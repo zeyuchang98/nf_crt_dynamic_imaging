@@ -379,3 +379,74 @@ decode to 378 frames at 864x408 and 90 ms per frame; inspected the labels and
 sampled frames, and verified the frozen left panel in motion-only. The loss curve
 was visually checked. SHA-256 checks preserve all 53 old result artifacts and
 49 unrelated local files; all existing summary rows are unchanged.
+
+## Motion max 32: 24k-step follow-up (2026-10-15): completed
+
+Approved one additional run with the exact R=2, motion max=32 setup above,
+changing only `steps` from 8,000 to 24,000. Training starts from the same seeded
+initialization; the existing cosine scheduler now reaches zero at step 24,000.
+This is a new run with a longer schedule, not a continuation of the finished 8k
+checkpoint. All data, model, optimizer, loss, monitoring and evaluation settings
+remain identical, including the four requested GIF views. The reusable template
+is unchanged.
+
+Preflight confirmed the input differs only in `steps`, all numerical source
+hashes and the runtime match, and the complete initial model state is identical
+to a fresh model under the 8k configuration. The model still has 224,372 parameters.
+Scratch inputs and checks are in `/tmp/baseline_motion32_24k_20261015`.
+Completed all 24,000 updates using commit `5774f44cfcbaf739fbffd9a2dccd0c582c699cd5`.
+The saved [configuration](results/baselines_20261015_24k_low_rank_motion_r2_m32/config.json),
+[full metrics](results/baselines_20261015_24k_low_rank_motion_r2_m32/metrics.json),
+[loss/LR curve](results/baselines_20261015_24k_low_rank_motion_r2_m32/loss.png),
+[numeric losses](results/baselines_20261015_24k_low_rank_motion_r2_m32/loss.csv),
+monitoring indices, source archive and log are retained. The final `model.pt`
+remains local, as for the other baselines.
+
+### 8k versus 24k at motion max 32
+
+Full-image and reference-intensity scores use all 378 midpoint frames; motion
+scores compare displacement vectors directly on the same true foreground mask.
+
+| Metric | 8k steps | 24k steps |
+|---|---:|---:|
+| Image RRMSE | 5.3585% | 3.7109% |
+| Image PSNR (dB) | 46.1147 | 49.3060 |
+| Image SSIM | 0.998119 | 0.999122 |
+| Reference intensity RRMSE | 52.0252% | 59.3448% |
+| Reference intensity PSNR (dB) | 27.8725 | 26.7291 |
+| Reference intensity SSIM | 0.880784 | 0.855292 |
+| Motion vector RRMSE | 80.0716% | 83.5368% |
+| Motion endpoint RMSE (px) | 4.8604 | 5.0708 |
+| Fixed training MSE | 2.5598572e-05 | 1.0711806e-05 |
+| Fixed validation MSE | 2.6125811e-05 | 1.2019928e-05 |
+| Training time (s; excludes final evaluation/GIFs) | 264.65 | 658.16 |
+
+The [loss comparison](results/baselines_20261015_24k_low_rank_motion_r2_m32/visuals/loss_comparison.png)
+plots both numeric histories without smoothing. Longer training with the longer
+cosine schedule reduces fixed validation MSE by about 54% and improves image
+RRMSE/PSNR/SSIM, but both branch errors become worse. In this comparison, better
+image fitting does not produce better motion/intensity separation. The late loss
+curve flattens as the learning rate approaches zero; this does not prove full
+convergence. These are two single-seed runs with different schedule horizons,
+not an isolated test of extra updates at an unchanged learning-rate schedule.
+
+All four requested animations are saved:
+[full image](results/baselines_20261015_24k_low_rank_motion_r2_m32/visuals/image.gif),
+[reference intensity](results/baselines_20261015_24k_low_rank_motion_r2_m32/visuals/reference_intensity.gif),
+[motion effect with true time-varying intensity](results/baselines_20261015_24k_low_rank_motion_r2_m32/visuals/motion_effect.gif),
+and [motion only with frozen learned intensity](results/baselines_20261015_24k_low_rank_motion_r2_m32/visuals/motion_only.gif).
+The GIF definitions, clipping and individual fixed error scales are unchanged.
+
+**Post-run verification:** reloading the final model reproduces fixed training
+and validation MSE exactly. Monitoring indices match the 8k run. Checked the
+24k final step, all 50 finite loss/LR rows, the cosine schedule ending at zero,
+source archive hashes, zero reference motion and rank-2 tails below 3.6e-8.
+Initial monitoring and the first pre-update batch loss match exactly. An extra
+bitwise check of first post-update monitoring failed on absolute differences of
+3.59e-13 (training) and 4.29e-12 (validation); the original values were preserved
+and these checks pass at 1e-8 relative tolerance. This check did not alter any
+training, metrics or saved loss values; its initial failure log is retained in
+the scratch folder. All four GIFs decode to 378 frames at 864x408 and 90 ms, and
+motion-only has the intended fixed left panel. Sampled GIF frames and both loss
+plots were visually checked. All 65 old result artifacts, 49 unrelated local
+files and prior summary rows are unchanged.
