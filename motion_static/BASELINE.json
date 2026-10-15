@@ -1,5 +1,5 @@
 {
-  "purpose": "Validated implementation, reusable template, and approved five-run baseline queue including motion-free low-rank fitting. Current validation is software preflight, not a research result.",
+  "purpose": "Validated implementation and reusable template with the completed five-run 8k baseline comparison; results and limitations are recorded in PROGRESS.md.",
   "source_commit_before_cleanup": "e7a516bb7ef99a68deb1e843b1f5e20d45196dad",
   "python_files": 57,
   "validation": {
@@ -8,7 +8,8 @@
     "status": "passed",
     "metric_parity": "All pre-cleanup midpoint and block metrics matched exactly on inference-only 16x16 fixtures; no research training run.",
     "training_parity": "Seven four-step synthetic comparisons against 208b8ff matched loss, weights, RNG, optimizer/scheduler state, monitoring indices and numeric logs exactly, excluding elapsed time. Sixteen summary-row comparisons matched; no research experiment.",
-    "baseline_preflight": "All five approved configurations passed rank, gradient, anchor and optimizer coverage checks; motion-free training/reload, image-only metrics and fixed-validation rank selection passed. Fresh agent runtime witness passed."
+    "baseline_preflight": "All five approved configurations passed rank, gradient, anchor and optimizer coverage checks; motion-free training/reload, image-only metrics and fixed-validation rank selection passed. Fresh agent runtime witness passed.",
+    "completed_baselines": "Five approved 8k runs completed. Saved models exactly reproduce final fixed training/validation MSE; monitoring indices, source archives, rank bounds, anchors and rank selection verified. Best motion-free candidate among R=8,16,24: R=24."
   },
   "sha256": {
     "motion_static/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",

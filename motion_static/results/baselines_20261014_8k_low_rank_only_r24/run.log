@@ -1,0 +1,20 @@
+Phantom: complex | size: 64x64 | cycles: 3 | training frames: 379 | time: [-0.5, 2.5]
+complex/low_rank_hash_nf step 1: MSE 0.00879043, temporal L2 0, total 0.00879043, fixed train 0.00795261, held-out 0.00781567
+complex/low_rank_hash_nf step 500: MSE 0.00358734, temporal L2 0, total 0.00358734, fixed train 0.00371672, held-out 0.00364224
+complex/low_rank_hash_nf step 1000: MSE 0.00325204, temporal L2 0, total 0.00325204, fixed train 0.00368661, held-out 0.00361455
+complex/low_rank_hash_nf step 1500: MSE 0.00310885, temporal L2 0, total 0.00310885, fixed train 0.00368613, held-out 0.00361587
+complex/low_rank_hash_nf step 2000: MSE 0.00406724, temporal L2 0, total 0.00406724, fixed train 0.00367697, held-out 0.00360798
+complex/low_rank_hash_nf step 2500: MSE 0.00394317, temporal L2 0, total 0.00394317, fixed train 0.00365361, held-out 0.00358249
+complex/low_rank_hash_nf step 3000: MSE 0.00387955, temporal L2 0, total 0.00387955, fixed train 0.00364377, held-out 0.00357713
+complex/low_rank_hash_nf step 3500: MSE 0.00363931, temporal L2 0, total 0.00363931, fixed train 0.00361595, held-out 0.0035505
+complex/low_rank_hash_nf step 4000: MSE 0.00372925, temporal L2 0, total 0.00372925, fixed train 0.0035226, held-out 0.00345791
+complex/low_rank_hash_nf step 4500: MSE 0.00310407, temporal L2 0, total 0.00310407, fixed train 0.00333162, held-out 0.00325948
+complex/low_rank_hash_nf step 5000: MSE 0.00325241, temporal L2 0, total 0.00325241, fixed train 0.00308014, held-out 0.00303785
+complex/low_rank_hash_nf step 5500: MSE 0.00377825, temporal L2 0, total 0.00377825, fixed train 0.00305237, held-out 0.00301122
+complex/low_rank_hash_nf step 6000: MSE 0.00279276, temporal L2 0, total 0.00279276, fixed train 0.00307816, held-out 0.00303131
+complex/low_rank_hash_nf step 6500: MSE 0.00302046, temporal L2 0, total 0.00302046, fixed train 0.00303014, held-out 0.00299385
+complex/low_rank_hash_nf step 7000: MSE 0.00293973, temporal L2 0, total 0.00293973, fixed train 0.00303243, held-out 0.00299343
+complex/low_rank_hash_nf step 7500: MSE 0.00335101, temporal L2 0, total 0.00335101, fixed train 0.00302864, held-out 0.00299064
+complex/low_rank_hash_nf step 8000: MSE 0.00316142, temporal L2 0, total 0.00316142, fixed train 0.00302966, held-out 0.0029911
+Midpoint image RRMSE=59.7455%, SSIM=0.7720012901898609
+Saved results: /Users/zeyuchang/Research/nf_crt_dynamic_imaging/motion_static/results/baselines_20261014_8k_low_rank_only_r24

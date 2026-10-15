@@ -1,0 +1,40 @@
+{
+  "criterion": "Lowest final fixed midpoint validation image MSE; ties choose smaller rank",
+  "selected_rank": 24,
+  "selected_run": "baselines_20261014_8k_low_rank_only_r24",
+  "candidates": [
+    {
+      "rank": 8,
+      "run": "baselines_20261014_8k_low_rank_only_r8",
+      "fixed_validation_mse": 0.0031772971504056965,
+      "full_midpoint_rrmse": 0.6143100172155788,
+      "full_midpoint_psnr_db": 24.92783838450312,
+      "full_midpoint_ssim": 0.7617928079160331
+    },
+    {
+      "rank": 16,
+      "run": "baselines_20261014_8k_low_rank_only_r16",
+      "fixed_validation_mse": 0.0035703279453365286,
+      "full_midpoint_rrmse": 0.6541664980086869,
+      "full_midpoint_psnr_db": 24.381824353527747,
+      "full_midpoint_ssim": 0.7507560141642998
+    },
+    {
+      "rank": 24,
+      "run": "baselines_20261014_8k_low_rank_only_r24",
+      "fixed_validation_mse": 0.0029911023836706645,
+      "full_midpoint_rrmse": 0.5974550739938209,
+      "full_midpoint_psnr_db": 25.169485251993244,
+      "full_midpoint_ssim": 0.7720012901898609
+    }
+  ],
+  "all_runs": {
+    "nested_hash": "baselines_20261014_8k_nested_hash",
+    "low_rank_motion_r2": "baselines_20261014_8k_low_rank_motion_r2",
+    "low_rank_only_r8": "baselines_20261014_8k_low_rank_only_r8",
+    "low_rank_only_r16": "baselines_20261014_8k_low_rank_only_r16",
+    "low_rank_only_r24": "baselines_20261014_8k_low_rank_only_r24"
+  },
+  "scope": "Best among R=8,16,24 at 8k steps, seed 0; all candidates retained",
+  "limitation": "Rank-selected midpoint scores are validation results, not an independent test"
+}

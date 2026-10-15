@@ -196,7 +196,7 @@ state, monitoring indices, console values and loss CSV values matched exactly
 `BASELINE.json`; results remain empty except for `.gitkeep`. No research experiment
 or parameter search was launched, and no new scientific conclusion is implied.
 
-## Approved baseline comparison: running
+## Approved baseline comparison: completed
 
 The user approved local CPU runs with the earlier visually preferred 8-level
 8-128 grids and 8k updates: nested hash, low-rank + motion R=2, and motion-free
@@ -221,8 +221,56 @@ image-only evaluation and validation-based selection. A fresh agent executed the
 documented seeded runtime witness successfully. Existing local Python 3.11.16 /
 PyTorch 2.14.0 environment is reused on CPU; no dependencies changed.
 
-The five-run serial queue launched on 2026-10-15 at 04:24 UTC (2026-10-14 local),
-using source commit `4c74bf9a527860e251b1027b42914a63e772cb67`. Scratch inputs and
-queue log are under `/tmp/baselines_20261014_8k`; flat run folders use the same
-prefix in `results/`. Nested hash is training normally; the remaining four jobs
-are queued. No final rank or model comparison is available yet.
+All five runs completed on 2026-10-14 local. The first used commit
+`4c74bf9a527860e251b1027b42914a63e772cb67`; the remaining runs used `75343b6`,
+which only updated this progress record. Every run's Python source hashes are
+identical. Scratch inputs/queue log are under `/tmp/baselines_20261014_8k`;
+resolved configurations, numerical results and curves are retained below.
+
+### Complete midpoint image comparison
+
+All rows use the same 378 midpoint frames, data range 1 and existing sequence
+SSIM convention. RRMSE is displayed as a percentage. Training time includes
+fixed monitoring and plotting, and excludes the final full-grid evaluation.
+
+| Model and full metrics | Image RRMSE | PSNR (dB) | SSIM | Fixed validation MSE | Train (s) | Loss/LR curve |
+|---|---:|---:|---:|---:|---:|---|
+| [Nested hash](results/baselines_20261014_8k_nested_hash/metrics.json) | 1.1988% | 59.1210 | 0.999882 | 1.2356603e-06 | 281.23 | [PNG](results/baselines_20261014_8k_nested_hash/loss.png), [CSV](results/baselines_20261014_8k_nested_hash/loss.csv) |
+| [Low rank + motion, R=2](results/baselines_20261014_8k_low_rank_motion_r2/metrics.json) | 2.5181% | 52.6742 | 0.999630 | 5.3106635e-06 | 277.42 | [PNG](results/baselines_20261014_8k_low_rank_motion_r2/loss.png), [CSV](results/baselines_20261014_8k_low_rank_motion_r2/loss.csv) |
+| [Low rank only, R=8](results/baselines_20261014_8k_low_rank_only_r8/metrics.json) | 61.4310% | 24.9278 | 0.761793 | 0.0031772972 | 67.80 | [PNG](results/baselines_20261014_8k_low_rank_only_r8/loss.png), [CSV](results/baselines_20261014_8k_low_rank_only_r8/loss.csv) |
+| [Low rank only, R=16](results/baselines_20261014_8k_low_rank_only_r16/metrics.json) | 65.4166% | 24.3818 | 0.750756 | 0.0035703279 | 68.07 | [PNG](results/baselines_20261014_8k_low_rank_only_r16/loss.png), [CSV](results/baselines_20261014_8k_low_rank_only_r16/loss.csv) |
+| [Low rank only, R=24 (selected)](results/baselines_20261014_8k_low_rank_only_r24/metrics.json) | 59.7455% | 25.1695 | 0.772001 | 0.0029911024 | 67.66 | [PNG](results/baselines_20261014_8k_low_rank_only_r24/loss.png), [CSV](results/baselines_20261014_8k_low_rank_only_r24/loss.csv) |
+
+### Branch comparison
+
+Only the two nested models have independently evaluated motion and reference
+intensity. Motion errors compare displacement vectors directly on the existing
+true foreground mask; the zero-motion endpoint RMSE is 6.0701 px.
+
+| Model | Reference intensity RRMSE | Motion vector RRMSE | Motion endpoint RMSE (px) |
+|---|---:|---:|---:|
+| Nested hash | 94.2346% | 101.7730% | 6.1777 |
+| Low rank + motion, R=2 | 59.0838% | 85.9171% | 5.2153 |
+
+**Selected motion-free baseline: R=24**, by the lowest final fixed validation MSE
+among R=8,16,24. See the [selection record](results/baselines_20261014_8k_selection.json)
+and [all-run summary](results/summary.csv). All candidate records and local models
+are retained. Model weights remain local in each run's `model.pt`; lightweight
+records (config, metrics, losses, curve, monitoring indices, source and log) are
+published. GIFs, prediction arrays and intermediate checkpoints were not generated.
+
+Nested hash fits the image best but does not recover the true branches. Low-rank
++ motion reduces both branch errors while retaining substantial decomposition
+error. Motion-free low rank fits poorly at this budget, even for the selected
+R=24. These runs do not distinguish insufficient capacity from optimization or
+training-budget limitations; they do not establish a fundamental limitation of
+motion-free low-rank representations. There is no extra rank search or training.
+
+**Post-run verification:** reloaded all five saved models and reproduced their
+final fixed training and validation MSE exactly. All five runs use identical
+monitoring indices. Checked the 8k final step, complete loss/LR rows, zero final
+learning rates, eight-file output layout, source archive hashes, motion anchors
+and absence of fictitious branch metrics for motion-free models. Rank tails were
+below 6.1e-8 for the trained low-rank predictions. Recomputed the rank selection
+and matched the saved selection record. These checks validate saved results,
+not convergence or physical separation.
