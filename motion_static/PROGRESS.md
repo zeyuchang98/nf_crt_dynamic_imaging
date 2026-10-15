@@ -195,3 +195,29 @@ state, monitoring indices, console values and loss CSV values matched exactly
 (elapsed time excluded). Sixteen summary-row comparisons also matched. Refreshed
 `BASELINE.json`; results remain empty except for `.gitkeep`. No research experiment
 or parameter search was launched, and no new scientific conclusion is implied.
+
+## Approved baseline comparison: implementation ready
+
+The user approved local CPU runs with the earlier visually preferred 8-level
+8-128 grids and 8k updates: nested hash, low-rank + motion R=2, and motion-free
+low rank at R=8,16,24. All use the complex 64x64, 3-cycle/379-frame benchmark,
+seed 0, batch 4096, Adam hash/MLP rates 0.01/0.001 and the existing cosine schedule.
+The three motion-free candidates are ranked by final fixed midpoint validation
+image MSE. Full midpoint image RRMSE/PSNR/SSIM are reported for all; these are
+validation results after rank selection. No extra seeds or rank expansion is approved.
+
+Added `low_rank_hash_nf` by directly reusing `LowRankIntensity` at observation
+coordinates. The runner, optimizer and checkpoint loader now support it; its
+metrics report full-image rank and image quality, without invented motion or
+reference-intensity branch scores. Existing nested models and loss formulas are
+unchanged. `baselines.py` prepares the exact five inputs in scratch storage,
+checks code/config hashes and runs serially into flat result folders, retaining
+all records and identifying the selected rank. GIFs remain opt-in.
+
+**Preflight verified:** 87 tests passed, including all five actual model settings,
+rank bounds, coordinate gradients, reference anchors where applicable, optimizer
+parameter coverage, three-step synthetic motion-free updates, checkpoint reload,
+image-only evaluation and validation-based selection. A fresh agent executed the
+documented seeded runtime witness successfully. Existing local Python 3.11.16 /
+PyTorch 2.14.0 environment is reused on CPU; no dependencies changed. Training
+has not yet launched at this implementation milestone.

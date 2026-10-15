@@ -20,10 +20,10 @@ regularization or branch supervision.
 
 | Setting | Meaning |
 |---|---|
-| `model` | `nested_low_rank_hash_nf`, `nested_hash_nf`, `nested_mlp`, or `hash_nf` |
-| `rank` | Total low-rank intensity rank, including static intensity |
+| `model` | `nested_low_rank_hash_nf`, `low_rank_hash_nf`, `nested_hash_nf`, `nested_mlp`, or `hash_nf` |
+| `rank` | Total rank including static intensity; reference intensity for nested, full image for motion-free |
 | `encoding` | Intensity hash levels, features, table size, minimum and maximum resolution |
-| `motion_encoding` | Independent motion settings; resolutions can be scalar or `[x,y,t]` |
+| `motion_encoding` | Independent overrides for `nested_low_rank_hash_nf`; scalar or `[x,y,t]` resolutions |
 | `head_width`, `temporal_width` | Hash head and low-rank temporal MLP widths |
 | `steps`, `batch_size`, `seed`, `threads` | Optimizer updates, samples per update, random seed and CPU threads |
 | `hash_lr`, `mlp_lr` | Initial Adam rates; cosine schedules end at the selected step budget |
@@ -37,6 +37,11 @@ For `nested_mlp`, explicit `intensity_width` and `motion_width` may be added;
 the retained defaults are 128 and 32. The direct `hash_nf` model retains its
 built-in architecture and does not consume the nested model's encoding settings.
 Model implementations and metric formulas are not changed by this template.
+
+`low_rank_hash_nf` uses the existing low-rank module directly at observation
+coordinates, without motion. `--rank` works for both low-rank models. The runner
+removes inapplicable `motion_encoding` and `reference_time` fields for the
+motion-free model and rejects the nested-only temporal penalty for it.
 
 ## Usage
 
@@ -90,3 +95,36 @@ for explicitly requested comparisons. It requires a fresh `--config-dir` outside
 `experiments/` and `results/`, records source/config hashes and uses the same flat
 outputs. It no longer publishes artifacts or generates GIF comparisons
 automatically. No batch experiment was launched during this cleanup.
+
+## Approved baseline comparison (2026-10-14)
+
+The user selected the earlier visually preferred 8-level, 8-to-128 configuration,
+with 8,000 updates per run. The five jobs are nested hash, low-rank + motion R=2,
+and motion-free low rank at R=8,16,24. All share the complex 64x64, 3-cycle/379-frame
+benchmark, seed 0, batch size 4096, CPU with four threads, Adam hash/MLP learning
+rates 0.01/0.001, a cosine schedule, head width 64 and temporal width 32 where
+applicable. Only observed image MSE is optimized. Monitoring uses seed 2026 and
+65,536 fixed samples per split; logs are saved every 500 steps and at step 1.
+
+The shared [baseline script](../baselines.py) prepares explicit inputs outside
+this directory and runs serially through the same trainer:
+
+```bash
+python -m motion_static.baselines prepare --config-dir /tmp/baselines_20261014_8k
+python -m motion_static.baselines run --config-dir /tmp/baselines_20261014_8k
+```
+
+Preparation freezes input/source hashes. Execution pulls with `--ff-only` before
+each run and stops if code changes or an existing run is incomplete. Completed
+matching runs can be reused. Run directories remain flat under `results/`.
+GIFs, prediction arrays and intermediate checkpoints stay disabled.
+
+Select the best motion-free rank using the final fixed midpoint validation image
+MSE; exact ties choose the smaller rank. There is no early stopping or checkpoint
+selection. All candidate records and models are retained, and
+`results/baselines_20261014_8k_selection.json` identifies the selected model and
+reports full-grid midpoint RRMSE/PSNR/SSIM for all three candidates.
+The same midpoints are used for selection and reporting, so these are validation
+comparisons, not an independent test. Equal seeds do not imply identical initial
+parameters or training batches when model sizes differ; monitoring indices are
+identical. This is a single-seed comparison, with no claim of convergence.

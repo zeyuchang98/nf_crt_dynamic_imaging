@@ -111,6 +111,17 @@ def snapshot_source(root, out):
     }
 
 
+def source_hashes():
+    """Fingerprint maintained Python sources before preparing or resuming a queue."""
+    root = Path(__file__).resolve().parent
+    hashes = {}
+    for path in sorted(root.rglob("*.py")):
+        relative = path.relative_to(root)
+        if relative.parts[0] not in ("archive", "results"):
+            hashes[str(Path(root.name) / relative)] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return hashes
+
+
 def save_checkpoint(out, model, optimizer, scheduler, config, step):
     """Save an explicitly requested intermediate step, including optimizer/RNG."""
     checkpoint_dir = Path(out) / "checkpoints"
@@ -148,14 +159,17 @@ def summary_row(run, config, report=None):
     row["run"] = run.name
     row["status"] = config.get("status", "unknown")
     row["git_commit"] = config.get("code_provenance", {}).get("git_commit", "")
-    if config["model"] != "nested_low_rank_hash_nf":
+    if config["model"] not in ("low_rank_hash_nf", "nested_low_rank_hash_nf"):
         row["rank"] = ""
 
     # Motion settings inherit from the intensity hash unless overridden.
-    if config["model"] in ("nested_hash_nf", "nested_low_rank_hash_nf"):
+    if config["model"] in ("nested_hash_nf", "low_rank_hash_nf", "nested_low_rank_hash_nf"):
         intensity_settings = config.get("encoding", {})
         motion_settings = {**intensity_settings, **config.get("motion_encoding", {})}
-        for branch, settings in (("intensity", intensity_settings), ("motion", motion_settings)):
+        branches = [("intensity", intensity_settings)]
+        if config["model"] != "low_rank_hash_nf":
+            branches.append(("motion", motion_settings))
+        for branch, settings in branches:
             for key in ("levels", "min_resolution", "max_resolution"):
                 value = settings.get(key, "")
                 if isinstance(value, list):

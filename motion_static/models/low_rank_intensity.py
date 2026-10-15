@@ -1,7 +1,9 @@
-"""Reference intensity C(q,t) = sum_k b_k(q) a_k(t), with total rank <= R.
+"""Scalar field sum_k b_k(q) a_k(t), with total space-time rank <= R.
 
 The spatial hash network sees only q; the temporal MLP sees only t.
 No shape, trajectory, or brightness law is supplied to either network.
+Nested models query reference coordinates q=r+u. The motion-free baseline queries
+observation coordinates r directly, so its rank bound applies to the full image.
 """
 from torch import nn
 

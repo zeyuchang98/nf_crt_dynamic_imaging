@@ -73,6 +73,8 @@ def evaluate_blocks(model, data, split, config, out, training_seconds):
         checks["zero_motion_learned_intensity"] = error_metrics(
             data["truth"][test], prediction["reference_intensity"][test], data_range=1)
         report["diagnostics_on_test_pixels"] = checks
+    elif hasattr(model, "rank"):
+        report["image_rank"] = intensity_rank_report({"all_grid": prediction["image"]}, model.rank)
     save_metrics(out / "metrics.json", report)
     if options.get("predictions", False):
         np.savez_compressed(out / "predictions.npz", **prediction,

@@ -24,6 +24,7 @@ losses, coordinate conventions, model architectures or metric definitions.
 |---|---|
 | Shared model implementations | [models/README.md](models/README.md) |
 | Single training entry point | [run.py](run.py) |
+| Approved five-run baseline queue | [baselines.py](baselines.py), [settings and commands](experiments/README.md#approved-baseline-comparison-2026-10-14) |
 | Objective and individual loss terms | [losses.py](losses.py) |
 | Fixed losses, learning rates and curves | [training_monitor.py](training_monitor.py) |
 | Run log, metadata and summary index | [run_records.py](run_records.py) |

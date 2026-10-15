@@ -13,7 +13,7 @@ import platform
 import subprocess
 import sys
 
-from .run_records import write_json
+from .run_records import source_hashes, write_json
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / "motion_static/experiments/template.json"
@@ -62,12 +62,6 @@ def validate_config(config, expected):
             "true_motion_used_for_training", "reference_intensity_labels_used_for_training",
             "midpoint_labels_used_for_training")):
         raise ValueError("Sweep requires image-only supervision and midpoint evaluation")
-
-
-def source_hashes():
-    return {str(p.relative_to(ROOT)): sha256(p)
-            for p in sorted((ROOT / "motion_static").rglob("*.py"))
-            if p.relative_to(ROOT / "motion_static").parts[0] not in ("archive", "results")}
 
 
 def prepare(config_dir, smoke=False):

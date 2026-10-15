@@ -7,7 +7,7 @@ Inputs are rows of `(x, y, t)`, with shape `(N, 3)`.
 |---|---|
 | [nested_hash_nf.py](nested_hash_nf.py) | Two hash fields: `intensity(r + motion(r, t), t)` |
 | [nested_low_rank_hash_nf.py](nested_low_rank_hash_nf.py) | Existing motion hash field + low-rank reference intensity |
-| [low_rank_intensity.py](low_rank_intensity.py) | 2D spatial hash basis and time MLP coefficients, joined by an inner product |
+| [low_rank_intensity.py](low_rank_intensity.py) | 2D spatial hash basis and time MLP; reused directly by the motion-free baseline |
 | [nested_mlp.py](nested_mlp.py) | The same composition using two coordinate MLPs |
 | [hash_nf.py](hash_nf.py) | One hash field: coordinate scaling, encoding, then MLP decoding |
 | [coordinates.py](coordinates.py) | Fixed dataset bounds, normalization to [0, 1] or [-1, 1] |
@@ -22,7 +22,8 @@ Inputs are rows of `(x, y, t)`, with shape `(N, 3)`.
 - **Grid resolutions and table sizes:** `HashGridEncoding.__init__`.
 - **Interpolation weights:** `HashGridEncoding.forward`, step 3.
 - **Dense indexing and hashing:** `HashGridEncoding._table_indices`.
-- **Loss and optimization:** [../run.py](../run.py), in `train()`.
+- **Loss formula:** [../losses.py](../losses.py), in `compute_training_losses()`.
+- **Optimization:** [../run.py](../run.py), in `build_optimizer()` and `train()`.
 
 The model code assumes valid experiment settings and `(N, 3)` coordinate inputs.
 Boundary handling remains necessary: training includes the domain endpoints,
@@ -50,6 +51,19 @@ runner still uses direct image supervision; PACT measurement reconstruction is
 not implemented by these representation experiments. R=2 and R=3 are candidate
 capacities, not established rank bounds for real PACT objects. The factor basis
 is nonunique and individual basis images need not correspond to physical parts.
+
+### Motion-free low-rank baseline
+
+The runner's `low_rank_hash_nf` option instantiates `LowRankIntensity` directly:
+`I(r,t) = sum_k b_k(r) a_k(t)`. It has no motion module, warp or motion reference
+anchor. Its spatial bases and time coefficients must represent the complete
+moving image, including both geometry and brightness changes.
+
+It uses the same image MSE, spatial hash, temporal MLP and optimizer rates as the
+low-rank branch of the nested model. Its rank bound applies to the image matrix
+at fixed observation coordinates. Evaluation reports image metrics and
+`image_rank`; motion and recovered reference-intensity metrics are absent.
+This baseline is not supervised with true reference-intensity labels.
 
 ### Independent motion grid resolution
 

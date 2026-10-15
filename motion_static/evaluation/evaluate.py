@@ -92,7 +92,7 @@ def predict_fields(model, entry, config, *, include_visuals=True):
 
 
 def intensity_rank_report(volumes, rank):
-    """Check rank on a fixed reference grid, without centering or warping it."""
+    """Check rank on the supplied fixed spatial grid, without centering/warping."""
     report = dict(rank_limit=rank, definition="Total uncentered space-by-time matrix rank", splits={})
     for name, volume in volumes.items():
         matrix = volume.reshape(-1, volume.shape[-1])
@@ -147,6 +147,11 @@ def evaluate(model, data, config, out, training_seconds):
         if hasattr(model.intensity, "rank"):
             report["intensity_rank"] = intensity_rank_report(
                 {s: p["reference_intensity"] for s, p in predictions.items()}, model.intensity.rank)
+    elif hasattr(model, "rank"):
+        # A motion-free low-rank model constrains the image matrix at fixed r,
+        # not a recovered reference-intensity matrix at q.
+        report["image_rank"] = intensity_rank_report(
+            {s: p["image"] for s, p in predictions.items()}, model.rank)
     save_metrics(out / "metrics.json", report)
     if options.get("predictions", False):
         np.savez_compressed(out / "predictions.npz",

@@ -18,6 +18,7 @@ from .models.coordinates import DEFAULT_BOUNDS
 from .models.nested_mlp import NestedMLP
 from .models.nested_hash_nf import NestedHashNF
 from .models.nested_low_rank_hash_nf import NestedLowRankHashNF
+from .models.low_rank_intensity import LowRankIntensity
 from .phantoms.data import DEFAULT_PHANTOM, DEFAULT_SAMPLING, coordinate_grid, make_pair, sample
 from .splits import block_split
 from .evaluation.evaluate import evaluate
@@ -50,6 +51,15 @@ def build_model(config):
             width=config["head_width"], coordinate_bounds=bounds,
             reference_time=reference_time, **config["encoding"],
         )
+    if config["model"] == "low_rank_hash_nf":
+        # No motion module: spatial bases are evaluated at observation coordinates r.
+        return LowRankIntensity(
+            rank=config["rank"],
+            width=config["head_width"],
+            temporal_width=config["temporal_width"],
+            coordinate_bounds=bounds,
+            **config["encoding"],
+        )
     if config["model"] == "nested_low_rank_hash_nf":
         return NestedLowRankHashNF(
             rank=config["rank"],
@@ -70,7 +80,7 @@ def build_optimizer(model, config):
     The low-rank temporal MLP is separate from its spatial hash and MLP.
     """
     model_name = config["model"]
-    if model_name == "hash_nf":
+    if model_name in ("hash_nf", "low_rank_hash_nf"):
         fields = [("image", model)]
     elif model_name in ("nested_hash_nf", "nested_low_rank_hash_nf"):
         fields = [("intensity", model.intensity), ("motion", model.motion.field)]
@@ -91,11 +101,17 @@ def build_optimizer(model, config):
             "lr": config["mlp_lr"],
             "name": f"{branch_name}_mlp",
         })
-    if model_name == "nested_low_rank_hash_nf":
+    if model_name in ("low_rank_hash_nf", "nested_low_rank_hash_nf"):
+        if model_name == "low_rank_hash_nf":
+            temporal_parameters = model.temporal.parameters()
+            temporal_group_name = "image_time_mlp"
+        else:
+            temporal_parameters = model.intensity.temporal.parameters()
+            temporal_group_name = "intensity_time_mlp"
         groups.append({
-            "params": model.intensity.temporal.parameters(),
+            "params": temporal_parameters,
             "lr": config["mlp_lr"],
-            "name": "intensity_time_mlp",
+            "name": temporal_group_name,
         })
     return torch.optim.Adam(groups)
 
@@ -185,7 +201,8 @@ def parse_configuration(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, help="JSON template copy; defaults to experiments/template.json")
     parser.add_argument("--phantom", choices=("simple", "complex"), help="Explicitly override the template phantom")
-    parser.add_argument("--model", choices=("hash_nf", "nested_mlp", "nested_hash_nf", "nested_low_rank_hash_nf"))
+    parser.add_argument("--model", choices=("hash_nf", "nested_mlp", "nested_hash_nf",
+                                           "low_rank_hash_nf", "nested_low_rank_hash_nf"))
     parser.add_argument("--split", choices=("midpoints", "blocks"))
     parser.add_argument("--out", type=Path, help="New run directory; default is results/<UTC timestamp>_<name>")
     parser.add_argument("--name", help="Short run label for the automatic directory name")
@@ -194,7 +211,7 @@ def parse_configuration(argv=None):
     parser.add_argument("--cycles", type=int, help="Complete periods; extend time without speeding up dynamics")
     parser.add_argument("--checkpoint-steps", type=int, nargs="*", help="Optional intermediate checkpoints; default: none")
     parser.add_argument("--seed", type=int)
-    parser.add_argument("--rank", type=int, help="Total intensity rank, for nested_low_rank_hash_nf only")
+    parser.add_argument("--rank", type=int, help="Total space-time rank for either low-rank model")
     parser.add_argument("--temporal-weight", type=float)
     parser.add_argument("--temporal-step", type=float)
     parser.add_argument("--gifs", action=argparse.BooleanOptionalAction, default=None)
@@ -226,9 +243,11 @@ def parse_configuration(argv=None):
     config["evaluation_split"] = args.split or config.get("evaluation_split", "midpoints")
     if config["evaluation_split"] not in ("midpoints", "blocks"):
         parser.error("evaluation_split must be midpoints or blocks")
-    if args.rank is not None and config["model"] != "nested_low_rank_hash_nf":
-        parser.error("--rank requires nested_low_rank_hash_nf")
-    if config["model"] == "nested_low_rank_hash_nf" and config["rank"] < 1:
+    low_rank = config["model"] in ("low_rank_hash_nf", "nested_low_rank_hash_nf")
+    nested = config["model"] in ("nested_mlp", "nested_hash_nf", "nested_low_rank_hash_nf")
+    if args.rank is not None and not low_rank:
+        parser.error("--rank requires low_rank_hash_nf or nested_low_rank_hash_nf")
+    if low_rank and config["rank"] < 1:
         parser.error("rank must be positive")
     for key in ("steps", "batch_size", "threads", "size", "frames", "cycles"):
         if not isinstance(config[key], int) or isinstance(config[key], bool) or config[key] < 1:
@@ -258,14 +277,17 @@ def parse_configuration(argv=None):
     if "coordinate_bounds" in config and config["coordinate_bounds"] != bounds:
         parser.error("coordinate_bounds do not match the configured phantom domain")
     config["coordinate_bounds"] = bounds
-    if config["model"] != "hash_nf" and config.get("reference_time") is None:
+    if nested and config.get("reference_time") is None:
         config["reference_time"] = bounds[2][0]
+    if config["model"] == "low_rank_hash_nf":
+        config.pop("motion_encoding", None)
+        config.pop("reference_time", None)
 
     # The optional existing temporal penalty uses physical time differences.
     weight = config.get("temporal_weight", 0.)
     if not np.isfinite(weight) or weight < 0:
         parser.error("temporal_weight must be finite and nonnegative")
-    if weight > 0 and config["model"] == "hash_nf":
+    if weight > 0 and not nested:
         parser.error("Temporal intensity regularization requires a nested model")
     if args.temporal_step is not None and weight == 0:
         parser.error("--temporal-step requires positive temporal_weight")
