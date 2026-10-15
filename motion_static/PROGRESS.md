@@ -196,7 +196,7 @@ state, monitoring indices, console values and loss CSV values matched exactly
 `BASELINE.json`; results remain empty except for `.gitkeep`. No research experiment
 or parameter search was launched, and no new scientific conclusion is implied.
 
-## Approved baseline comparison: implementation ready
+## Approved baseline comparison: running
 
 The user approved local CPU runs with the earlier visually preferred 8-level
 8-128 grids and 8k updates: nested hash, low-rank + motion R=2, and motion-free
@@ -219,5 +219,10 @@ rank bounds, coordinate gradients, reference anchors where applicable, optimizer
 parameter coverage, three-step synthetic motion-free updates, checkpoint reload,
 image-only evaluation and validation-based selection. A fresh agent executed the
 documented seeded runtime witness successfully. Existing local Python 3.11.16 /
-PyTorch 2.14.0 environment is reused on CPU; no dependencies changed. Training
-has not yet launched at this implementation milestone.
+PyTorch 2.14.0 environment is reused on CPU; no dependencies changed.
+
+The five-run serial queue launched on 2026-10-15 at 04:24 UTC (2026-10-14 local),
+using source commit `4c74bf9a527860e251b1027b42914a63e772cb67`. Scratch inputs and
+queue log are under `/tmp/baselines_20261014_8k`; flat run folders use the same
+prefix in `results/`. Nested hash is training normally; the remaining four jobs
+are queued. No final rank or model comparison is available yet.
