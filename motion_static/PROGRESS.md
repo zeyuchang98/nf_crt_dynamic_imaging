@@ -257,7 +257,8 @@ among R=8,16,24. See the [selection record](results/baselines_20261014_8k_select
 and [all-run summary](results/summary.csv). All candidate records and local models
 are retained. Model weights remain local in each run's `model.pt`; lightweight
 records (config, metrics, losses, curve, monitoring indices, source and log) are
-published. GIFs, prediction arrays and intermediate checkpoints were not generated.
+published. GIFs were subsequently generated on request (links below); prediction
+arrays and intermediate checkpoints remain absent.
 
 Nested hash fits the image best but does not recover the true branches. Low-rank
 + motion reduces both branch errors while retaining substantial decomposition
@@ -269,8 +270,42 @@ motion-free low-rank representations. There is no extra rank search or training.
 **Post-run verification:** reloaded all five saved models and reproduced their
 final fixed training and validation MSE exactly. All five runs use identical
 monitoring indices. Checked the 8k final step, complete loss/LR rows, zero final
-learning rates, eight-file output layout, source archive hashes, motion anchors
+learning rates, eight-file core output layout, source archive hashes, motion anchors
 and absence of fictitious branch metrics for motion-free models. Rank tails were
 below 6.1e-8 for the trained low-rank predictions. Recomputed the rank selection
 and matched the saved selection record. These checks validate saved results,
 not convergence or physical separation.
+
+### GIFs generated on request
+
+Rendered all five saved models with the existing `evaluation.render` command;
+no optimization, model/configuration changes or metric recomputation. GIFs remain
+opt-in for future runs. Each animation uses all 378 unseen midpoint frames over
+three cycles, 90 ms per frame and infinite looping.
+
+| Model | Full image | Reference intensity | Motion effect | Motion only |
+|---|---|---|---|---|
+| Nested hash | [GIF](results/baselines_20261014_8k_nested_hash/visuals/image.gif) | [GIF](results/baselines_20261014_8k_nested_hash/visuals/reference_intensity.gif) | [GIF](results/baselines_20261014_8k_nested_hash/visuals/motion_effect.gif) | [GIF](results/baselines_20261014_8k_nested_hash/visuals/motion_only.gif) |
+| Low rank + motion, R=2 | [GIF](results/baselines_20261014_8k_low_rank_motion_r2/visuals/image.gif) | [GIF](results/baselines_20261014_8k_low_rank_motion_r2/visuals/reference_intensity.gif) | [GIF](results/baselines_20261014_8k_low_rank_motion_r2/visuals/motion_effect.gif) | [GIF](results/baselines_20261014_8k_low_rank_motion_r2/visuals/motion_only.gif) |
+| Low rank only, R=8 | [GIF](results/baselines_20261014_8k_low_rank_only_r8/visuals/image.gif) | N/A | N/A | N/A |
+| Low rank only, R=16 | [GIF](results/baselines_20261014_8k_low_rank_only_r16/visuals/image.gif) | N/A | N/A | N/A |
+| Low rank only, R=24 (selected) | [GIF](results/baselines_20261014_8k_low_rank_only_r24/visuals/image.gif) | N/A | N/A | N/A |
+
+Full image compares truth, prediction and absolute error. Reference intensity is
+queried at fixed coordinates, without applying motion. Motion effect applies true
+and predicted motion to the same true time-varying intensity, so brightness may
+still vary. Motion only freezes the learned intensity at the motion reference time:
+the left panel is the fixed learned image, the middle applies predicted motion,
+and the right shows absolute change, not error against ground truth. Motion-free
+models have only the full-image view.
+
+Truth/prediction display ranges are fixed at 0..1. Each GIF's error/change range
+is fixed over time but scaled independently and printed above its right panel;
+compare the numerical metrics rather than error-panel brightness across GIFs.
+
+**Rendering verification:** all 11 GIFs decode to 378 frames at 864x408, with
+90 ms duration and looping. All prediction panels vary over time; both motion-only
+left panels remain identical across all frames as intended. Inspected labeled
+frames for every GIF. SHA-256 checks confirmed all 42 original result artifacts
+(including models, metrics and losses) and 49 unrelated local files are unchanged.
+The new GIFs occupy 36.22 MiB and are published with this index.
