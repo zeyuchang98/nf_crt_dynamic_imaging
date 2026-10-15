@@ -81,7 +81,8 @@ def evaluate_blocks(model, data, split, config, out, training_seconds):
                             x=data["x"], y=data["y"], t=data["t"])
     if options.get("gifs", False):
         from .render import save_gifs
-        save_gifs(out / "visuals", data, prediction, error_mask=split["test_mask"])
+        save_gifs(out / "visuals", data, prediction, config=config, error_mask=split["test_mask"],
+                  reference_time=float(model.motion.reference_time) if nested else None)
     score = image["test_pixels"]
     print(f"Held-out image RRMSE={score['rrmse']:.6f}, spatial-window SSIM={score['ssim']}", flush=True)
 

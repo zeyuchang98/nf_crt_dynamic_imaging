@@ -53,7 +53,7 @@ def diagnose_run(run, out):
                         intensity_geometry=fit["parameters"], intensity_template_fit=fit["images"],
                         intensity_template_fit_rrmse=fit["rrmse"],
                         stationary_control_geometry=stationary["parameters"], moving_control_geometry=moving["parameters"])
-    save_branch_plots(out, data, prediction, fit, stationary, motion, phantom, run.name)
+    save_branch_plots(out, data, prediction, fit, stationary, motion, phantom, run.name, config)
     for path in sources:
         if hashlib.sha256(path.read_bytes()).hexdigest() != hashes[str(path)]:
             raise RuntimeError(f"Source changed during diagnosis: {path}")
@@ -118,7 +118,7 @@ def write_summary(out, reports):
                   f"- [Intensity 单独输出 GIF]({name}/intensity_residual.gif) · [残余平移、膨胀曲线]({name}/intensity_geometry.png)",
                   f"- [几何拟合检查 GIF]({name}/geometry_fit.gif)：中位拟合 RRMSE {fit_error:.2%}，用于检查几何估计是否可靠。",
                   f"- [ux/uy、幅度与误差曲线]({name}/motion_outputs.png)",
-                  f"- [预测 motion + 真实 intensity GIF]({name}/motion_effect.gif)",
+                  f"- [True/predicted motion on true intensity frozen at t0]({name}/motion_effect.gif)",
                   f"- [完整指标及源文件校验]({name}/metrics.json) · [几何拟合数组]({name}/diagnostics.npz)", "",
                   f"控制结果：静止参考图最大伪平移 {calibration['stationary_max_shift_pixels']:.2g} px；"
                   f"真实动态图的最大平移估计误差 {calibration['moving_max_translation_error_pixels']:.2g} px。", ""]

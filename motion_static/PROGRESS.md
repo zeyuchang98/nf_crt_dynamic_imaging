@@ -292,9 +292,10 @@ three cycles, 90 ms per frame and infinite looping.
 | Low rank only, R=24 (selected) | [GIF](results/baselines_20261014_8k_low_rank_only_r24/visuals/image.gif) | N/A | N/A | N/A |
 
 Full image compares truth, prediction and absolute error. Reference intensity is
-queried at fixed coordinates, without applying motion. Motion effect applies true
-and predicted motion to the same true time-varying intensity, so brightness may
-still vary. Motion only freezes the learned intensity at the motion reference time:
+queried at fixed coordinates, without applying motion. As updated on 2026-10-15,
+the linked motion-effect GIFs apply true and predicted motion to the same true
+intensity frozen at t0; their right panel is absolute image error. The original
+exports used time-varying true intensity. Motion only freezes the learned intensity at the motion reference time:
 the left panel is the fixed learned image, the middle applies predicted motion,
 and the right shows absolute change, not error against ground truth. Motion-free
 models have only the full-image view.
@@ -365,10 +366,11 @@ consumption, so equal seeds do not imply matched training batches.
 Requested GIFs use the existing definitions and display conventions described above:
 [full image](results/baselines_20261015_8k_low_rank_motion_r2_m32/visuals/image.gif),
 [reference intensity](results/baselines_20261015_8k_low_rank_motion_r2_m32/visuals/reference_intensity.gif),
-[motion effect with true time-varying intensity](results/baselines_20261015_8k_low_rank_motion_r2_m32/visuals/motion_effect.gif),
+[motion effect with true intensity fixed at t0](results/baselines_20261015_8k_low_rank_motion_r2_m32/visuals/motion_effect.gif),
 and [motion only with frozen learned intensity](results/baselines_20261015_8k_low_rank_motion_r2_m32/visuals/motion_only.gif).
-Motion-only still uses the learned intensity at t0; the discussed alternative
-using frozen true intensity was not implemented in this configuration-only run.
+Motion-only still uses the learned intensity at t0. The motion-effect link was
+subsequently regenerated with frozen true intensity in the visualization update
+below; that change was not part of this configuration-only training run.
 Default GIF export remains disabled in the reusable template.
 
 **Post-run verification:** the saved model reproduces final fixed training and
@@ -433,9 +435,11 @@ not an isolated test of extra updates at an unchanged learning-rate schedule.
 All four requested animations are saved:
 [full image](results/baselines_20261015_24k_low_rank_motion_r2_m32/visuals/image.gif),
 [reference intensity](results/baselines_20261015_24k_low_rank_motion_r2_m32/visuals/reference_intensity.gif),
-[motion effect with true time-varying intensity](results/baselines_20261015_24k_low_rank_motion_r2_m32/visuals/motion_effect.gif),
+[motion effect with true intensity fixed at t0](results/baselines_20261015_24k_low_rank_motion_r2_m32/visuals/motion_effect.gif),
 and [motion only with frozen learned intensity](results/baselines_20261015_24k_low_rank_motion_r2_m32/visuals/motion_only.gif).
-The GIF definitions, clipping and individual fixed error scales are unchanged.
+At training completion the GIF definitions, clipping and individual fixed error
+scales were unchanged. The linked motion-effect GIF was subsequently regenerated
+with frozen true intensity in the visualization update below.
 
 **Post-run verification:** reloading the final model reproduces fixed training
 and validation MSE exactly. Monitoring indices match the 8k run. Checked the
@@ -450,3 +454,49 @@ the scratch folder. All four GIFs decode to 378 frames at 864x408 and 90 ms, and
 motion-only has the intended fixed left panel. Sampled GIF frames and both loss
 plots were visually checked. All 65 old result artifacts, 49 unrelated local
 files and prior summary rows are unchanged.
+
+## Standard motion GIF: true intensity frozen at t0 (2026-10-15)
+
+The user approved replacing the motion-effect visualization with a shared true
+reference frozen at the model's motion reference time (t0=-0.5 for these runs):
+left `I_true(r + u_true(r,t), t0)`, middle
+`I_true(r + phi_motion(r,t), t0)`, right the absolute image difference.
+Both motion fields retain their current observation time. Neither panel uses
+the learned intensity network. The true reference is evaluated continuously at
+the displaced coordinates, rather than warped from a rendered reference bitmap.
+
+`evaluation/motion_visuals.py` implements the shared definition for the standard
+renderer, optional training exports, branch diagnostics and multi-run GIFs.
+This replaces the former time-varying true-intensity motion view. The separately
+named `motion_only.gif` retains its learned-reference diagnostic definition.
+The template still disables automatic GIF generation. Numerical evaluation,
+including direct motion errors and time-varying branch-replacement metrics,
+is unchanged; no model was trained or metric record recomputed.
+
+Regenerated all four existing motion-effect GIFs from the saved models:
+
+| Model | Updated motion GIF |
+|---|---|
+| Low rank + motion R=2, motion max 32, 24k | [GIF](results/baselines_20261015_24k_low_rank_motion_r2_m32/visuals/motion_effect.gif) |
+| Low rank + motion R=2, motion max 32, 8k | [GIF](results/baselines_20261015_8k_low_rank_motion_r2_m32/visuals/motion_effect.gif) |
+| Low rank + motion R=2, motion max 128, 8k | [GIF](results/baselines_20261014_8k_low_rank_motion_r2/visuals/motion_effect.gif) |
+| Nested hash, 8k | [GIF](results/baselines_20261014_8k_nested_hash/visuals/motion_effect.gif) |
+
+**Validation:** 91 tests passed. Controls verify zero image error when predicted
+motion equals true motion, a time-constant image for zero predicted motion,
+custom t0 handling and unchanged inputs. Checked every panel of all 378 frames
+in each regenerated GIF against the frozen-reference formula: decoded grayscale
+values match exactly. All four left-panel sequences are identical and move over
+time. Dimensions (864x408), 90 ms duration, looping, fixed 0..1 image display and
+per-GIF fixed error scales are preserved; labeled frames were visually inspected.
+Source syntax comparisons confirm that midpoint/block numerical modules changed
+only at the GIF export call. Rendering old checkpoints verifies unchanged model,
+phantom and data-source hashes; the revised evaluation export call is accepted
+only after comparing all remaining module syntax with the hash-verified source
+archive. Changed inference functions still fail the provenance check.
+
+Checksums preserve all 75 other result files (including models, configurations,
+metrics, losses, source archives and other GIFs) and 37 unrelated working files.
+Validation scripts/logs are in `/tmp/frozen_true_motion_20261015`. The updated
+images visualize existing motion errors; this is not a new experiment or evidence
+of improved model performance.

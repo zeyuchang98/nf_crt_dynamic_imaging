@@ -113,7 +113,7 @@ def compare(baseline, current, out):
         diagnostic = Path(os.path.relpath(scores["diagnostic_directory"], out)).as_posix()
         lines += [f"- **{label}**：[完整图像指标]({run}/plots/image/framewise_metrics.png) · [图像 GIF]({run}/plots/image.gif)",
                   f"  [Intensity 单独输出]({diagnostic}/intensity_residual.gif) · [残余几何]({diagnostic}/intensity_geometry.png) · "
-                  f"[Motion 输出曲线]({diagnostic}/motion_outputs.png) · [Motion + 真实 intensity]({diagnostic}/motion_effect.gif)"]
+                  f"[Motion output curves]({diagnostic}/motion_outputs.png) · [Motion with true intensity frozen at t0]({diagnostic}/motion_effect.gif)"]
     lines += ["", "[完整对比数字](comparison.json)。原有逐帧指标、ROI、时间曲线和 average adjacent truth frames 对照保留在各实验目录。"]
     (out / "README.md").write_text("\n".join(lines) + "\n")
     print(out / "README.md")

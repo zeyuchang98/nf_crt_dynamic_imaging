@@ -160,7 +160,8 @@ def evaluate(model, data, config, out, training_seconds):
             training_t=data["training"]["t"], midpoint_t=data["midpoint"]["t"])
     if visuals:
         from .render import save_gifs
-        save_gifs(out / "visuals", data["midpoint"], predictions["midpoint"])
+        save_gifs(out / "visuals", data["midpoint"], predictions["midpoint"], config=config,
+                  reference_time=float(model.motion.reference_time) if nested else None)
     selected = image["unseen_time_midpoints"]
     print(f"Midpoint image RRMSE={selected['rrmse']:.4%}, SSIM={selected['ssim']}", flush=True)
     return report

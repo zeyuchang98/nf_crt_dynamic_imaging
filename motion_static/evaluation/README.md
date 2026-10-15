@@ -35,15 +35,35 @@ python -m motion_static.evaluation.render /path/to/run --views image intensity m
 |---|---|
 | `image` | Full image prediction versus truth |
 | `intensity` | Intensity at fixed reference coordinates, without motion |
-| `motion` | Predicted and true motion applied to the same true time-varying intensity |
+| `motion` | True motion (left), predicted motion (middle), absolute image error (right); both use true intensity frozen at t0 |
 | `motion_only` | Learned intensity frozen at the reference time, then warped by learned motion |
 
 Only `visuals/` is created or updated. The command checks the saved configuration,
 checkpoint and numerical source hashes, then performs inference without optimizer
 updates. It uses all configured evaluation times and the saved block mask where
-applicable. A source mismatch requires using the saved `source.zip`; it is not
-silently treated as equivalent code. `motion_only`'s fixed first panel is intentional
+applicable. Model, phantom and data-construction sources must match their saved
+hashes. A change confined to the unused `evaluate()` reporting entrypoint is
+accepted only after comparing the remaining module syntax with the hash-verified
+`source.zip`. Changed inference functions still require the original sources.
+`motion_only`'s fixed first panel is intentional
 and its third panel is change from that reference, not motion ground-truth error.
+
+The standard `motion_effect.gif` definition, adopted on 2026-10-15, is
+
+\[
+L(r,t)=I_{\mathrm{true}}(r+u_{\mathrm{true}}(r,t),t_0),\qquad
+P(r,t)=I_{\mathrm{true}}(r+\phi_{\mathrm{motion}}(r,t),t_0),\qquad
+E(r,t)=|P(r,t)-L(r,t)|.
+\]
+
+Here t0 is the model's motion reference time, not the first displayed midpoint.
+Displacements are evaluated at each current time t. Both panels query the same
+continuous true phantom intensity at t0; no learned intensity network enters
+this comparison. [motion_visuals.py](motion_visuals.py) shares this definition
+across the standard renderer, branch diagnostics and multi-run comparisons.
+Display ranges remain fixed over time. This is an image visualization of motion;
+direct displacement metrics and the existing time-varying branch-replacement
+metrics are unchanged. GIFs remain opt-in.
 
 ## Other explicit analysis commands
 

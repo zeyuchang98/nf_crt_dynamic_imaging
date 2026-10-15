@@ -265,8 +265,11 @@ agreement before use. No pipeline implementation or saved result is claimed.
 
 Existing GIF definitions remain in [PROGRESS.md](PROGRESS.md). In particular,
 `reference_intensity.gif` queries fixed reference coordinates without motion;
-`motion_effect.gif` applies true/predicted motion to the same true time-varying
-intensity; `motion_only.gif` freezes learned intensity at the reference time.
+`motion_effect.gif` applies true/predicted motion to true intensity frozen at the
+model's reference time t0, with absolute image error in the third panel (definition
+updated on 2026-10-15); `motion_only.gif` freezes learned intensity at that time.
+The frozen-reference GIF does not replace the existing time-varying intensity
+branch-replacement scores in `diagnostics`; numerical metrics are unchanged.
 None of these image displays is the displacement vector itself.
 
 ## 5. Code and output map

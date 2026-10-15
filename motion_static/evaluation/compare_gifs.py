@@ -11,6 +11,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 from .compare_training import validate_configs
+from .motion_visuals import frozen_true_motion
 
 
 def save_animation(path, truth, predictions, times, labels, title):
@@ -79,15 +80,21 @@ def main():
                   analysis_source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), animations={})
     views = [("image", "truth", "image", "Image fitting: shared times and display scales"),
              ("intensity", "reference_intensity", "reference_intensity", "Intensity at fixed reference coordinates"),
-             ("motion", "truth", "learned_motion_true_intensity",
-              "Motion comparison: all panels use the same true time-varying intensity")]
+             ("motion", None, None,
+              "Motion comparison: true intensity fixed at t0 in all panels")]
     for name, truth_key, prediction_key, title in views:
-        truth = loaded[0][1][truth_key]
+        truth = None
         predictions = []
-        for _, data, prediction in loaded:
-            if not np.array_equal(truth, data[truth_key]):
+        for config, data, prediction in loaded:
+            if name == "motion":
+                current_truth, current_prediction = frozen_true_motion(data, prediction["motion"], config)
+            else:
+                current_truth, current_prediction = data[truth_key], prediction[prediction_key]
+            if truth is None:
+                truth = current_truth
+            elif not np.array_equal(truth, current_truth):
                 raise ValueError("Comparison requires identical ground truth")
-            predictions.append(prediction[prediction_key])
+            predictions.append(current_prediction)
         path = args.out / f"{name}_comparison.gif"
         report["animations"][path.name] = save_animation(path, truth, predictions, times, labels, title)
         print(f"Saved {path}", flush=True)

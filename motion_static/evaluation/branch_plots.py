@@ -4,20 +4,22 @@ import numpy as np
 
 from .branch_metrics import relative_geometry, true_geometry
 from .plots import pyplot, save_comparison
+from .motion_visuals import frozen_true_motion
 
 BLUE, ORANGE, GRAY = "#0072b2", "#d55e00", "#777777"
 
 
-def save_branch_plots(out, data, prediction, fit, stationary, motion, phantom, model):
+def save_branch_plots(out, data, prediction, fit, stationary, motion, phantom, model, config):
     """Same artifact names for every nested model and supported toy phantom."""
     intensity_animation(out / "intensity_residual.gif", data, prediction["reference_intensity"], fit["parameters"])
     geometry_plot(out / "intensity_geometry.png", data, fit, stationary, phantom, model)
     save_comparison(out / "geometry_fit.gif", prediction["reference_intensity"], fit["images"], data["t"],
                     title=f"{model}: check the geometry estimator fit; not a model prediction",
                     labels=("Intensity network output", "Geometry + brightness fit", "Fit error"))
-    save_comparison(out / "motion_effect.gif", data["truth"], prediction["learned_motion_true_intensity"], data["t"],
-                    title=f"{model}: motion + TRUE intensity / unseen midpoints",
-                    labels=("Observed object (truth)", "C_true(r + u_pred, t)", "Absolute image error"))
+    true_effect, predicted_effect = frozen_true_motion(data, prediction["motion"], config)
+    save_comparison(out / "motion_effect.gif", true_effect, predicted_effect, data["t"],
+                    title="True and predicted motion | True intensity fixed at t0",
+                    labels=("True motion", "Predicted motion", "Absolute image error"))
     motion_plot(out / "motion_outputs.png", data, prediction["motion"], motion, model)
 
 
