@@ -3,6 +3,7 @@
 Run: python -m motion_static.evaluation.compare_temporal BASELINE_DIAG NEW_DIAG --out OUTPUT_DIR
 """
 import argparse
+from ..run_records import read_report
 import json
 import os
 from pathlib import Path
@@ -21,7 +22,7 @@ def load_result(directory):
     if diagnosis["phantom"] != "complex":
         raise ValueError("This comparison uses the complex phantom's two brightness components")
     run = Path(diagnosis["source"])
-    report = json.loads((run / "summary.json").read_text())
+    report = read_report(run)
     with np.load(directory / "diagnostics.npz") as saved:
         arrays = {name: saved[name] for name in saved.files}
     gains = arrays["intensity_geometry"][:, 4:]

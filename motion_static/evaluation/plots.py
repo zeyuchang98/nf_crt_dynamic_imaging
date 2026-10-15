@@ -1,5 +1,6 @@
 """Readable animations and motion diagnostics. All comparisons use fixed scales."""
 import os
+import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -7,7 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 def save_comparison(path, truth, prediction, times, title,
-                    labels=("Ground truth", "Prediction", "Absolute error"), error_mask=None):
+                    labels=("Ground truth", "Prediction", "Absolute error"), error_mask=None, save_still=True):
     error = np.abs(prediction - truth)
     selected_error = error if error_mask is None else error[error_mask]
     error_max = max(float(selected_error.max()), 1e-8)
@@ -37,6 +38,8 @@ def save_comparison(path, truth, prediction, times, title,
         frames.append(canvas)
     path = Path(path)
     frames[0].save(path, save_all=True, append_images=frames[1:], duration=90, loop=0)
+    if not save_still:
+        return
     # Still frame chosen by worst image MSE, useful for inspecting the GIF without playing it.
     if error_mask is None:
         frame_mse = np.mean(error ** 2, axis=(0, 1))
@@ -49,8 +52,8 @@ def save_comparison(path, truth, prediction, times, title,
 
 
 def pyplot(out):
-    os.environ.setdefault("MPLCONFIGDIR", str(Path(out) / ".matplotlib"))
-    os.environ.setdefault("XDG_CACHE_HOME", str(Path(out) / ".cache"))
+    # Keep plotting caches out of run records. Respect an explicitly configured cache.
+    os.environ.setdefault("MPLCONFIGDIR", str(Path(tempfile.gettempdir()) / "motion_static_matplotlib"))
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt

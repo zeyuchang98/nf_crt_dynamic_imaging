@@ -62,39 +62,32 @@ def main():
     if len(set(labels)) != len(labels):
         parser.error("Each run must have a distinct intensity maximum resolution")
     args.out.mkdir(parents=True, exist_ok=True)
+    from .diagnose_branches import load_midpoints
+    loaded = [load_midpoints(run) for run in args.runs]
+    times = loaded[0][1]["t"]
+    for _, data, _ in loaded[1:]:
+        if not np.array_equal(times, data["t"]):
+            raise ValueError("Comparison requires identical midpoint times")
     sources = {}
-    times = None
     for run in args.runs:
-        with np.load(run / "arrays/predictions.npz") as arrays:
-            if times is None:
-                times = arrays["midpoint_t"]
-            elif not np.array_equal(times, arrays["midpoint_t"]):
-                raise ValueError("Comparison requires identical midpoint times")
-        for name in ("config.json", "arrays/image.npz", "arrays/reference_intensity.npz", "arrays/predictions.npz"):
+        for name in ("config.json", "model.pt", "predictions.npz", "arrays/predictions.npz"):
             path = run / name
-            sources[str(path.resolve())] = hashlib.sha256(path.read_bytes()).hexdigest()
+            if path.exists():
+                sources[str(path.resolve())] = hashlib.sha256(path.read_bytes()).hexdigest()
     report = dict(runs=[str(run.resolve()) for run in args.runs], labels=labels,
                   time_count=len(times), source_sha256=sources,
                   analysis_source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), animations={})
-    views = [("image", "image", None, "Image fitting: shared times and display scales"),
-             ("intensity", "reference_intensity", None, "Intensity at fixed reference coordinates"),
-             ("motion", "image", "midpoint_learned_motion_true_intensity",
+    views = [("image", "truth", "image", "Image fitting: shared times and display scales"),
+             ("intensity", "reference_intensity", "reference_intensity", "Intensity at fixed reference coordinates"),
+             ("motion", "truth", "learned_motion_true_intensity",
               "Motion comparison: all panels use the same true time-varying intensity")]
-    for name, array_name, prediction_key, title in views:
-        truth = None
+    for name, truth_key, prediction_key, title in views:
+        truth = loaded[0][1][truth_key]
         predictions = []
-        for run in args.runs:
-            with np.load(run / "arrays" / f"{array_name}.npz") as arrays:
-                current_truth = arrays["midpoint_truth"]
-                if truth is None:
-                    truth = current_truth
-                elif not np.array_equal(truth, current_truth):
-                    raise ValueError("Comparison requires identical ground truth")
-                if prediction_key is None:
-                    predictions.append(arrays["midpoint_prediction"])
-            if prediction_key is not None:
-                with np.load(run / "arrays/predictions.npz") as arrays:
-                    predictions.append(arrays[prediction_key])
+        for _, data, prediction in loaded:
+            if not np.array_equal(truth, data[truth_key]):
+                raise ValueError("Comparison requires identical ground truth")
+            predictions.append(prediction[prediction_key])
         path = args.out / f"{name}_comparison.gif"
         report["animations"][path.name] = save_animation(path, truth, predictions, times, labels, title)
         print(f"Saved {path}", flush=True)

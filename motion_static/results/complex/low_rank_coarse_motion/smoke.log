@@ -1,6 +1,0 @@
-Matplotlib is building the font cache; this may take a moment.
-complex/nested_low_rank_hash_nf step 1: MSE 0.0087674, temporal L2 0, total 0.0087674, fixed train 0.00768132, held-out 0.00800514
-complex/nested_low_rank_hash_nf step 2: MSE 0.00844554, temporal L2 0, total 0.00844554, fixed train 0.00733123, held-out 0.00767247
-complex/nested_low_rank_hash_nf step 3: MSE 0.00762009, temporal L2 0, total 0.00762009, fixed train 0.00723294, held-out 0.00757972
-Midpoint image RRMSE=99.4053%, SSIM=0.026069
-Saved results: /var/folders/09/mp0ld8cj1y51xq56vl0__y0r0000gn/T/nf_coarse_motion_smoke_1a1_0er2/run

@@ -3,7 +3,8 @@
 # Neural Field CRT Dynamic Imaging
 
 Toy experiments for hash NF and nested motion/intensity MLPs are organized in
-[`motion_static/`](motion_static/README.md), with [results and GIFs](motion_static/results/README.md).
+[`motion_static/`](motion_static/README.md), with a [reusable experiment template](motion_static/experiments/README.md)
+and [retained research conclusions](motion_static/PROGRESS.md). New run outputs stay local; GIFs are generated on demand.
 
 Companion code of journal articles
 

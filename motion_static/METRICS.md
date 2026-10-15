@@ -272,13 +272,15 @@ None of these image displays is the displacement vector itself.
 ## 5. Code and output map
 
 Paths below are relative to `motion_static/`; output paths are relative to a run.
+The compact layout changes storage only. Its `schema_version` is a file-format
+version, not adoption of the proposed standardized metric protocol.
 
 | Calculation | Implementation | Saved output / key |
 |---|---|---|
-| Scalar MSE, RMSE, RRMSE, PSNR | [metrics.py](evaluation/metrics.py): `error_metrics()` | `metrics/{image,reference_intensity,ux,uy}.json`; `rrmse`, `psnr_db`, `mse`, `rmse` |
-| Sequence, frame, ROI, and SSIM evaluation | [metrics.py](evaluation/metrics.py): `evaluate_sequence()` | `evaluations.unseen_time_midpoints`, `roi`, `per_frame_ssim`, other `per_frame_*` |
-| Populate image/intensity/component reports | [evaluate.py](evaluation/evaluate.py): `scalar_report()`, `evaluate()` | Four scalar reports above; image/intensity summaries also appear in `summary.json` |
-| Mean EPE, endpoint RMSE, vector RRMSE | [evaluate.py](evaluation/evaluate.py): `motion_scores()` | `metrics/motion.json`: `midpoint.foreground` and `midpoint.whole_fov`; `mean_endpoint_error_pixels`, `endpoint_rmse_pixels`, `vector_rrmse` |
+| Scalar MSE, RMSE, RRMSE, PSNR | [metrics.py](evaluation/metrics.py): `error_metrics()` | `metrics.json`: `image`, `reference_intensity`, `motion_components.{ux,uy}`; `rrmse`, `psnr_db`, `mse`, `rmse` |
+| Sequence, frame, ROI, and SSIM evaluation | [metrics.py](evaluation/metrics.py): `evaluate_sequence()` | `{image,reference_intensity}.unseen_time_midpoints`, `roi`, `per_frame_ssim`, other `per_frame_*` |
+| Populate image/intensity/component reports | [evaluate.py](evaluation/evaluate.py): `scalar_report()`, `evaluate()` | One `metrics.json` containing all scalar and branch reports |
+| Mean EPE, endpoint RMSE, vector RRMSE | [evaluate.py](evaluation/evaluate.py): `motion_scores()` | `metrics.json`: `motion.midpoint.foreground` and `motion.midpoint.whole_fov`; `mean_endpoint_error_pixels`, `endpoint_rmse_pixels`, `vector_rrmse` |
 | Motion diagnostics with per-axis pixel spacing | [branch_metrics.py](evaluation/branch_metrics.py): `motion_statistics()` | Branch-diagnostic summaries; component and endpoint RMSE in pixels |
 | Selected-block errors and spatial-window SSIM | [masked_metrics.py](evaluation/masked_metrics.py): `evaluate_masked_sequence()` | Block-run reports, using their distinct mask protocol |
 | Fixed-point and region-mean temporal curve errors | [metrics.py](evaluation/metrics.py): `evaluate_sequence()` | `point_curves`, `activity_curve`, including curve `rrmse` |
@@ -291,8 +293,9 @@ point/mean curve RRMSE is not the demeaned dynamic-intensity metric in Section 3
 Implementation checks on 2026-10-14:
 
 - Inspected the functions and their callers above; no metric code was changed.
-- Confirmed the early R=2 run already stores all four scalar reports and motion
-  vector scores in [its metrics directory](results/complex/low_rank/rank_2/metrics).
+- Before artifact cleanup, confirmed the early R=2 run stored all four scalar
+  reports and motion vector scores. Those old files were subsequently deleted
+  at the user's request; this is a historical implementation audit.
 - Ran 11 existing focused tests: eight scalar/sequence metric tests, one endpoint
   pixel-unit/foreground test, and two branch motion tests. All passed. These do
   not validate unimplemented proposals or claim exhaustive coverage.

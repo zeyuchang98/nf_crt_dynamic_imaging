@@ -1,36 +1,25 @@
-"""The approved 36-run hash-grid sweep; existing training mathematics is unchanged."""
+"""Optional historical 36-setting plan, using flat run outputs and no publication.
+
+Only template.json is maintained as an experiment input. Generate this explicitly
+requested comparison into a separate scratch directory; importing does not run it.
+"""
 import argparse
 import copy
-import fcntl
 import hashlib
 import itertools
 import json
-import os
 from pathlib import Path
 import platform
-import shutil
 import subprocess
 import sys
-import traceback
-from datetime import datetime, timezone
+
+from .run_records import write_json
 
 ROOT = Path(__file__).resolve().parents[1]
-CONFIG_DIR = ROOT / "motion_static/experiments/complex/hash_sweep_24k"
-RESULT_DIR = ROOT / "motion_static/results/complex/hash_sweep_24k"
-BASELINE = ROOT / "motion_static/experiments/complex/low_rank_intensity_max64.json"
-PROGRESS = ROOT / "motion_static/PROGRESS.md"
-START = "<!-- hash-sweep-24k:start -->"
-END = "<!-- hash-sweep-24k:end -->"
+TEMPLATE = ROOT / "motion_static/experiments/template.json"
 LEVELS = (4, 8, 12)
 MOTION_MAX = (16, 32)
 INTENSITY_MAX = (32, 64)
-
-
-def write_json(path, value):
-    path = Path(path)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(value, indent=2, allow_nan=False) + "\n")
-    temporary.replace(path)
 
 
 def sha256(path):
@@ -38,7 +27,13 @@ def sha256(path):
 
 
 def approved_configs(smoke=False):
-    base = json.loads(BASELINE.read_text())
+    base = json.loads(TEMPLATE.read_text())
+    base.update(rank=2, size=64, frames=379, cycles=3, seed=0, steps=24000,
+                batch_size=4096, threads=4, head_width=64, temporal_width=32,
+                mlp_lr=.001, hash_lr=.01, monitor_samples=65536, monitor_seed=2026, log_interval=500)
+    base["encoding"] = dict(levels=8, features=2, log2_hash_size=15, min_resolution=8, max_resolution=64)
+    base["motion_encoding"] = dict(min_resolution=[2, 2, 8], max_resolution=[32, 32, 128])
+    base["output"] = dict(gifs=False, predictions=False)
     base.update(steps=24000, checkpoint_steps=[8000, 16000, 24000],
                 coordinate_bounds=[[-.5, .5], [-.5, .5], [-.5, 2.5]], reference_time=-.5)
     base.pop("motion_grid_note", None)
@@ -73,24 +68,6 @@ def source_hashes():
     return {str(p.relative_to(ROOT)): sha256(p)
             for p in sorted((ROOT / "motion_static").rglob("*.py"))
             if p.relative_to(ROOT / "motion_static").parts[0] not in ("archive", "results")}
-
-
-def checked(command, **kwargs):
-    result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, **kwargs)
-    if result.stdout:
-        print(result.stdout.rstrip(), flush=True)
-    if result.returncode:
-        raise RuntimeError(f"Command failed ({result.returncode}): {command}\n{result.stderr}")
-    return result.stdout.strip()
-
-
-def synchronize(manifest=None):
-    if checked(["git", "branch", "--show-current"]) != "motion-static":
-        raise RuntimeError("The sweep is pinned to motion-static; stop after a branch change")
-    checked(["git", "pull", "--ff-only"], timeout=120)
-    if manifest is not None:
-        if source_hashes() != manifest["source_sha256"]:
-            raise RuntimeError("Source changed since sweep preparation; stop before mixing implementations")
 
 
 def prepare(config_dir, smoke=False):
@@ -178,158 +155,47 @@ def preflight(config_dir, out):
     print(f"WITNESS: {len(results)} configurations passed endpoints, rank, anchor and coordinate gradients")
 
 
-def update_progress(completed, total, status):
-    content = PROGRESS.read_text()
-    section = f"""{START}
-## Hash Grid Sweep — 24k Steps, 36 Configurations (2026-10-14)
-
-**Approved scope:** independently combine motion levels 4/8/12 and spatial max 16/32 with intensity levels 4/8/12 and max 32/64. Motion minima stay [2,2,8], temporal max stays 128, and intensity min stays 8. Intermediate temporal scales change with motion level count. All 36 runs start from seed 0 with a fresh 24,000-step cosine schedule; previous 32k checkpoints are excluded. Rank 2, the 64x64 three-cycle/379-frame phantom, image MSE, reference anchor, batch 4,096, four CPU threads, learning rates and evaluation conventions are unchanged.
-
-**Status:** {status}. {completed}/{total} runs have passed saved-result verification. The serial queue preserves per-run configurations, source snapshots, checkpoints, full metrics, image/intensity/motion GIFs, numeric loss and learning-rate histories, and loss curves. Checks cover branch layer independence, grid endpoints, rank, reference anchor, gradients, reloaded predictions, fixed losses and metric recomputation. Completed runs are published in separate milestones; partial or failed output is preserved and never silently retrained.
-
-[Configurations and commands](experiments/complex/hash_sweep_24k/README.md) · [Result table and artifact links](results/complex/hash_sweep_24k/README.md) · [Preflight checks](results/complex/hash_sweep_24k/preflight.json).
-
-**Interpretation:** compare the three original midpoint errors separately, report each minimum and the nondominated tradeoffs, and inspect shared-time/shared-scale GIFs and loss curves. No weighted score is introduced. Parameter shapes, initialization and sampled batches can differ despite the same seed. This is single-seed toy hyperparameter exploration; choosing using midpoint errors does not provide an independent test of generalization or real PACT reconstruction.
-{END}"""
-    if START in content:
-        before, rest = content.split(START, 1)
-        _, after = rest.split(END, 1)
-        content = before + section + after
-    else:
-        content = content.replace("## 9. Subsequent Discussion", section + "\n\n## 9. Subsequent Discussion", 1)
-    content = content.replace("Last updated: 2026-10-13.", "Last updated: 2026-10-14.")
-    PROGRESS.write_text(content)
-
-
-def artifact_files(directory):
-    return [p for p in sorted(directory.rglob("*")) if p.is_file()
-            and not any(part.startswith(".") or part == "__pycache__"
-                        for part in p.relative_to(directory).parts)
-            and p.name not in ("queue_state.json", "queue.log", "launch.json")]
-
-
-def publish(group, run_name, completed, total):
-    """Publish only this sweep's stable artifacts, preserving unrelated work."""
-    if checked(["git", "branch", "--show-current"]) != "motion-static":
-        raise RuntimeError("Stop publication after a branch change")
-    if checked(["git", "diff", "--cached", "--name-only"]):
-        raise RuntimeError("Pre-existing staged changes: publication requires an empty index")
-    status = "complete" if completed == total else "running"
-    update_progress(completed, total, status)
-    paths = artifact_files(group) + [PROGRESS]
-    if any(p.stat().st_size >= 100 * 1024**2 for p in paths):
-        raise RuntimeError("Artifact exceeds GitHub's per-file limit; preserve files and stop publication")
-    checked(["git", "add", "--", *[str(p.relative_to(ROOT)) for p in paths]])
-    staged = set(checked(["git", "diff", "--cached", "--name-only"]).splitlines())
-    if not staged.issubset({str(p.relative_to(ROOT)) for p in paths}):
-        raise RuntimeError("Unexpected staged paths; stop without changing the index")
-    if staged:
-        checked(["git", "commit", "-m", f"Record hash sweep {completed}/{total}: {run_name}"], timeout=120)
-    checked(["git", "push"], timeout=600)
-    head = checked(["git", "rev-parse", "HEAD"])
-    remote = checked(["git", "config", "branch.motion-static.remote"])
-    ref = checked(["git", "config", "branch.motion-static.merge"])
-    if checked(["git", "ls-remote", remote, ref], timeout=120).split()[0] != head:
-        raise RuntimeError("Remote HEAD does not match the published milestone")
-    # Verify actual GitHub paths, not just a locally updated tracking ref.
-    for relative in (group.relative_to(ROOT) / "README.md",
-                     group.relative_to(ROOT) / "runs" / run_name / "summary.json"):
-        actual = checked(["gh", "api", f"repos/zeyuchang98/nf_crt_dynamic_imaging/contents/{relative}?ref={head}",
-                          "--jq", ".sha"], timeout=120)
-        if actual != checked(["git", "rev-parse", f"HEAD:{relative}"]):
-            raise RuntimeError(f"GitHub artifact verification failed: {relative}")
-    print(f"Published and verified {head}", flush=True)
-
-
-def run_queue(config_dir, group, publication=False):
+def run_queue(config_dir, results):
+    """Execute only an explicitly prepared plan; failed/incomplete runs are preserved."""
+    import fcntl
+    from .evaluation.hash_sweep import verify_run
     manifest = load_manifest(config_dir)
-    if publication and (manifest["smoke_only"] or group.resolve() != RESULT_DIR):
-        raise ValueError("Publication is scoped to the approved research result directory")
-    if publication and checked(["git", "branch", "--show-current"]) != "motion-static":
-        raise RuntimeError("Publication requires the approved motion-static branch")
-    group.mkdir(parents=True, exist_ok=True)
-    lock = (group / ".queue.lock").open("a")
-    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    (group / "logs").mkdir(exist_ok=True)
-    (group / "runs").mkdir(exist_ok=True)
-    state = dict(status="starting", pid=os.getpid(), total=len(manifest["run_ids"]), completed=[],
-                 config_dir=str(config_dir.resolve()), publication_enabled=publication)
-
-    def save_state():
-        state["updated_utc"] = datetime.now(timezone.utc).isoformat()
-        write_json(group / "queue_state.json", state)
-
-    save_state()
-    try:
-        if not (group / "preflight.json").exists():
-            preflight(config_dir, group / "preflight.json")
-        if shutil.disk_usage(group).free < (1 if manifest["smoke_only"] else 10) * 1024**3:
-            raise RuntimeError("Insufficient free disk space for preserved sweep artifacts")
+    results.mkdir(parents=True, exist_ok=True)
+    with (config_dir / ".queue.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         for name in manifest["run_ids"]:
-            state.update(status="synchronizing", current_run=name)
-            save_state()
-            synchronize(manifest)
-            # Revalidate configuration files after pulling, before every run.
-            load_manifest(config_dir)
-            run = group / "runs" / name
+            subprocess.run(["git", "pull", "--ff-only"], cwd=ROOT, check=True)
+            if source_hashes() != manifest["source_sha256"]:
+                raise RuntimeError("Source changed since preparation; prepare a new plan for a new implementation")
             expected = json.loads((config_dir / f"{name}.json").read_text())
-            from .evaluation.hash_sweep import validate_result, summarize
-            if run.exists():
-                if not (run / "verification.json").exists():
-                    raise RuntimeError(f"Partial run preserved at {run}; no automatic overwrite or restart")
-                validate_result(run, expected, manifest["source_sha256"], check_only=True)
-            else:
-                state.update(status="training", training_log=str(group / "logs" / f"{name}.log"))
-                save_state()
-                command = [sys.executable, "-u", "-m", "motion_static.run", "--phantom", "complex",
-                           "--model", "nested_low_rank_hash_nf", "--config", str(config_dir / f"{name}.json"),
-                           "--out", str(run)]
-                print(f"Starting {name}: {expected['steps']} steps", flush=True)
-                with (group / "logs" / f"{name}.log").open("x") as log:
-                    subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, check=True)
-                state["status"] = "validating"
-                save_state()
-                # Isolate plotting/verification memory from the long-lived queue.
-                checked([sys.executable, "-u", "-m", "motion_static.evaluation.hash_sweep", "verify",
-                         "--config-dir", str(config_dir), "--out", str(group), "--run-id", name])
-            state["completed"].append(name)
-            state["status"] = "summarizing"
-            save_state()
-            summarize(config_dir, group, make_gifs=False)
-            final = len(state["completed"]) == state["total"]
-            if final:
-                checked([sys.executable, "-u", "-m", "motion_static.evaluation.hash_sweep", "summarize",
-                         "--config-dir", str(config_dir), "--out", str(group), "--gifs"])
-            if publication:
-                state["status"] = "publishing"
-                save_state()
-                publish(group, name, len(state["completed"]), state["total"])
-        state["status"] = "complete"
-        state.pop("current_run", None)
-        save_state()
-    except BaseException as error:
-        state.update(status="stopped", error=f"{type(error).__name__}: {error}")
-        save_state()
-        traceback.print_exc()
-        raise
-    finally:
-        lock.close()
+            out = results / f"{config_dir.name}_{name}"
+            if out.exists():
+                verify_run(out, expected, manifest["source_sha256"])
+                continue
+            command = [sys.executable, "-u", "-m", "motion_static.run", "--config",
+                       str(config_dir / f"{name}.json"), "--out", str(out)]
+            subprocess.run(command, cwd=ROOT, check=True)
+            verify_run(out, expected, manifest["source_sha256"])
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("prepare", "preflight", "run"))
-    parser.add_argument("--config-dir", type=Path, default=CONFIG_DIR)
-    parser.add_argument("--out", type=Path, default=RESULT_DIR)
-    parser.add_argument("--smoke", action="store_true", help="Two asymmetric 3-step/25-frame probes only")
-    parser.add_argument("--publish", action="store_true", help="Commit/push verified research milestones")
+    parser.add_argument("--config-dir", type=Path, required=True,
+                        help="Fresh scratch directory outside experiments/ and results/")
+    parser.add_argument("--out", type=Path, default=ROOT / "motion_static/results")
+    parser.add_argument("--smoke", action="store_true", help="Explicit two-setting validation plan only")
     args = parser.parse_args()
+    config_dir = args.config_dir.resolve()
+    if any(config_dir.is_relative_to(path.resolve()) for path in
+           (ROOT / "motion_static/experiments", ROOT / "motion_static/results", args.out)):
+        parser.error("Keep generated queue inputs outside the maintained experiments/ and output directories")
     if args.action == "prepare":
-        prepare(args.config_dir, args.smoke)
+        prepare(config_dir, args.smoke)
     elif args.action == "preflight":
-        preflight(args.config_dir, args.out / "preflight.json")
+        preflight(config_dir, config_dir / "preflight.json")
     else:
-        run_queue(args.config_dir, args.out, args.publish)
+        run_queue(config_dir, args.out)
 
 
 if __name__ == "__main__":

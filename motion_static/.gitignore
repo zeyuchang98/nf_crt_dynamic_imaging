@@ -3,5 +3,6 @@ __pycache__/
 .cache/
 .DS_Store
 
-# Historical records remain tracked; new run artifacts require deliberate selection.
-/results/
+# Run artifacts stay local unless explicitly selected for publication.
+/results/*
+!/results/.gitkeep

@@ -21,7 +21,10 @@ def diagnose_run(run, out):
     run, out = Path(run).resolve(), Path(out).resolve()
     if run == out:
         raise ValueError("Use a separate diagnostic output folder")
-    sources = (run / "config.json", run / "arrays/predictions.npz")
+    prediction_path = run / "predictions.npz"
+    if not prediction_path.exists():
+        prediction_path = run / "arrays/predictions.npz"
+    sources = (run / "config.json", prediction_path if prediction_path.exists() else run / "model.pt")
     hashes = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in sources}
     config, data, prediction = load_midpoints(run)
     out.mkdir(parents=True, exist_ok=True)
@@ -61,7 +64,20 @@ def load_midpoints(run):
     """Read times and predictions from the experiment, not from fixed defaults."""
     run = Path(run)
     config = json.loads((run / "config.json").read_text())
-    with np.load(run / "arrays/predictions.npz", allow_pickle=False) as arrays:
+    if config.get("evaluation_split", "midpoints") != "midpoints":
+        raise ValueError("This diagnosis requires midpoint evaluation")
+    archive = run / "predictions.npz"
+    if not archive.exists():
+        archive = run / "arrays/predictions.npz"
+    if not archive.exists():
+        from .render import load_run, saved_evaluation_data
+        from .evaluate import predict_fields
+        model, config = load_run(run)
+        data, _ = saved_evaluation_data(run, config)
+        if not hasattr(model, "motion"):
+            raise ValueError("Branch diagnosis requires a nested model")
+        return config, data, predict_fields(model, data, config)
+    with np.load(archive, allow_pickle=False) as arrays:
         if "midpoint_motion" not in arrays:
             raise ValueError(f"{run}: requires a nested model with saved midpoint predictions")
         times = arrays["midpoint_t"]

@@ -47,8 +47,8 @@ class TrainingMonitorTests(unittest.TestCase):
                 expected = (monitored(torch.tensor(x[indices])) - torch.tensor(y[indices])).double().square().mean().item()
             self.assertAlmostEqual(float(rows[-1]["fixed_training_mse"]), expected, places=12)
             self.assertEqual(float(rows[-1]["next_lr_intensity_hash"]), 0.)
-            for suffix in ("png", "svg"):
-                self.assertGreater((out / "plots" / f"loss_curve.{suffix}").stat().st_size, 1000)
+            self.assertGreater((out / "loss.png").stat().st_size, 1000)
+            self.assertFalse((out / "plots").exists())
             checkpoint = torch.load(out / "checkpoints" / "step_000006.pt", weights_only=True)
             restored = build_model(checkpoint["config"])
             restored.load_state_dict(checkpoint["state_dict"])

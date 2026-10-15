@@ -1,11 +1,8 @@
 """Check coordinate order, exact temporal sampling, and physical warp conventions."""
-from contextlib import redirect_stdout
-import io
 import json
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import patch
 
 import numpy as np
 
@@ -89,40 +86,32 @@ class PhantomTests(unittest.TestCase):
         self.assertEqual(simple["truth"].shape, (16, 16, 64))
         np.testing.assert_array_equal(simple["t"][[0, -1]], [-.5, .5])
 
-    def test_all_complex_experiment_presets_use_the_approved_sampling(self):
-        directory = Path(__file__).resolve().parents[1] / "experiments" / "complex"
-        for path in directory.rglob("*.json"):
-            config = json.loads(path.read_text())
-            if "phantom" not in config:  # The sweep manifest contains hashes, not a data configuration.
-                continue
-            with self.subTest(config=path.name):
-                self.assertEqual((config["phantom"], config["size"], config["cycles"], config["frames"]),
-                                 ("complex", 64, 3, 379))
+    def test_reusable_template_uses_the_approved_sampling(self):
+        directory = Path(__file__).resolve().parents[1] / "experiments"
+        self.assertEqual(sorted(p.name for p in directory.iterdir()), ["README.md", "template.json"])
+        config = json.loads((directory / "template.json").read_text())
+        self.assertEqual((config["phantom"], config["size"], config["cycles"], config["frames"]),
+                         ("complex", 64, 3, 379))
 
-    def test_training_entry_uses_baseline_and_preserves_explicit_overrides(self):
-        from motion_static.run import main
-
-        # Stop before allocating data or training; inspect the resolved sampling contract.
+    def test_training_entry_uses_template_and_preserves_explicit_overrides(self):
+        from motion_static.run import parse_configuration
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             commands = [(["--model", model], ("complex", 64, 379, 3)) for model in
                         ("hash_nf", "nested_mlp", "nested_hash_nf", "nested_low_rank_hash_nf")]
-            commands += [(["--model", "hash_nf", "--cycles", "1", "--frames", "64"],
-                          ("complex", 64, 64, 1)),
-                         (["--phantom", "simple", "--model", "hash_nf"], ("simple", 64, 64, 1))]
-            config_path = Path(__file__).resolve().parents[1] / "experiments/complex/hash_nf.json"
+            commands += [(["--cycles", "1", "--frames", "64"], ("complex", 64, 64, 1)),
+                         (["--phantom", "simple"], ("simple", 64, 64, 1))]
+            config_path = Path(__file__).resolve().parents[1] / "experiments/template.json"
             config = json.loads(config_path.read_text())
             config.pop("frames")
             config.pop("cycles")
             custom = root / "custom.json"
             custom.write_text(json.dumps(config))
-            commands.append((["--model", "hash_nf", "--config", str(custom)], ("complex", 64, 379, 3)))
+            commands.append((["--config", str(custom)], ("complex", 64, 379, 3)))
             for arguments, expected in commands:
-                with self.subTest(arguments=arguments), redirect_stdout(io.StringIO()):
-                    with patch("motion_static.run.make_pair", side_effect=RuntimeError("sampling reached")) as generate:
-                        with self.assertRaisesRegex(RuntimeError, "sampling reached"):
-                            main([*arguments, "--out", str(root / "run")])
-                    generate.assert_called_once_with(*expected)
+                with self.subTest(arguments=arguments):
+                    _, resolved, _ = parse_configuration([*arguments, "--out", str(root / "run")])
+                    self.assertEqual(tuple(resolved[k] for k in ("phantom", "size", "frames", "cycles")), expected)
             self.assertFalse((root / "run").exists())
 
 

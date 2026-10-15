@@ -9,9 +9,10 @@ from motion_static.evaluation.compare_training import validate_configs
 
 class GridComparisonTests(unittest.TestCase):
     def setUp(self):
-        path = Path(__file__).resolve().parents[1] / "experiments/complex/low_rank_coarse_motion.json"
+        path = Path(__file__).resolve().parents[1] / "experiments/template.json"
         self.baseline = json.loads(path.read_text())
-        self.baseline.update(coordinate_bounds=[[-.5, .5], [-.5, .5], [-.5, 2.5]],
+        self.baseline.update(rank=2, steps=32000, motion_encoding=dict(min_resolution=[2, 2, 8], max_resolution=[32, 32, 128]),
+                             coordinate_bounds=[[-.5, .5], [-.5, .5], [-.5, 2.5]],
                              reference_time=-.5, loss="MSE(predicted image, observed image)",
                              scheduler="cosine to zero")
         self.changed = copy.deepcopy(self.baseline)

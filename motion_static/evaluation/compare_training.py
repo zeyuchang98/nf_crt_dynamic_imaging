@@ -15,6 +15,7 @@ from .evaluate import motion_scores, predict
 from .metrics import error_metrics, save_metrics
 from .plots import pyplot, save_comparison
 from ..phantoms.data import coordinate_grid, make_pair, sample
+from ..run_records import read_report
 
 
 def load_model(path):
@@ -118,6 +119,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("runs", type=Path, nargs="+")
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--gifs", action="store_true", help="Also render the motion comparison for each run")
     parser.add_argument("--previous", type=Path, help="Old one-cycle model, scored on common unseen first-cycle times")
     parser.add_argument("--labels", nargs="+", help="Unique display labels, one per run")
     grid_options = parser.add_mutually_exclusive_group()
@@ -140,7 +142,7 @@ def main():
     time_resolutions = None
     motion_resolutions = None
     for run, label in zip(args.runs, labels):
-        summary = json.loads((run / "summary.json").read_text())
+        summary = read_report(run)
         entries = []
         for path in sorted((run / "checkpoints").glob("step_*.pt")):
             model, checkpoint = load_model(path)
@@ -168,13 +170,9 @@ def main():
             entries.append(dict(step=summary["config"]["steps"], scores=summary_scores(summary)))
         traces[label] = entries
         save_metrics(args.out / "checkpoint_metrics.json", traces)
-        # Preserve an existing completed run's visualization when adding a comparison.
-        if not (run / "plots" / "motion_effect.gif").exists():
-            with np.load(run / "arrays" / "predictions.npz") as arrays:
-                save_comparison(run / "plots" / "motion_effect.gif", data["midpoint"]["truth"],
-                                arrays["midpoint_learned_motion_true_intensity"], data["midpoint"]["t"],
-                                title="Motion comparison: both panels use the same true time-varying intensity",
-                                labels=("True motion + true C(t)", "Pred motion + true C(t)", "Absolute error"))
+        if args.gifs:
+            from .render import main as render
+            render([str(run), "--views", "motion"])
     common = {}
     if args.previous is not None:
         times = data["midpoint"]["t"]

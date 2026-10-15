@@ -31,8 +31,6 @@ def fixed_mse(model, coordinates, values):
 class TrainingMonitor:
     def __init__(self, out, coordinates, intensities, validation, config, optimizer):
         self.out = Path(out)
-        self.plots = self.out / "plots"
-        self.plots.mkdir(exist_ok=True)
         # This generator is separate from the torch generator used for batches.
         rng = np.random.default_rng(config.get("monitor_seed", 2026))
         count = config.get("monitor_samples", 65536)
@@ -66,7 +64,7 @@ class TrainingMonitor:
         return row
 
     def plot(self):
-        plt = pyplot(self.plots)
+        plt = pyplot(self.out)
         fig, axes = plt.subplots(2, 1, figsize=(9, 7), sharex=True, layout="constrained")
         steps = [row["step"] for row in self.rows]
         labels = (("batch_mse", "Random training batch (before update)", "0.65"),
@@ -86,6 +84,5 @@ class TrainingMonitor:
         for ax in axes:
             ax.grid(alpha=.2)
             ax.legend(fontsize=8)
-        fig.savefig(self.plots / "loss_curve.png", dpi=160)
-        fig.savefig(self.plots / "loss_curve.svg")
+        fig.savefig(self.out / "loss.png", dpi=160)
         plt.close(fig)

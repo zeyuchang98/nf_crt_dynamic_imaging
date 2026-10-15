@@ -29,7 +29,7 @@ def plot_saved_losses(run):
     for label, values in series:
         if not np.isfinite(values).all() or not np.all(np.asarray(values) > 0):
             raise ValueError(f"Expected finite positive values for {label}.")
-    out = run / "plots"
+    out = run / "visuals"
     out.mkdir(exist_ok=True)
     plt = pyplot(out)
     fig, ax = plt.subplots(figsize=(8, 4.8), layout="constrained")
