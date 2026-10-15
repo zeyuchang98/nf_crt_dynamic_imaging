@@ -1,6 +1,6 @@
 # Motion and Intensity Separation: Current Progress
 
-Last updated: 2026-10-14.
+Last updated: 2026-10-15.
 
 ## Goal and current baseline
 
@@ -142,6 +142,9 @@ low-rank setup.
 - New motion/intensity separation losses and alternative intensity coordinates remain discussion only.
 - Proposed standardized metrics in `METRICS.md` require review before implementation.
 - Future training must retain numeric losses, learning rates, fixed training/held-out monitoring and a loss curve.
+- Oracle diagnostics (2026-10-15, below): with true motion the R=2 intensity still learns nearly static
+  brightness, and with true intensity the motion branch still misses most displacement. The follow-up
+  direction has not been chosen.
 
 ## Current organization cleanup
 
@@ -500,3 +503,94 @@ metrics, losses, source archives and other GIFs) and 37 unrelated working files.
 Validation scripts/logs are in `/tmp/frozen_true_motion_20261015`. The updated
 images visualize existing motion errors; this is not a new experiment or evidence
 of improved model performance.
+
+## Oracle-branch diagnostics A1/A2 (2026-10-15): completed
+
+Approved two 8k runs that each replace one branch of the R=2, motion-max-32 baseline
+with the complex phantom's true field and train only the other branch from image MSE:
+**A1** uses true backward motion `u = (r - T(t))/S(t) - r` and learns the low-rank
+intensity; **A2** uses the true reference intensity `C(q,t)` (exactly rank 2) and
+learns the motion hash field. These runs use ground-truth branch labels and are
+diagnostics, not reconstruction methods. All other settings match the baseline.
+
+`models/oracle_branches.py` holds torch copies of the phantom formulas (A2 needs
+coordinate gradients through `C`); `phantoms/complex.py` is unchanged. The option
+`oracle_branch` is accepted only for `nested_low_rank_hash_nf`, complex, midpoints
+and t0=-0.5; runs set `true_motion_used_for_training` or
+`reference_intensity_labels_used_for_training` and a new `oracle_branch` summary
+column. Both branches are built before replacement, so the learned branch's
+initialization and every training batch equal the baseline's.
+
+**Preflight:** 98 tests passed (7 new: torch/NumPy formulas agree to 1e-12, anchors,
+both oracles reproduce observed images, initialization/RNG parity, optimizer scope,
+gradient flow through the true intensity, CLI rejection, complete run and reload).
+At full size, dry-run inputs differ from the baseline only in `oracle_branch`; RNG
+state, learned-branch initialization and the first two batches matched exactly, and
+the unchanged baseline path reproduced its saved step-1 batch MSE exactly.
+Implementation commit `703aa29`; both runs used it. Scratch inputs and checks are in
+the session scratch folder `oracle_20261015`.
+
+| Metric (378 midpoints) | Baseline (joint) | A1: true motion | A2: true intensity |
+|---|---:|---:|---:|
+| Image RRMSE | 5.3585% | 17.7370% | 10.3651% |
+| Image PSNR (dB) / SSIM | 46.1147 / 0.998119 | 35.7180 / 0.991679 | 40.3841 / 0.996908 |
+| Reference intensity RRMSE | 52.0252% | 19.0426% | (true) |
+| Reference intensity center / spot curve RRMSE | 79.45% / 22.37% | 17.65% / 21.76% | (true) |
+| Motion vector RRMSE | 80.0716% | (true) | 64.6749% |
+| Motion endpoint RMSE / mean (px) | 4.8604 / 4.1877 | (true) | 3.9258 / 3.0206 |
+| Foreground nonpositive-Jacobian fraction | 31.39% | 0 | 15.82% |
+| Fixed training / validation MSE | 2.5599e-05 / 2.6126e-05 | 2.7660e-04 / 2.5991e-04 | 9.6457e-05 / 9.0028e-05 |
+| Trainable parameters / training seconds | 224,372 / 264.65 | 67,468 / 47.87 | 156,904 / 134.85 |
+
+Records: A1 [config](results/oracle_20261015_8k_true_motion_r2/config.json),
+[metrics](results/oracle_20261015_8k_true_motion_r2/metrics.json),
+[loss curve](results/oracle_20261015_8k_true_motion_r2/loss.png),
+[losses](results/oracle_20261015_8k_true_motion_r2/loss.csv),
+GIFs: [image](results/oracle_20261015_8k_true_motion_r2/visuals/image.gif),
+[reference intensity](results/oracle_20261015_8k_true_motion_r2/visuals/reference_intensity.gif).
+A2 [config](results/oracle_20261015_8k_true_intensity_m32/config.json),
+[metrics](results/oracle_20261015_8k_true_intensity_m32/metrics.json),
+[loss curve](results/oracle_20261015_8k_true_intensity_m32/loss.png),
+[losses](results/oracle_20261015_8k_true_intensity_m32/loss.csv),
+GIFs: [image](results/oracle_20261015_8k_true_intensity_m32/visuals/image.gif),
+[motion effect](results/oracle_20261015_8k_true_intensity_m32/visuals/motion_effect.gif).
+Weights remain local in `model.pt`.
+
+**A1, intensity branch:** even with exact motion, the image fit is worse than the
+joint baseline, and the learned intensity is nearly static. Its reference-space
+singular values are 94.81 and 0.54, versus 96.46 and 5.60 for the truth. At the
+body center, learned intensity has standard deviation 0.0063 over time versus
+0.0495 for truth. In a least-squares fit, span(a_1, a_2, 1) of the learned temporal
+coefficients explains R^2=0.021 of g(t) and 0.063 of g(t)s(t) (baseline: 0.017 and
+0.053). The reference-intensity GIF also shows vertical streaks in the body. At
+this architecture and budget, the temporal coefficients do not learn the true
+brightness waveforms, which oscillate 9 and up to 15 times over [-0.5, 2.5]. The
+joint baseline's better image fit therefore relies on incorrect, folded motion.
+These runs do not distinguish temporal-MLP capacity from optimization (learning
+rate 0.001, 8k steps).
+
+**A2, motion branch:** even with exact intensity, the learned motion recovers only
+part of the displacement and still folds 15.8% of the foreground. Per-frame
+foreground endpoint RMSE correlates with true displacement magnitude (r=0.60);
+frames whose true foreground RMS displacement exceeds 6 px average 4.19 px error
+(234 frames), versus 2.16 px below 2 px (30 frames). The median ratio of error to
+true displacement is 0.70. Flat-interior motion is unobservable, so part of the
+endpoint error is unidentifiable; the 10.37% image error with true intensity shows
+that edge correspondence is also wrong, mainly around spot1 and the body edge.
+This is consistent with a limited capture range for large displacements of sharp
+edges, but that cause has not been isolated.
+
+The waveform R^2, center standard deviation and per-frame correlations above are
+ad hoc analyses of the saved models and metrics, computed outside the pipeline;
+they are not adopted metrics. Single seed, single configuration.
+
+**Post-run verification:** reloading both models reproduces final fixed training
+and validation MSE exactly; monitoring indices equal the baseline's. Checked all
+18 finite loss/LR rows, cosine rates ending at zero, the optimizer groups (A1:
+intensity hash/MLP/time MLP; A2: motion hash/MLP), zero motion at t0, the A1 rank-2
+tail (3.9e-8), source archive hashes, and sampled GIF frames.
+
+**Provenance note:** `run.py` changed, so `evaluation.render` now refuses earlier
+checkpoints by design. Re-render them from their `source.zip` or the original
+commit. For this analysis, the baseline was loaded with `build_model` plus its
+`state_dict`; this reproduced its saved fixed validation MSE exactly.
