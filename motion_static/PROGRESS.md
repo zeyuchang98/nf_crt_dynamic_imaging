@@ -309,3 +309,73 @@ left panels remain identical across all frames as intended. Inspected labeled
 frames for every GIF. SHA-256 checks confirmed all 42 original result artifacts
 (including models, metrics and losses) and 49 unrelated local files are unchanged.
 The new GIFs occupy 36.22 MiB and are published with this index.
+
+## Motion maximum resolution 32 baseline (2026-10-15): completed
+
+Approved one additional local CPU run of low-rank + motion R=2, changing only
+`motion_encoding.max_resolution` from 128 to scalar 32 and enabling requested GIF
+exports. The scalar setting applies to x, y and t; motion resolutions are
+`[8, 9, 11, 14, 17, 21, 26, 32]`. Intensity remains eight levels from 8 to 128.
+The 8k budget, seed 0, complex 64x64/3-cycle/379-frame benchmark, batch size,
+optimizer, learning rates, loss, monitoring samples and evaluation protocol match
+the original R=2 baseline. No loss or implementation changes are made.
+
+The unchanged local `nf-crt` runtime is reused. Preflight checked exact setting
+and source parity, identical intensity initialization, optimizer coverage,
+coordinate gradients, motion reference anchoring and rank bounds. Three tiny
+synthetic updates verified gradient flow through both branches. The initial
+scratch check incorrectly demanded nonzero motion-table gradients before the
+zero-initialized output head updated; the corrected check verifies the expected
+initial zero and subsequent nonzero gradients. Model parameters: 224,372 versus
+390,934 for max=128. Scratch inputs/checks are in `/tmp/baseline_motion32_20261015`.
+The run completed all 8,000 updates using commit `fab901e1e02a71953a9f301393ff6df81408b937`.
+Its Python source hashes match the original baseline exactly. The resolved
+[configuration](results/baselines_20261015_8k_low_rank_motion_r2_m32/config.json),
+[full metrics](results/baselines_20261015_8k_low_rank_motion_r2_m32/metrics.json),
+[loss/LR curve](results/baselines_20261015_8k_low_rank_motion_r2_m32/loss.png),
+[numeric losses](results/baselines_20261015_8k_low_rank_motion_r2_m32/loss.csv),
+monitoring indices, source archive and run log are retained. Weights remain local
+in `model.pt`, consistent with the other baselines.
+
+All image/intensity scores below use the complete 378 midpoint frames. Motion
+scores compare displacement vectors directly on the existing true foreground mask.
+
+| Metric | Motion max 128 | Motion max 32 |
+|---|---:|---:|
+| Image RRMSE | 2.5181% | 5.3585% |
+| Image PSNR (dB) | 52.6742 | 46.1147 |
+| Image SSIM | 0.999630 | 0.998119 |
+| Reference intensity RRMSE | 59.0838% | 52.0252% |
+| Reference intensity PSNR (dB) | 26.7674 | 27.8725 |
+| Reference intensity SSIM | 0.874101 | 0.880784 |
+| Motion vector RRMSE | 85.9171% | 80.0716% |
+| Motion endpoint RMSE (px) | 5.2153 | 4.8604 |
+| Fixed training MSE | 4.0248556e-06 | 2.5598572e-05 |
+| Fixed validation MSE | 5.3106635e-06 | 2.6125811e-05 |
+| Parameters | 390,934 | 224,372 |
+| Training time (s; excludes final evaluation/GIFs) | 277.42 | 264.65 |
+
+At this budget, reducing motion resolution improves both branch errors but
+worsens complete-image fit. Substantial branch errors remain. This single-seed
+comparison changes spatial and temporal resolution together; it does not establish
+an optimal grid or convergence. Monitoring samples and intensity initialization
+match exactly, while different motion table sizes alter subsequent random-number
+consumption, so equal seeds do not imply matched training batches.
+
+Requested GIFs use the existing definitions and display conventions described above:
+[full image](results/baselines_20261015_8k_low_rank_motion_r2_m32/visuals/image.gif),
+[reference intensity](results/baselines_20261015_8k_low_rank_motion_r2_m32/visuals/reference_intensity.gif),
+[motion effect with true time-varying intensity](results/baselines_20261015_8k_low_rank_motion_r2_m32/visuals/motion_effect.gif),
+and [motion only with frozen learned intensity](results/baselines_20261015_8k_low_rank_motion_r2_m32/visuals/motion_only.gif).
+Motion-only still uses the learned intensity at t0; the discussed alternative
+using frozen true intensity was not implemented in this configuration-only run.
+Default GIF export remains disabled in the reusable template.
+
+**Post-run verification:** the saved model reproduces final fixed training and
+validation MSE exactly; monitoring indices match the max=128 run. Checked all
+18 loss rows, finite values, cosine rates ending at zero, source archive hashes,
+the zero-motion reference anchor and rank-2 tails below 3.7e-8. All four GIFs
+decode to 378 frames at 864x408 and 90 ms per frame; inspected the labels and
+sampled frames, and verified the frozen left panel in motion-only. The loss curve
+was visually checked. SHA-256 checks preserve all 53 old result artifacts and
+49 unrelated local files; all existing summary rows are unchanged.
