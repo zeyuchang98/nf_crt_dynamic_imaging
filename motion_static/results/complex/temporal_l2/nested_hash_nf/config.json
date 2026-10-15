@@ -1,0 +1,47 @@
+{
+  "phantom": "complex",
+  "model": "nested_hash_nf",
+  "size": 64,
+  "frames": 64,
+  "seed": 0,
+  "steps": 8000,
+  "batch_size": 4096,
+  "threads": 4,
+  "mlp_lr": 0.001,
+  "hash_lr": 0.01,
+  "head_width": 64,
+  "encoding": {
+    "levels": 8,
+    "features": 2,
+    "log2_hash_size": 15,
+    "min_resolution": 8,
+    "max_resolution": 128
+  },
+  "intensity_coordinate_clipping": false,
+  "coordinate_bounds": [
+    [
+      -0.5,
+      0.5
+    ],
+    [
+      -0.5,
+      0.5
+    ],
+    [
+      -0.5,
+      0.5
+    ]
+  ],
+  "temporal_weight": 0.0001,
+  "temporal_step": 0.015873015873015817,
+  "temporal_sampling": "detached warped training coordinates; same q at both times",
+  "temporal_penalty": "mean squared finite-difference time derivative",
+  "reference_time": -0.5,
+  "loss": "MSE(predicted image, observed image) + temporal_weight * intensity_temporal_l2",
+  "device": "cpu",
+  "scheduler": "cosine to zero",
+  "torch_version": "2.14.0",
+  "true_motion_used_for_training": false,
+  "reference_intensity_labels_used_for_training": false,
+  "midpoint_labels_used_for_training": false
+}

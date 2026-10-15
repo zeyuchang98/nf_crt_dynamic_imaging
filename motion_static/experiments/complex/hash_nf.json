@@ -1,0 +1,6 @@
+{
+  "phantom": "complex", "model": "hash_nf",
+  "size": 64, "frames": 64, "seed": 0,
+  "steps": 8000, "batch_size": 4096, "threads": 4,
+  "mlp_lr": 0.001, "hash_lr": 0.01
+}

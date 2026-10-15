@@ -1,0 +1,47 @@
+{
+  "device": "cpu",
+  "threads": 4,
+  "batch_size": 4096,
+  "torch_version": "2.14.0",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "warmup": 10,
+  "rounds": 6,
+  "iterations": 25,
+  "query_seed": 2026,
+  "optimizer_updates": 0,
+  "scope": "Full nested model forward, squared-output scalar reduction, backward, and zero_grad. No coordinate derivatives, optimizer step, data loading, monitoring or evaluation.",
+  "analysis_source_sha256": "bee2b829ebb6d5adfbdc2fd6a9095ec26b0e1a3c69bf6f21fa437088cf39e5e3",
+  "models": {
+    "original_grid": {
+      "checkpoint": "/Users/zeyuchang/Research/nf_crt_dynamic_imaging/motion_static/results/complex/low_rank_multicycle/steps_32000/model.pt",
+      "checkpoint_sha256": "74d08466b63fc7bad8a66255eb98abc561ae3cc239b92fb5cc6dac08a7818739",
+      "parameters": 390934,
+      "parameter_bytes": 1563736,
+      "seconds_per_batch_by_round": [
+        0.025143366679549216,
+        0.024994489997625352,
+        0.025616095000877977,
+        0.02560428668744862,
+        0.026280538318678735,
+        0.03419449335895479
+      ],
+      "median_seconds_per_batch": 0.0256101908441633
+    },
+    "coarse_grid": {
+      "checkpoint": "/Users/zeyuchang/Research/nf_crt_dynamic_imaging/motion_static/results/complex/low_rank_coarse_motion/steps_32000/model.pt",
+      "checkpoint_sha256": "3e52d2baf667e6dd9701b573c86ca667620a9168ead8153d791f2d80b024cc54",
+      "parameters": 241942,
+      "parameter_bytes": 967768,
+      "seconds_per_batch_by_round": [
+        0.022286896640434862,
+        0.02351531167514622,
+        0.0269327550008893,
+        0.02591217331588268,
+        0.026346878316253423,
+        0.03038245167583227
+      ],
+      "median_seconds_per_batch": 0.026129525816068054
+    }
+  },
+  "second_over_first_time_ratio": 1.0202784498977333
+}

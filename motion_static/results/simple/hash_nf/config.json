@@ -1,0 +1,19 @@
+{
+  "phantom": "simple",
+  "model": "hash_nf",
+  "size": 64,
+  "frames": 64,
+  "seed": 0,
+  "steps": 8000,
+  "batch_size": 4096,
+  "threads": 4,
+  "mlp_lr": 0.001,
+  "hash_lr": 0.01,
+  "loss": "MSE(predicted image, observed image)",
+  "device": "cpu",
+  "scheduler": "cosine to zero",
+  "torch_version": "2.14.0",
+  "true_motion_used_for_training": false,
+  "reference_intensity_labels_used_for_training": false,
+  "midpoint_labels_used_for_training": false
+}

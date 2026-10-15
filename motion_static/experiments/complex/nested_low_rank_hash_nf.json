@@ -1,0 +1,13 @@
+{
+  "phantom": "complex", "model": "nested_low_rank_hash_nf",
+  "size": 64, "frames": 64, "seed": 0,
+  "steps": 8000, "batch_size": 4096, "threads": 4,
+  "mlp_lr": 0.001, "hash_lr": 0.01,
+  "rank": 3, "head_width": 64, "temporal_width": 32,
+  "encoding": {
+    "levels": 8, "features": 2, "log2_hash_size": 15,
+    "min_resolution": 8, "max_resolution": 128
+  },
+  "intensity_coordinate_clipping": false,
+  "rank_definition": "Total spatial-temporal rank, including static intensity"
+}

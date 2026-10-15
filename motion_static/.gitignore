@@ -1,0 +1,7 @@
+__pycache__/
+.matplotlib/
+.cache/
+.DS_Store
+
+# Historical records remain tracked; new run artifacts require deliberate selection.
+/results/

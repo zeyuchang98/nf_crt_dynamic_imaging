@@ -1,0 +1,52 @@
+{
+  "status": "passed",
+  "formal_runs_completed": 0,
+  "full_suite_tests_passed": 70,
+  "final_scope_tests_passed": 6,
+  "configurations_checked": 36,
+  "smoke_runs": 2,
+  "smoke_steps": 3,
+  "smoke_frames": 25,
+  "smoke_research_results": false,
+  "initial_smoke_notes": "Training and verification passed. Found misleading 24k plot titles and insufficient documentation of console-log destination; corrected. Final smoke records runtime versions and tests both model columns.",
+  "final_smoke_status": "complete",
+  "plot_visual_inspection": "Shared-time motion panels and loss plots inspected; labels and geometry are readable.",
+  "runtime": {
+    "python": "3.11.16",
+    "torch": "2.14.0",
+    "numpy": "1.26.4",
+    "cuda_available": false,
+    "mps_available": true,
+    "device": "cpu",
+    "threads": 4,
+    "status": "passed",
+    "configurations": "See ../preflight.json"
+  },
+  "artifact_sha256": {
+    "final_scope_tests_6.log": "9a3195f50cbca8c42e92c4878d20097668a800a0d582aaafd9f7c0ed8eee60ad",
+    "smoke_final.zip": "5a98fbe88d8d6e7d355d55657c641617376d1b6a94fad8038a8536fbe911fa82",
+    "smoke_final.log": "90d91df46f731c4ddda4b8a842caaae6ad14ed3b33c4789885a3e4b4a95488bf",
+    "tests_70.log": "bbcbd18bfba38b8dd2bccdafe888382432ffd87a944f3eeee373759c93e13b95",
+    "smoke_initial.log": "5a294bfb7c9bf8b1c54273222ab0d0feaaa8ffa6fc9ad405ddb1ee24b5308a75",
+    "smoke_initial.zip": "8b9b1dbcdf64ad3965be942b65fd30889e3466e8610156c4a90f49689a929bef"
+  },
+  "fresh_agent_check": {
+    "status": "passed",
+    "command_exit": 0,
+    "completed": 2,
+    "total": 2,
+    "documentation_discrepancies": [],
+    "comparison_gifs": {
+      "count": 3,
+      "frames": 24,
+      "size": [
+        720,
+        636
+      ],
+      "duration_ms": 90,
+      "model_columns": 2,
+      "motion_truth_distinct_images": 8
+    },
+    "role": "Independent agent followed the documented command verbatim without fixes or reruns"
+  }
+}

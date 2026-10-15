@@ -1,0 +1,140 @@
+{
+  "unit_tests": {
+    "passed": 53,
+    "log": "validation.log"
+  },
+  "midpoint_end_to_end_smoke": "passed: 3 cycles, 25 frames, 16x16, 3 steps",
+  "block_end_to_end_smoke": "passed: 3 cycles, 24 frames, 16x16, 3 steps",
+  "checkpoint_scoring_matches_existing_metrics": true,
+  "initial_fixed_losses_identical": true,
+  "fixed_monitoring_indices_identical": true,
+  "first_update_fixed_mse_max_between_process_difference": 2.3367054818868027e-12,
+  "config_differences": [
+    "steps",
+    "checkpoint_steps"
+  ],
+  "verified_source_file_counts": {
+    "steps_8000": 43,
+    "steps_32000": 43
+  },
+  "status": "complete",
+  "trained_checkpoints": {
+    "steps_8000": {
+      "reference_anchor_points": 4096,
+      "reference_anchor_max_abs": 0.0,
+      "reload_prediction_points": 511,
+      "reload_prediction_max_abs_error": 0.0,
+      "coordinate_gradients_finite": true,
+      "spatial_coordinate_gradients_nonzero": true,
+      "rank_tails": {
+        "training": 3.5588561507348646e-08,
+        "midpoint": 3.577565517640011e-08
+      },
+      "final_intermediate_checkpoint_equals_model": true,
+      "model_sha256": "8c9d5cc5c28f0f6e6ce9c05b08e0b1d503dab230079e65b8c7e6e38261b73a65"
+    },
+    "steps_32000": {
+      "reference_anchor_points": 4096,
+      "reference_anchor_max_abs": 0.0,
+      "reload_prediction_points": 511,
+      "reload_prediction_max_abs_error": 0.0,
+      "coordinate_gradients_finite": true,
+      "spatial_coordinate_gradients_nonzero": true,
+      "rank_tails": {
+        "training": 3.533790020171718e-08,
+        "midpoint": 3.521613033720556e-08
+      },
+      "final_intermediate_checkpoint_equals_model": true,
+      "model_sha256": "74d08466b63fc7bad8a66255eb98abc561ae3cc239b92fb5cc6dac08a7818739"
+    }
+  },
+  "artifacts": {
+    "steps_8000": {
+      "gifs": {
+        "image.gif": {
+          "frames": 378,
+          "size": [
+            864,
+            408
+          ],
+          "duration_ms": 90
+        },
+        "reference_intensity.gif": {
+          "frames": 378,
+          "size": [
+            864,
+            408
+          ],
+          "duration_ms": 90
+        },
+        "motion_only.gif": {
+          "frames": 378,
+          "size": [
+            864,
+            408
+          ],
+          "duration_ms": 90
+        },
+        "motion_effect.gif": {
+          "frames": 378,
+          "size": [
+            864,
+            408
+          ],
+          "duration_ms": 90,
+          "distinct_ground_truth_image_tiles": 126
+        }
+      },
+      "loss_curve_formats": [
+        "png",
+        "svg"
+      ],
+      "loss_csv_rows": 18
+    },
+    "steps_32000": {
+      "gifs": {
+        "image.gif": {
+          "frames": 378,
+          "size": [
+            864,
+            408
+          ],
+          "duration_ms": 90
+        },
+        "reference_intensity.gif": {
+          "frames": 378,
+          "size": [
+            864,
+            408
+          ],
+          "duration_ms": 90
+        },
+        "motion_only.gif": {
+          "frames": 378,
+          "size": [
+            864,
+            408
+          ],
+          "duration_ms": 90
+        },
+        "motion_effect.gif": {
+          "frames": 378,
+          "size": [
+            864,
+            408
+          ],
+          "duration_ms": 90,
+          "distinct_ground_truth_image_tiles": 126
+        }
+      },
+      "loss_curve_formats": [
+        "png",
+        "svg"
+      ],
+      "loss_csv_rows": 66
+    }
+  },
+  "comparison_sources_unchanged": true,
+  "common_unseen_time_count": 126,
+  "markdown_links_valid": true
+}

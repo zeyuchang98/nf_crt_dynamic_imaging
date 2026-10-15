@@ -1,0 +1,134 @@
+{
+  "phantom": "complex",
+  "model": "nested_low_rank_hash_nf",
+  "size": 64,
+  "frames": 379,
+  "cycles": 3,
+  "seed": 0,
+  "steps": 24000,
+  "batch_size": 4096,
+  "threads": 4,
+  "mlp_lr": 0.001,
+  "hash_lr": 0.01,
+  "rank": 2,
+  "head_width": 64,
+  "temporal_width": 32,
+  "encoding": {
+    "levels": 4,
+    "features": 2,
+    "log2_hash_size": 15,
+    "min_resolution": 8,
+    "max_resolution": 64
+  },
+  "motion_encoding": {
+    "min_resolution": [
+      2,
+      2,
+      8
+    ],
+    "max_resolution": [
+      16,
+      16,
+      128
+    ],
+    "levels": 4
+  },
+  "checkpoint_steps": [
+    8000,
+    16000,
+    24000
+  ],
+  "monitor_samples": 65536,
+  "monitor_seed": 2026,
+  "log_interval": 500,
+  "intensity_coordinate_clipping": false,
+  "rank_definition": "Total spatial-temporal rank, including static intensity",
+  "coordinate_bounds": [
+    [
+      -0.5,
+      0.5
+    ],
+    [
+      -0.5,
+      0.5
+    ],
+    [
+      -0.5,
+      2.5
+    ]
+  ],
+  "reference_time": -0.5,
+  "loss": "MSE(predicted image, observed image)",
+  "device": "cpu",
+  "scheduler": "cosine to zero",
+  "torch_version": "2.14.0",
+  "true_motion_used_for_training": false,
+  "reference_intensity_labels_used_for_training": false,
+  "midpoint_labels_used_for_training": false,
+  "joint_period": 1.0,
+  "time_bounds": [
+    -0.5,
+    2.5
+  ],
+  "intervals_per_cycle": 126.0,
+  "monitoring": "Fixed uniform samples without replacement; image MSE; no validation gradients",
+  "monitor_lr_convention": "Learning rates after scheduler step, for the next optimizer update",
+  "code_provenance": {
+    "git_commit": "4f70209ce3069b3fe350e84fe8fe4c34f7812017",
+    "source_archive": "source.zip",
+    "source_sha256": {
+      "motion_static/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "motion_static/evaluation/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "motion_static/evaluation/benchmark_query_cost.py": "bee2b829ebb6d5adfbdc2fd6a9095ec26b0e1a3c69bf6f21fa437088cf39e5e3",
+      "motion_static/evaluation/block_evaluate.py": "20254226b05639a0650bb503d28eecbc72cd42f4c4fcc6e3dd8e7b9d6e43e6a1",
+      "motion_static/evaluation/block_plots.py": "f49a820fb9913d56789c9171009b0518bc54ce7e044df530f9c8de0446a5fc8d",
+      "motion_static/evaluation/branch_metrics.py": "87c9e3b339e71c1c3e16bd80a2812eabe5fe6f151ddcd590bd8a372a5c9ca381",
+      "motion_static/evaluation/branch_plots.py": "7bc98b0c55bf94d4f9a73acd6f0454af4e13632b6963cc4bcd15d909f822ade2",
+      "motion_static/evaluation/compare_gifs.py": "977ad0ab117deba382c5861de88fca78adf5d6f69239ac9195b9cafa74e8e230",
+      "motion_static/evaluation/compare_temporal.py": "4e59e18a1b5cea31d819d5f751c0d14ed721c285c72c91df8226d582d121eefe",
+      "motion_static/evaluation/compare_training.py": "41c5ee6bb289ce872bd9e1b7c036dd4fb9b22aa82f28f9d1d030c8bf1f2abb66",
+      "motion_static/evaluation/diagnose_branches.py": "873d0a6ae820c642b72f8e6dc3d7880ba836436b930fc2397173449243e4e876",
+      "motion_static/evaluation/evaluate.py": "2e29b05435fe702f5d3dec3fb09c41d4deb26c6a14e9dfe6bb506ebc5fb4dc4d",
+      "motion_static/evaluation/hash_sweep.py": "810440b287f8aaccf745441cbb1fcf6923c8b368db91bb1bc0de02d0db064394",
+      "motion_static/evaluation/masked_metrics.py": "f8891b4848799418d99125817e4e9bd62433fe1edb8d0f825b7b53b2b413dbb6",
+      "motion_static/evaluation/metric_plots.py": "6dc597c43ba0c679fa6f0c019d41749475c1c44ab4e0e56a8bb8d049ce01516c",
+      "motion_static/evaluation/metrics.py": "4fab21fb7d87f1666066bc0be9f306d2c14e7b1edfed3e3038c8de17c968bf4a",
+      "motion_static/evaluation/plot_saved_losses.py": "e6a3f590e7f5c9502b7a6331e1218a115b5019bcabf5a5491e66ecb195aa8f33",
+      "motion_static/evaluation/plots.py": "886c79ef313a55cebc876b2acb77eeecbd2494f9a70dbbdac40642bf58fa2944",
+      "motion_static/evaluation/summarize.py": "41391610729bbc4e8431d5fe8c358015166bc07bb8b98db0cd568af317440691",
+      "motion_static/evaluation/summarize_blocks.py": "8a9290d7d792feba10c11a469cb20a9a5d55478a928e59917f472d6139c12326",
+      "motion_static/hash_sweep.py": "0c93ee924c5331fec4e8f854a72576a0c87dcaa942184ee2517abe9a7e697801",
+      "motion_static/losses.py": "2a0db63c389b62b5c91fed5ad0fa8017f0e70e481e3b5dc2d120b1ebf6e53f17",
+      "motion_static/models/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "motion_static/models/coordinates.py": "90ac4885b3248df7fed2deb4803256e08b819d63def5764d4283a467a537f4df",
+      "motion_static/models/hash_grid.py": "d920b2570d9842a961766a5bea5f62be4ef5d848d662ece1eba41562c78d7757",
+      "motion_static/models/hash_nf.py": "51ab05a1e09aea8ec23cbe2a517470bd9aaf3b9eb2c3e90df8e6e0716ca113a5",
+      "motion_static/models/low_rank_intensity.py": "6a40ff6d53d7ed1364661ba8be39c57323fe5bca8bae86afdf817d0b5f038aef",
+      "motion_static/models/nested_hash_nf.py": "7de135b17e981f206fca28a9fdc653a0cb2f33d9d91558e5d24d947293d5c973",
+      "motion_static/models/nested_low_rank_hash_nf.py": "3917fd445bb53eebac9937c540c9f02306369d2f6b342ea1362218ba7e8e196b",
+      "motion_static/models/nested_mlp.py": "14c922fca223d4f767efab74fc4ddbf5912cddfa14855b7b1a80a567a116bc1c",
+      "motion_static/phantoms/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "motion_static/phantoms/complex.py": "dfe6df09cc23496d5fb522dd1c9933cccad4f6a758edc0a87cc4e276a7c9c6c0",
+      "motion_static/phantoms/data.py": "c2fb4ed64f6bb18217aa745e56f1345ee4921e74ea8301024e80c1f9fb57cb65",
+      "motion_static/phantoms/simple.py": "4a0bd6cafd703cd0009c19245801b83f853b233030bffad21f74c482a85b9ba7",
+      "motion_static/run.py": "ea6613c527f32e7cd4cf94553245d4d05ec2fcf16df1068f191b98d55fe47ac4",
+      "motion_static/splits.py": "3bfa1ab86d4bba2081c89001743a38fbc638d224d4a37e3f094c3c8f8d248200",
+      "motion_static/tests/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "motion_static/tests/test_block_split.py": "5fa6271433afecebb6e8fce39048c1b454e601aaf4d53e24a69f4d2f78f079fa",
+      "motion_static/tests/test_branch_diagnostics.py": "db8b2dbd63829c86ec61ae2d2f26101a663d502cfbaf2c4c01a3138d4289068b",
+      "motion_static/tests/test_coarse_motion.py": "c9132d9e5eb15613a2105128f8caba1bc5ce8599ec7775474d003ec8c0c9ee90",
+      "motion_static/tests/test_coordinates.py": "3eae3b01e455b28997f7ad3e796f809971e992b71d47e003bda3d9e2e41b6164",
+      "motion_static/tests/test_grid_comparison.py": "b671d7c630cbba2557643595269e20f20cefd06854a94925ae3df4b9a8b364c4",
+      "motion_static/tests/test_hash_nf.py": "ab45d9f5bd91a6ccb8fdadf2bca8f61edbc07f97d85a1f32d63f61ba36c4618b",
+      "motion_static/tests/test_hash_sweep.py": "511ad4a59b5904d5ba7e604c98a3d7723fbf68617319378389eda1622414cbc2",
+      "motion_static/tests/test_low_rank.py": "428e91e7e2f20211a475f129bf6fb9266700654b4763f16bab3042f21f3672d4",
+      "motion_static/tests/test_metrics.py": "6d76d2b650d27e038ed12446b1d750adcd6e9516001c96d1d650be5b61764af9",
+      "motion_static/tests/test_nested.py": "7fd99fd5e47a94ceddd4514e21d783c361bafd01c4ed715728636f29fca5e5f4",
+      "motion_static/tests/test_nested_hash_nf.py": "b1ddb32f6bc2026a3f6469d601ee18f338222d760770636cf66e70ca5b003270",
+      "motion_static/tests/test_phantoms.py": "2b3bf3752ac4eeee5c81360cb91465ac90d047688a5b8616679d6566cccaa89e",
+      "motion_static/tests/test_temporal_loss.py": "ae9ed3c2bc47fc949c596ab3444fc2062f17c32786af24fc4a693bcd54516a8b",
+      "motion_static/tests/test_training_monitor.py": "59b368a45379e328318dab32abd83cf809d033df03f9a99a4d9fc71743d07fc2",
+      "motion_static/training_monitor.py": "c52e525c48274173d6999a969c49c025e623a3cc245b2d13fdbeac53dae9b53b"
+    }
+  }
+}

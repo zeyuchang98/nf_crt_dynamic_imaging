@@ -1,0 +1,142 @@
+{
+  "original_grid": [
+    {
+      "step": 8000,
+      "scores": {
+        "training": {
+          "image_rrmse": 0.041250374168870126,
+          "intensity_rrmse": 0.6542796893820194,
+          "motion_rmse_pixels": 5.421779140961085,
+          "nonpositive_jacobian_fraction": 0.3088887395861328
+        },
+        "midpoint": {
+          "image_rrmse": 0.042010233296011265,
+          "intensity_rrmse": 0.6546920379150593,
+          "motion_rmse_pixels": 5.422195822180294,
+          "nonpositive_jacobian_fraction": 0.3083663086489542
+        }
+      }
+    },
+    {
+      "step": 16000,
+      "scores": {
+        "training": {
+          "image_rrmse": 0.022126255159907755,
+          "intensity_rrmse": 0.6923924670243788,
+          "motion_rmse_pixels": 5.482477873847096,
+          "nonpositive_jacobian_fraction": 0.3211636656812685
+        },
+        "midpoint": {
+          "image_rrmse": 0.025061675975401754,
+          "intensity_rrmse": 0.6928360737994563,
+          "motion_rmse_pixels": 5.48285984024707,
+          "nonpositive_jacobian_fraction": 0.32072195752240973
+        }
+      }
+    },
+    {
+      "step": 24000,
+      "scores": {
+        "training": {
+          "image_rrmse": 0.013307226855281224,
+          "intensity_rrmse": 0.6857593318536707,
+          "motion_rmse_pixels": 5.48504792434203,
+          "nonpositive_jacobian_fraction": 0.3238712711636657
+        },
+        "midpoint": {
+          "image_rrmse": 0.019631529237116918,
+          "intensity_rrmse": 0.6862001925577708,
+          "motion_rmse_pixels": 5.485443316774055,
+          "nonpositive_jacobian_fraction": 0.3236695469595413
+        }
+      }
+    },
+    {
+      "step": 32000,
+      "scores": {
+        "training": {
+          "image_rrmse": 0.01115982190258312,
+          "intensity_rrmse": 0.6861244552613915,
+          "motion_rmse_pixels": 5.483382676881372,
+          "nonpositive_jacobian_fraction": 0.32166084385917765
+        },
+        "midpoint": {
+          "image_rrmse": 0.018772584463782226,
+          "intensity_rrmse": 0.6865626256121085,
+          "motion_rmse_pixels": 5.483800565652554,
+          "nonpositive_jacobian_fraction": 0.3221284556784839
+        }
+      }
+    }
+  ],
+  "coarse_grid": [
+    {
+      "step": 8000,
+      "scores": {
+        "training": {
+          "image_rrmse": 0.0542681852011567,
+          "intensity_rrmse": 0.5248409636271953,
+          "motion_rmse_pixels": 4.1327305612108125,
+          "nonpositive_jacobian_fraction": 0.29234748723461434
+        },
+        "midpoint": {
+          "image_rrmse": 0.05427023665908076,
+          "intensity_rrmse": 0.525140250519758,
+          "motion_rmse_pixels": 4.134344484676947,
+          "nonpositive_jacobian_fraction": 0.292464130932192
+        }
+      }
+    },
+    {
+      "step": 16000,
+      "scores": {
+        "training": {
+          "image_rrmse": 0.0357164196051676,
+          "intensity_rrmse": 0.5459894459871415,
+          "motion_rmse_pixels": 4.287041616605155,
+          "nonpositive_jacobian_fraction": 0.29365090029561947
+        },
+        "midpoint": {
+          "image_rrmse": 0.03801847087357442,
+          "intensity_rrmse": 0.5463315246698724,
+          "motion_rmse_pixels": 4.289317723747889,
+          "nonpositive_jacobian_fraction": 0.2934601200570675
+        }
+      }
+    },
+    {
+      "step": 24000,
+      "scores": {
+        "training": {
+          "image_rrmse": 0.028277147264445295,
+          "intensity_rrmse": 0.5424161948422025,
+          "motion_rmse_pixels": 4.336886553830141,
+          "nonpositive_jacobian_fraction": 0.30020827734479977
+        },
+        "midpoint": {
+          "image_rrmse": 0.03285272297860227,
+          "intensity_rrmse": 0.5427574734334317,
+          "motion_rmse_pixels": 4.339207958082229,
+          "nonpositive_jacobian_fraction": 0.2997859969312768
+        }
+      }
+    },
+    {
+      "step": 32000,
+      "scores": {
+        "training": {
+          "image_rrmse": 0.025042694119092455,
+          "intensity_rrmse": 0.5502881466274533,
+          "motion_rmse_pixels": 4.336788997924867,
+          "nonpositive_jacobian_fraction": 0.2985823703305563
+        },
+        "midpoint": {
+          "image_rrmse": 0.03140702267917424,
+          "intensity_rrmse": 0.5506350242179044,
+          "motion_rmse_pixels": 4.339152479842507,
+          "nonpositive_jacobian_fraction": 0.29850063258768744
+        }
+      }
+    }
+  ]
+}

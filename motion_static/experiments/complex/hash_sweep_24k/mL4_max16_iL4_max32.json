@@ -1,0 +1,61 @@
+{
+  "phantom": "complex",
+  "model": "nested_low_rank_hash_nf",
+  "size": 64,
+  "frames": 379,
+  "cycles": 3,
+  "seed": 0,
+  "steps": 24000,
+  "batch_size": 4096,
+  "threads": 4,
+  "mlp_lr": 0.001,
+  "hash_lr": 0.01,
+  "rank": 2,
+  "head_width": 64,
+  "temporal_width": 32,
+  "encoding": {
+    "levels": 4,
+    "features": 2,
+    "log2_hash_size": 15,
+    "min_resolution": 8,
+    "max_resolution": 32
+  },
+  "motion_encoding": {
+    "min_resolution": [
+      2,
+      2,
+      8
+    ],
+    "max_resolution": [
+      16,
+      16,
+      128
+    ],
+    "levels": 4
+  },
+  "checkpoint_steps": [
+    8000,
+    16000,
+    24000
+  ],
+  "monitor_samples": 65536,
+  "monitor_seed": 2026,
+  "log_interval": 500,
+  "intensity_coordinate_clipping": false,
+  "rank_definition": "Total spatial-temporal rank, including static intensity",
+  "coordinate_bounds": [
+    [
+      -0.5,
+      0.5
+    ],
+    [
+      -0.5,
+      0.5
+    ],
+    [
+      -0.5,
+      2.5
+    ]
+  ],
+  "reference_time": -0.5
+}

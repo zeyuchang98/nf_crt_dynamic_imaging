@@ -1,0 +1,5 @@
+Matplotlib is building the font cache; this may take a moment.
+complex/nested_low_rank_hash_nf step 1: MSE 0.00826555, temporal L2 0, total 0.00826555, fixed train 0.00765079, held-out 0.00778181
+complex/nested_low_rank_hash_nf step 3: MSE 0.00705227, temporal L2 0, total 0.00705227, fixed train 0.00750075, held-out 0.00763082
+Midpoint image RRMSE=94.9997%, SSIM=0.148705
+Saved results: /tmp/nf-pact-intensity32-smoke

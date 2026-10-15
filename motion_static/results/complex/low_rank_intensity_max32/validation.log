@@ -1,0 +1,9 @@
+test_both_grid_comparison_modes_are_rejected (motion_static.tests.test_grid_comparison.GridComparisonTests.test_both_grid_comparison_modes_are_rejected) ... ok
+test_intensity_maximum_requires_explicit_comparison_mode (motion_static.tests.test_grid_comparison.GridComparisonTests.test_intensity_maximum_requires_explicit_comparison_mode) ... ok
+test_intensity_minimum_and_motion_grid_must_stay_fixed (motion_static.tests.test_grid_comparison.GridComparisonTests.test_intensity_minimum_and_motion_grid_must_stay_fixed) ... ok
+test_unrelated_conditions_cannot_change_with_intensity_maximum (motion_static.tests.test_grid_comparison.GridComparisonTests.test_unrelated_conditions_cannot_change_with_intensity_maximum) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.002s
+
+OK

@@ -1,0 +1,124 @@
+test_interpolation_does_not_read_test_labels (test_block_split.BlockSplitTests.test_interpolation_does_not_read_test_labels) ... ok
+test_invalid_or_infeasible_split (test_block_split.BlockSplitTests.test_invalid_or_infeasible_split) ... ok
+test_whole_blocks_and_short_gaps (test_block_split.BlockSplitTests.test_whole_blocks_and_short_gaps) ... ok
+test_errors_outside_mask_are_excluded (test_block_split.MaskedMetricTests.test_errors_outside_mask_are_excluded) ... ok
+test_roi_and_insufficient_windows (test_block_split.MaskedMetricTests.test_roi_and_insufficient_windows) ... ok
+test_ssim_matches_independent_crop (test_block_split.MaskedMetricTests.test_ssim_matches_independent_crop) ... ok
+test_geometry_recovers_motion_without_confusing_brightness (test_branch_diagnostics.BranchDiagnosticTests.test_geometry_recovers_motion_without_confusing_brightness) ... ok
+test_loader_uses_saved_midpoint_times (test_branch_diagnostics.BranchDiagnosticTests.test_loader_uses_saved_midpoint_times) ... ok
+test_motion_uses_component_pixel_spacing_and_foreground (test_branch_diagnostics.BranchDiagnosticTests.test_motion_uses_component_pixel_spacing_and_foreground) ... ok
+test_simple_template_and_nondefault_frame_count (test_branch_diagnostics.BranchDiagnosticTests.test_simple_template_and_nondefault_frame_count) ... ok
+test_zero_prediction_has_undefined_direction (test_branch_diagnostics.BranchDiagnosticTests.test_zero_prediction_has_undefined_direction) ... ok
+test_anisotropic_hashed_coordinate_gradient (test_coarse_motion.CoarseMotionTests.test_anisotropic_hashed_coordinate_gradient) ... ok
+test_anisotropic_outside_boundary_continuity (test_coarse_motion.CoarseMotionTests.test_anisotropic_outside_boundary_continuity) ... ok
+test_invalid_axis_resolutions (test_coarse_motion.CoarseMotionTests.test_invalid_axis_resolutions) ... ok
+test_motion_override_preserves_intensity_initialization_and_time_grid (test_coarse_motion.CoarseMotionTests.test_motion_override_preserves_intensity_initialization_and_time_grid) ... ok
+test_rectangular_grid_reproduces_trilinear_function (test_coarse_motion.CoarseMotionTests.test_rectangular_grid_reproduces_trilinear_function) ... ok
+test_scalar_and_equal_axis_grids_are_exactly_equivalent (test_coarse_motion.CoarseMotionTests.test_scalar_and_equal_axis_grids_are_exactly_equivalent) ... ok
+test_training_gradients_rank_anchor_and_checkpoint_roundtrip (test_coarse_motion.CoarseMotionTests.test_training_gradients_rank_anchor_and_checkpoint_roundtrip) ... complex/nested_low_rank_hash_nf step 1: MSE 0.20337, temporal L2 0, total 0.20337
+complex/nested_low_rank_hash_nf step 3: MSE 0.213721, temporal L2 0, total 0.213721
+ok
+test_checkpoint_config_restores_bounds_and_reference_time (test_coordinates.CoordinateTests.test_checkpoint_config_restores_bounds_and_reference_time) ... ok
+test_custom_reference_time_uses_input_units (test_coordinates.CoordinateTests.test_custom_reference_time_uses_input_units) ... ok
+test_fixed_bounds_map_endpoints_and_keep_outside_queries (test_coordinates.CoordinateTests.test_fixed_bounds_map_endpoints_and_keep_outside_queries) ... ok
+test_images_motion_and_coordinate_gradients_are_invariant_to_units (test_coordinates.CoordinateTests.test_images_motion_and_coordinate_gradients_are_invariant_to_units) ... ok
+test_zero_width_bounds_are_rejected (test_coordinates.CoordinateTests.test_zero_width_bounds_are_rejected) ... ok
+test_both_hash_and_mlp_receive_gradients (test_hash_nf.HashGridTests.test_both_hash_and_mlp_receive_gradients) ... ok
+test_coordinate_gradient (test_hash_nf.HashGridTests.test_coordinate_gradient) ... ok
+test_dense_affine_interpolation_and_boundary (test_hash_nf.HashGridTests.test_dense_affine_interpolation_and_boundary) ... ok
+test_hash_collisions_preserve_constant_field_and_gradients (test_hash_nf.HashGridTests.test_hash_collisions_preserve_constant_field_and_gradients) ... ok
+test_intensity_coordinate_gradients_inside_and_outside_image (test_low_rank.LowRankTests.test_intensity_coordinate_gradients_inside_and_outside_image) ... ok
+test_invalid_rank_is_rejected (test_low_rank.LowRankTests.test_invalid_rank_is_rejected) ... ok
+test_nested_motion_gradients_match_finite_differences (test_low_rank.LowRankTests.test_nested_motion_gradients_match_finite_differences) ... ok
+test_saved_motion_only_prediction_freezes_learned_intensity_at_custom_t0 (test_low_rank.LowRankTests.test_saved_motion_only_prediction_freezes_learned_intensity_at_custom_t0) ... ok
+test_shared_trainer_updates_all_branches_and_keeps_anchor (test_low_rank.LowRankTests.test_shared_trainer_updates_all_branches_and_keeps_anchor) ... complex/nested_low_rank_hash_nf step 1: MSE 0.203207, temporal L2 0, total 0.203207
+complex/nested_low_rank_hash_nf step 3: MSE 0.200344, temporal L2 0, total 0.200344
+ok
+test_spatial_dense_grid_interpolates_affine_function_at_boundaries (test_low_rank.LowRankTests.test_spatial_dense_grid_interpolates_affine_function_at_boundaries) ... ok
+test_spatial_dense_to_hashed_boundary_is_continuous (test_low_rank.LowRankTests.test_spatial_dense_to_hashed_boundary_is_continuous) ... ok
+test_total_rank_bound_including_outside_reference_coordinates (test_low_rank.LowRankTests.test_total_rank_bound_including_outside_reference_coordinates) ... ok
+test_activity_and_points_with_nonlast_time_axis (test_metrics.MetricTests.test_activity_and_points_with_nonlast_time_axis) ... ok
+test_analytic_constant_error (test_metrics.MetricTests.test_analytic_constant_error) ... ok
+test_exact_and_zero_reference_json (test_metrics.MetricTests.test_exact_and_zero_reference_json) ... ok
+test_four_dimensional_sequence_and_scale (test_metrics.MetricTests.test_four_dimensional_sequence_and_scale) ... ok
+test_invalid_inputs (test_metrics.MetricTests.test_invalid_inputs) ... ok
+test_roi_excludes_outside_errors_and_preserves_neighborhoods (test_metrics.MetricTests.test_roi_excludes_outside_errors_and_preserves_neighborhoods) ... ok
+test_ssim_reference_and_negative_structure (test_metrics.MetricTests.test_ssim_reference_and_negative_structure) ... ok
+test_volume_psnr_is_not_mean_frame_psnr (test_metrics.MetricTests.test_volume_psnr_is_not_mean_frame_psnr) ... ok
+test_endpoint_error_pixel_units_and_foreground_mask (test_nested.NestedTests.test_endpoint_error_pixel_units_and_foreground_mask) ... ok
+test_image_loss_trains_both_networks_and_keeps_reference_zero (test_nested.NestedTests.test_image_loss_trains_both_networks_and_keeps_reference_zero) ... ok
+test_motion_gradient_matches_finite_difference (test_nested.NestedTests.test_motion_gradient_matches_finite_difference) ... ok
+test_composed_motion_gradient_matches_finite_difference (test_nested_hash_nf.NestedHashTests.test_composed_motion_gradient_matches_finite_difference) ... ok
+test_dense_boundary_is_continuous_when_outside_vertices_are_hashed (test_nested_hash_nf.NestedHashTests.test_dense_boundary_is_continuous_when_outside_vertices_are_hashed) ... ok
+test_image_loss_reaches_both_tables_and_both_motion_outputs (test_nested_hash_nf.NestedHashTests.test_image_loss_reaches_both_tables_and_both_motion_outputs) ... ok
+test_outside_queries_keep_coordinate_gradients (test_nested_hash_nf.NestedHashTests.test_outside_queries_keep_coordinate_gradients) ... ok
+test_backward_warp_recovers_material_points (test_phantoms.PhantomTests.test_backward_warp_recovers_material_points) ... ok
+test_default_sampling_bounds_remain_explicit (test_phantoms.PhantomTests.test_default_sampling_bounds_remain_explicit) ... ok
+test_flattening_matches_y_x_time (test_phantoms.PhantomTests.test_flattening_matches_y_x_time) ... ok
+test_multicycle_extends_time_with_same_states_and_disjoint_midpoints (test_phantoms.PhantomTests.test_multicycle_extends_time_with_same_states_and_disjoint_midpoints) ... ok
+test_only_complex_reference_intensity_changes_brightness (test_phantoms.PhantomTests.test_only_complex_reference_intensity_changes_brightness) ... ok
+test_temporal_split_and_reference (test_phantoms.PhantomTests.test_temporal_split_and_reference) ... ok
+test_hash_intensity_receives_gradients (test_temporal_loss.TemporalLossTests.test_hash_intensity_receives_gradients) ... ok
+test_rate_uses_time_units_and_does_not_update_motion (test_temporal_loss.TemporalLossTests.test_rate_uses_time_units_and_does_not_update_motion) ... ok
+test_static_intensity_is_zero_despite_time_dependent_motion (test_temporal_loss.TemporalLossTests.test_static_intensity_is_zero_despite_time_dependent_motion) ... ok
+test_monitoring_does_not_change_training_and_checkpoints_restore (test_training_monitor.TrainingMonitorTests.test_monitoring_does_not_change_training_and_checkpoints_restore) ... complex/nested_low_rank_hash_nf step 1: MSE 0.060429, temporal L2 0, total 0.060429
+complex/nested_low_rank_hash_nf step 2: MSE 0.0505551, temporal L2 0, total 0.0505551
+complex/nested_low_rank_hash_nf step 4: MSE 0.0935026, temporal L2 0, total 0.0935026
+complex/nested_low_rank_hash_nf step 6: MSE 0.0465868, temporal L2 0, total 0.0465868
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_fontconfig_pattern.py:64: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+  prop = Group((name + Suppress("=") + comma_separated(value)) | oneOf(_CONSTANTS))
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_fontconfig_pattern.py:85: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+  parse = parser.parseString(pattern)
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_fontconfig_pattern.py:89: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'
+  parser.resetCache()
+Matplotlib is building the font cache; this may take a moment.
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_mathtext.py:45: PyparsingDeprecationWarning: 'enablePackrat' deprecated - use 'enable_packrat'
+  ParserElement.enablePackrat()
+In /Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_fontconfig_pattern.py:85: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+  parse = parser.parseString(pattern)
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_fontconfig_pattern.py:89: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'
+  parser.resetCache()
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_mathtext.py:2010: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+  p.space          = oneOf(self._space_widths)("space")
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_mathtext.py:2012: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+  p.style_literal  = oneOf(
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_mathtext.py:2020: PyparsingDeprecationWarning: 'leaveWhitespace' deprecated - use 'leave_whitespace'
+  )("sym").leaveWhitespace()
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_mathtext.py:2024: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+  p.start_group    = Optional(r"\math" + oneOf(self._fontnames)("font")) + "{"
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_mathtext.py:2027: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+  p.delim          = oneOf(self._delims)
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_mathtext.py:1984: PyparsingDeprecationWarning: 'setName' deprecated - use 'set_name'
+  val.setName(key)
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_mathtext.py:1987: PyparsingDeprecationWarning: 'setParseAction' deprecated - use 'set_parse_action'
+  val.setParseAction(getattr(self, key))
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_mathtext.py:1748: PyparsingDeprecationWarning: 'setParseAction' deprecated - use 'set_parse_action'
+  return Empty().setParseAction(raise_error)
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_mathtext.py:2088: PyparsingDeprecationWarning: 'endQuoteChar' argument is deprecated, use 'end_quote_char'
+  p.text = cmd(r"\text", QuotedString('{', '\\', endQuoteChar="}"))
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_mathtext.py:2097: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+  + OneOrMore(oneOf(["_", "^"]) - p.placeable)("subsuper")
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_mathtext.py:2146: PyparsingDeprecationWarning: 'unquoteResults' argument is deprecated, use 'unquote_results'
+  p.math_string   = QuotedString('$', '\\', unquoteResults=False)
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_mathtext.py:2147: PyparsingDeprecationWarning: 'leaveWhitespace' deprecated - use 'leave_whitespace'
+  p.non_math      = Regex(r"(?:(?:\\[$])|[^$])*").leaveWhitespace()
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_mathtext.py:2170: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+  result = self._expression.parseString(s)
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_mathtext.py:2197: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+  return self._math_expression.parseString(toks[0][1:-1], parseAll=True)
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/pyparsing/util.py:466: PyparsingDeprecationWarning: 'parseAll' argument is deprecated, use 'parse_all'
+  return fn(self, *args, **kwargs)
+/Users/zeyuchang/miniconda3/envs/nf-crt/lib/python3.11/site-packages/matplotlib/_mathtext.py:2178: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'
+  ParserElement.resetCache()
+complex/nested_low_rank_hash_nf step 1: MSE 0.060429, temporal L2 0, total 0.060429, fixed train 0.0724028, held-out 9986.4
+complex/nested_low_rank_hash_nf step 2: MSE 0.0505551, temporal L2 0, total 0.0505551, fixed train 0.0719555, held-out 9986.97
+complex/nested_low_rank_hash_nf step 4: MSE 0.0935026, temporal L2 0, total 0.0935026, fixed train 0.071534, held-out 9987.03
+complex/nested_low_rank_hash_nf step 6: MSE 0.0465868, temporal L2 0, total 0.0465868, fixed train 0.0714217, held-out 9987.09
+ok
+
+----------------------------------------------------------------------
+Ran 60 tests in 12.130s
+
+OK

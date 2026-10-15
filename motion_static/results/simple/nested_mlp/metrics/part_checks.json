@@ -1,0 +1,54 @@
+{
+  "training": {
+    "true_motion_learned_intensity": {
+      "mse": 0.0615296144030425,
+      "rmse": 0.24805163656594265,
+      "rrmse": 0.9722178297482422,
+      "relative_l2": 0.9722178297482422,
+      "psnr_db": 12.10915806562477,
+      "max_abs_error": 1.0417852401733398
+    },
+    "learned_motion_true_intensity": {
+      "mse": 0.04791263335906242,
+      "rmse": 0.2188895460250727,
+      "rrmse": 0.8579194329745963,
+      "relative_l2": 0.8579194329745963,
+      "psnr_db": 13.195499589293615,
+      "max_abs_error": 1.0
+    },
+    "zero_motion_learned_intensity": {
+      "mse": 0.015085140774282134,
+      "rmse": 0.12282158106083041,
+      "rrmse": 0.48138900689520053,
+      "relative_l2": 0.48138900689520053,
+      "psnr_db": 18.214506326412195,
+      "max_abs_error": 1.042305588722229
+    }
+  },
+  "midpoint": {
+    "true_motion_learned_intensity": {
+      "mse": 0.06223500152685232,
+      "rmse": 0.24946944006601754,
+      "rrmse": 0.9777880691820187,
+      "relative_l2": 0.9777880691820187,
+      "psnr_db": 12.059652954605129,
+      "max_abs_error": 1.0453522205352783
+    },
+    "learned_motion_true_intensity": {
+      "mse": 0.048501509511223326,
+      "rmse": 0.22023058259747516,
+      "rrmse": 0.8631872347804638,
+      "relative_l2": 0.8631872347804638,
+      "psnr_db": 13.142447446514915,
+      "max_abs_error": 1.0
+    },
+    "zero_motion_learned_intensity": {
+      "mse": 0.015059564809605004,
+      "rmse": 0.12271741852567224,
+      "rrmse": 0.48098728118147516,
+      "relative_l2": 0.48098728118147516,
+      "psnr_db": 18.221875781697115,
+      "max_abs_error": 1.039614200592041
+    }
+  }
+}

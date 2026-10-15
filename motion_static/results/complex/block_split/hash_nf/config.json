@@ -1,0 +1,54 @@
+{
+  "phantom": "complex",
+  "model": "hash_nf",
+  "size": 64,
+  "frames": 64,
+  "seed": 0,
+  "steps": 8000,
+  "batch_size": 4096,
+  "threads": 4,
+  "mlp_lr": 0.001,
+  "hash_lr": 0.01,
+  "split": {
+    "name": "blocks",
+    "block_shape_yxt": [
+      8,
+      8,
+      2
+    ],
+    "seed": 0,
+    "requested_test_fraction": 0.2,
+    "actual_test_fraction": 0.2001953125,
+    "total_blocks": 2048,
+    "test_blocks": 410,
+    "train_points": 209664,
+    "test_points": 52480,
+    "protected_first_and_last_time_blocks": true,
+    "adjacent_test_time_blocks": false,
+    "max_missing_frames": 2,
+    "max_bracketing_gap_in_frame_steps": 3,
+    "mask_sha256": "12d892b5d6aa1f5477d7897c0c28da3bc5459bf8349155cee0d72345b7a165eb"
+  },
+  "coordinate_bounds": [
+    [
+      -0.5,
+      0.5
+    ],
+    [
+      -0.5,
+      0.5
+    ],
+    [
+      -0.5,
+      0.5
+    ]
+  ],
+  "loss": "MSE(predicted image, observed image)",
+  "device": "cpu",
+  "scheduler": "cosine to zero",
+  "torch_version": "2.14.0",
+  "true_motion_used_for_training": false,
+  "reference_intensity_labels_used_for_training": false,
+  "midpoint_labels_used_for_training": false,
+  "held_out_labels_used_for_training": false
+}

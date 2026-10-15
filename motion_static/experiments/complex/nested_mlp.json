@@ -1,0 +1,6 @@
+{
+  "phantom": "complex", "model": "nested_mlp",
+  "size": 64, "frames": 64, "seed": 0,
+  "steps": 8000, "batch_size": 4096, "threads": 4,
+  "mlp_lr": 0.001, "intensity_width": 128, "motion_width": 32
+}

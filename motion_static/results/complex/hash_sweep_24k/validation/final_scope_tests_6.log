@@ -1,0 +1,12 @@
+test_all_36_unique_combinations_have_the_same_24k_budget (motion_static.tests.test_hash_sweep.HashSweepTests.test_all_36_unique_combinations_have_the_same_24k_budget) ... ok
+test_asymmetric_layer_counts_do_not_leak_between_branches (motion_static.tests.test_hash_sweep.HashSweepTests.test_asymmetric_layer_counts_do_not_leak_between_branches) ... ok
+test_changed_loss_data_schedule_or_motion_time_is_rejected (motion_static.tests.test_hash_sweep.HashSweepTests.test_changed_loss_data_schedule_or_motion_time_is_rejected) ... ok
+test_missing_independent_motion_level_is_rejected (motion_static.tests.test_hash_sweep.HashSweepTests.test_missing_independent_motion_level_is_rejected) ... ok
+test_nondominated_frontier_retains_tradeoffs_and_ties (motion_static.tests.test_hash_sweep.HashSweepTests.test_nondominated_frontier_retains_tradeoffs_and_ties) ... ok
+test_prepared_config_modification_and_duplicate_are_rejected (motion_static.tests.test_hash_sweep.HashSweepTests.test_prepared_config_modification_and_duplicate_are_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.055s
+
+OK
+Prepared 36 research configurations: /var/folders/09/mp0ld8cj1y51xq56vl0__y0r0000gn/T/tmpkjceu090/configs

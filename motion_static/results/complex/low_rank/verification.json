@@ -1,0 +1,67 @@
+{
+  "test_command": "python -m unittest discover -s motion_static/tests -v",
+  "tests_run": 50,
+  "failures": 0,
+  "errors": 0,
+  "passed": true,
+  "seconds": 2.4155894578434527,
+  "trained_checkpoints": {
+    "2": {
+      "checkpoint_prediction_queries": 511,
+      "max_absolute_prediction_difference": 0.0,
+      "reference_anchor_queries": 4096,
+      "max_absolute_reference_motion": 0.0,
+      "source_archive_files_verified": 41
+    },
+    "3": {
+      "checkpoint_prediction_queries": 511,
+      "max_absolute_prediction_difference": 0.0,
+      "reference_anchor_queries": 4096,
+      "max_absolute_reference_motion": 0.0,
+      "source_archive_files_verified": 41
+    }
+  },
+  "old_checkpoint_regression": {
+    "model": "nested_hash_nf",
+    "queries": 511,
+    "max_absolute_prediction_difference": 0.0
+  },
+  "gifs": {
+    "rank_2/plots/reference_intensity.gif": {
+      "frames": 63,
+      "size": [
+        864,
+        408
+      ],
+      "frame_duration_ms": 90,
+      "distinct_frames": 63
+    },
+    "rank_2/plots/motion_only.gif": {
+      "frames": 63,
+      "size": [
+        864,
+        408
+      ],
+      "frame_duration_ms": 90,
+      "distinct_frames": 63
+    },
+    "rank_3/plots/reference_intensity.gif": {
+      "frames": 63,
+      "size": [
+        864,
+        408
+      ],
+      "frame_duration_ms": 90,
+      "distinct_frames": 63
+    },
+    "rank_3/plots/motion_only.gif": {
+      "frames": 63,
+      "size": [
+        864,
+        408
+      ],
+      "frame_duration_ms": 90,
+      "distinct_frames": 63
+    }
+  }
+}

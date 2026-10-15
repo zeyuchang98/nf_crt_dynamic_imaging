@@ -1,0 +1,38 @@
+Matplotlib is building the font cache; this may take a moment.
+{
+  "runs": [
+    "/private/tmp/nf-pact-intensity64-smoke25-20261013"
+  ],
+  "checkpoints": {
+    "smoke_max64": [
+      {
+        "step": 3,
+        "scores": {
+          "training": {
+            "image_rrmse": 0.9556129521275614,
+            "intensity_rrmse": 0.9782791473096877,
+            "motion_rmse_pixels": 5.988939348832419,
+            "nonpositive_jacobian_fraction": 0.0
+          },
+          "midpoint": {
+            "image_rrmse": 0.954986152226509,
+            "intensity_rrmse": 0.9785438312412464,
+            "motion_rmse_pixels": 6.075340442152904,
+            "nonpositive_jacobian_fraction": 0.0
+          }
+        }
+      }
+    ]
+  },
+  "common_first_cycle_midpoints": {},
+  "common_time_count": 0,
+  "comparison_note": "Same training budget and temporal grid. Parameter shapes and RNG consumption differ; the same seed does not imply identical branch initialization or batches.",
+  "labels": [
+    "smoke_max64"
+  ],
+  "comparison_type": "intensity_spatial_grid",
+  "source_sha256": {
+    "/private/tmp/nf-pact-intensity64-smoke25-20261013/checkpoints/step_000003.pt": "e85ad0b705fc5372c738192a06b2d6fd5253f79c98483c1e9a7137c05ed91ae4"
+  },
+  "analysis_source_sha256": "41c5ee6bb289ce872bd9e1b7c036dd4fb9b22aa82f28f9d1d030c8bf1f2abb66"
+}
