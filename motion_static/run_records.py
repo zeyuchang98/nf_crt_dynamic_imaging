@@ -85,6 +85,14 @@ def initialize_run_metadata(config):
     })
     if config.get("temporal_weight", 0) > 0:
         config["loss"] += " + temporal_weight * intensity_temporal_l2"
+    # Oracle diagnostics feed one true branch into the model during training.
+    oracle = config.get("oracle_branch")
+    if oracle is not None:
+        config.update(
+            true_motion_used_for_training=oracle == "motion",
+            reference_intensity_labels_used_for_training=oracle == "intensity",
+            oracle_note=f"Diagnostic only: the {oracle} branch is the phantom's ground truth, not learned",
+        )
 
 
 def snapshot_source(root, out):
@@ -138,7 +146,7 @@ def save_checkpoint(out, model, optimizer, scheduler, config, step):
 
 
 SUMMARY_FIELDS = (
-    'run', 'status', 'phantom', 'model', 'evaluation_split', 'size', 'cycles', 'frames',
+    'run', 'status', 'phantom', 'model', 'oracle_branch', 'evaluation_split', 'size', 'cycles', 'frames',
     'rank', 'steps', 'seed', 'motion_levels', 'motion_min_resolution', 'motion_max_resolution',
     'intensity_levels', 'intensity_min_resolution', 'intensity_max_resolution',
     'image_rrmse', 'image_psnr_db', 'image_ssim', 'intensity_rrmse',

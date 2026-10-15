@@ -43,6 +43,19 @@ coordinates, without motion. `--rank` works for both low-rank models. The runner
 removes inapplicable `motion_encoding` and `reference_time` fields for the
 motion-free model and rejects the nested-only temporal penalty for it.
 
+### Oracle-branch diagnostics
+
+`"oracle_branch": "motion"` or `"intensity"` replaces that branch of
+`nested_low_rank_hash_nf` with the complex phantom's true field
+([models/oracle_branches.py](../models/oracle_branches.py)) and trains only the
+other branch from image MSE. Both branches are built first, so the learned
+branch's initialization and the training batches match the same configuration
+without an oracle. Only the complex phantom, midpoint split and reference time
+-0.5 are accepted; the temporal penalty is rejected. Runs are labelled with
+`true_motion_used_for_training` or `reference_intensity_labels_used_for_training`
+and an `oracle_branch` summary column. They diagnose branch capacity and
+identifiability; they are not reconstruction methods.
+
 ## Usage
 
 From the repository root, inspect the resolved configuration without training or

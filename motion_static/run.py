@@ -19,6 +19,7 @@ from .models.nested_mlp import NestedMLP
 from .models.nested_hash_nf import NestedHashNF
 from .models.nested_low_rank_hash_nf import NestedLowRankHashNF
 from .models.low_rank_intensity import LowRankIntensity
+from .models.oracle_branches import PHANTOM_REFERENCE_TIME, TrueMotion, TrueReferenceIntensity
 from .phantoms.data import DEFAULT_PHANTOM, DEFAULT_SAMPLING, coordinate_grid, make_pair, sample
 from .splits import block_split
 from .evaluation.evaluate import evaluate
@@ -61,7 +62,7 @@ def build_model(config):
             **config["encoding"],
         )
     if config["model"] == "nested_low_rank_hash_nf":
-        return NestedLowRankHashNF(
+        model = NestedLowRankHashNF(
             rank=config["rank"],
             width=config["head_width"],
             temporal_width=config["temporal_width"],
@@ -70,7 +71,24 @@ def build_model(config):
             motion_encoding=config.get("motion_encoding"),
             **config["encoding"],
         )
+        return apply_oracle_branch(model, config)
     raise ValueError(f"Unknown model: {config['model']}")
+
+
+def apply_oracle_branch(model, config):
+    """Diagnostic only: replace one learned branch by the phantom's true field.
+
+    Both branches are built first, so the learned branch's initialization and
+    all later training batches match the run without an oracle branch.
+    """
+    branch = config.get("oracle_branch")
+    if branch == "motion":
+        model.motion = TrueMotion(reference_time=config["reference_time"])
+    elif branch == "intensity":
+        model.intensity = TrueReferenceIntensity(size=config["size"])
+    elif branch is not None:
+        raise ValueError(f"Unknown oracle branch: {branch}")
+    return model
 
 
 def build_optimizer(model, config):
@@ -83,7 +101,13 @@ def build_optimizer(model, config):
     if model_name in ("hash_nf", "low_rank_hash_nf"):
         fields = [("image", model)]
     elif model_name in ("nested_hash_nf", "nested_low_rank_hash_nf"):
-        fields = [("intensity", model.intensity), ("motion", model.motion.field)]
+        # An oracle branch is fixed ground truth with nothing to optimize.
+        oracle = config.get("oracle_branch")
+        fields = []
+        if oracle != "intensity":
+            fields.append(("intensity", model.intensity))
+        if oracle != "motion":
+            fields.append(("motion", model.motion.field))
     else:
         return torch.optim.Adam([
             {"params": model.parameters(), "lr": config["mlp_lr"], "name": "mlp"},
@@ -101,7 +125,8 @@ def build_optimizer(model, config):
             "lr": config["mlp_lr"],
             "name": f"{branch_name}_mlp",
         })
-    if model_name in ("low_rank_hash_nf", "nested_low_rank_hash_nf"):
+    learned_low_rank = config.get("oracle_branch") != "intensity"
+    if model_name in ("low_rank_hash_nf", "nested_low_rank_hash_nf") and learned_low_rank:
         if model_name == "low_rank_hash_nf":
             temporal_parameters = model.temporal.parameters()
             temporal_group_name = "image_time_mlp"
@@ -298,6 +323,19 @@ def parse_configuration(argv=None):
         config.update(temporal_weight=weight, temporal_step=delta,
                       temporal_sampling="detached warped training coordinates; same q at both times",
                       temporal_penalty="mean squared finite-difference time derivative")
+
+    # Oracle diagnostics replace one branch by the complex phantom's true field.
+    oracle = config.get("oracle_branch")
+    if oracle is not None:
+        if oracle not in ("motion", "intensity"):
+            parser.error("oracle_branch must be motion or intensity")
+        if (config["model"] != "nested_low_rank_hash_nf" or config["phantom"] != "complex"
+                or config["evaluation_split"] != "midpoints"):
+            parser.error("oracle_branch requires nested_low_rank_hash_nf, the complex phantom and midpoints")
+        if config["reference_time"] != PHANTOM_REFERENCE_TIME:
+            parser.error("oracle_branch requires the phantom's motion reference time -0.5")
+        if weight > 0:
+            parser.error("oracle_branch does not support the temporal penalty")
 
     # Blocks are a separate protocol, with their own grid divisibility constraint.
     if config["evaluation_split"] == "blocks":
