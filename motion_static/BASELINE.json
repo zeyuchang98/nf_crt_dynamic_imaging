@@ -1,12 +1,13 @@
 {
-  "purpose": "Current validated implementation and reusable experiment template after the approved flat-output cleanup. No research run or new metric protocol is implied.",
+  "purpose": "Current validated implementation and reusable experiment template after the flat-output cleanup and training readability refactor. No research run or new metric protocol is implied.",
   "source_commit_before_cleanup": "e7a516bb7ef99a68deb1e843b1f5e20d45196dad",
   "python_files": 55,
   "validation": {
     "command": "python -m unittest discover -s motion_static/tests -v",
-    "tests": 79,
+    "tests": 81,
     "status": "passed",
-    "metric_parity": "All pre-cleanup midpoint and block metrics matched exactly on inference-only 16x16 fixtures; no research training run."
+    "metric_parity": "All pre-cleanup midpoint and block metrics matched exactly on inference-only 16x16 fixtures; no research training run.",
+    "training_parity": "Seven four-step synthetic comparisons against 208b8ff matched loss, weights, RNG, optimizer/scheduler state, monitoring indices and numeric logs exactly, excluding elapsed time. Sixteen summary-row comparisons matched; no research experiment."
   },
   "sha256": {
     "motion_static/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -31,7 +32,7 @@
     "motion_static/evaluation/summarize.py": "703afecd1e1bc2ebc456caf35940cfc1160d8b65a73f28f8ea6d1323c5857830",
     "motion_static/evaluation/summarize_blocks.py": "7d6abc69a869859b0e2077b6d0f6ac82471911ab7e727951ef286b2df46fb457",
     "motion_static/hash_sweep.py": "273634e1516f3bba4fab7eb8f7aa381f2ed1f5ba1c2e55fd88211efc90b2ba60",
-    "motion_static/losses.py": "2a0db63c389b62b5c91fed5ad0fa8017f0e70e481e3b5dc2d120b1ebf6e53f17",
+    "motion_static/losses.py": "015684cf57ecfdf9975daa91cafd8cf3bfabe9365d2a12689d0db4d8a4f862b4",
     "motion_static/models/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "motion_static/models/coordinates.py": "90ac4885b3248df7fed2deb4803256e08b819d63def5764d4283a467a537f4df",
     "motion_static/models/hash_grid.py": "d920b2570d9842a961766a5bea5f62be4ef5d848d662ece1eba41562c78d7757",
@@ -44,8 +45,8 @@
     "motion_static/phantoms/complex.py": "dfe6df09cc23496d5fb522dd1c9933cccad4f6a758edc0a87cc4e276a7c9c6c0",
     "motion_static/phantoms/data.py": "55efeaccb50231810e0025b2db5579d5e31c5f87941070e540033e25988b5be0",
     "motion_static/phantoms/simple.py": "4a0bd6cafd703cd0009c19245801b83f853b233030bffad21f74c482a85b9ba7",
-    "motion_static/run.py": "0a3bfa56ca96b654c75e79c262728ce74106a158b4b4dc94576b5a4ba863a87b",
-    "motion_static/run_records.py": "1d86e2c16a15faf01d0a9a6828375652d78503586ab5f605e7b4de2d6bd4be8b",
+    "motion_static/run.py": "faebb2ad3daeeb96cef2ccd35a7df3449be68ba6561d61e03ede4e683ae7c5e8",
+    "motion_static/run_records.py": "e7686d090af4168902f2b2052d2efdbb226d5ea3dae323ef23cb27a443a7bab0",
     "motion_static/splits.py": "3bfa1ab86d4bba2081c89001743a38fbc638d224d4a37e3f094c3c8f8d248200",
     "motion_static/tests/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "motion_static/tests/test_block_split.py": "5fa6271433afecebb6e8fce39048c1b454e601aaf4d53e24a69f4d2f78f079fa",
@@ -61,14 +62,14 @@
     "motion_static/tests/test_nested_hash_nf.py": "b1ddb32f6bc2026a3f6469d601ee18f338222d760770636cf66e70ca5b003270",
     "motion_static/tests/test_phantoms.py": "a462137a7e197e53d0557fcfcb2bf9890584e7dcc64f21a0f4ef19d868ddd16f",
     "motion_static/tests/test_run_records.py": "8f006a2a124441cfa0c0882d9905aaeb1f431e2b4caee41c328d1ba60372a30f",
-    "motion_static/tests/test_temporal_loss.py": "ae9ed3c2bc47fc949c596ab3444fc2062f17c32786af24fc4a693bcd54516a8b",
+    "motion_static/tests/test_temporal_loss.py": "73a382e2c045a0630f1590de45530895183b840f5c013b497d2afb16a80d946a",
     "motion_static/tests/test_training_monitor.py": "84a7e6a533d6fb9345ce28370b0e32a62317bb114671b12e90ea8d2031c3836a",
-    "motion_static/training_monitor.py": "0f944966e5bd3ec09e94e571130f873468537d30c451162c2eb29c3c578e3d39",
+    "motion_static/training_monitor.py": "d2bb55fad70871e326219a96d692df9468c619d5cb6e09d9b36579ed52f8432f",
     "motion_static/experiments/template.json": "2c147c609915886f10a97d6fdd9719e3de014fb3d2b52d2838d0c573261d03e6"
   },
   "historical_commit_ids_are_provenance_only": true,
   "cleanup_matching_remote_implementation_commit": "1d4265ec0ee3eeab781f4a475af65f0641408b21",
-  "updated_from_commit": "8ac9dc90177ee9f23275aa94afc518a72ec4492b",
+  "updated_from_commit": "208b8ffc4ec0c1b2232a0b174ee506ed822fe541",
   "default_benchmark": {
     "phantom": "complex",
     "size": 64,

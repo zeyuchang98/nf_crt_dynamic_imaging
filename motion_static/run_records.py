@@ -1,11 +1,22 @@
-"""Small shared helpers for flat run records and their derived CSV index."""
+"""Persist run metadata, source, checkpoints, logs and the derived summary CSV.
+
+This module records existing results. It does not define losses, train models or
+compute metrics. Fixed-sample loss recording belongs to training_monitor.py.
+"""
 import csv
 from datetime import datetime, timezone
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
+import platform
+import subprocess
 import tempfile
+from zipfile import ZipFile, ZIP_DEFLATED
+
+import numpy as np
+import torch
 
 
 def utc_now():
@@ -13,16 +24,19 @@ def utc_now():
 
 
 def write_json(path, value):
+    """Replace a JSON record atomically so readers do not see a partial file."""
     path = Path(path)
-    temporary = path.with_suffix(path.suffix + '.tmp')
-    temporary.write_text(json.dumps(value, indent=2, allow_nan=False) + '\n')
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(value, indent=2, allow_nan=False) + "\n")
     temporary.replace(path)
 
 
 class Tee:
     """Keep terminal output visible while recording the same text in run.log."""
+
     def __init__(self, terminal, log):
-        self.terminal, self.log = terminal, log
+        self.terminal = terminal
+        self.log = log
 
     def write(self, value):
         self.terminal.write(value)
@@ -38,12 +52,78 @@ class Tee:
 def read_report(run):
     """Read the compact record, or an explicitly supplied historical run."""
     run = Path(run)
-    path = run / 'metrics.json'
+    path = run / "metrics.json"
     if not path.exists():
-        path = run / 'summary.json'
+        path = run / "summary.json"
     report = json.loads(path.read_text())
-    report['config'] = json.loads((run / 'config.json').read_text())
+    report["config"] = json.loads((run / "config.json").read_text())
     return report
+
+
+def initialize_run_metadata(config):
+    """Add runtime descriptions in place, clearing status from any prior run."""
+    config.pop("error", None)
+    config.pop("finished_at", None)
+    config.update({
+        "status": "running",
+        "started_at": utc_now(),
+        "device": "cpu",
+        "scheduler": "cosine to zero",
+        "torch_version": str(torch.__version__),
+        "numpy_version": np.__version__,
+        "python_version": platform.python_version(),
+        "platform": platform.platform(),
+        "loss": "MSE(predicted image, observed image)",
+        "true_motion_used_for_training": False,
+        "reference_intensity_labels_used_for_training": False,
+        "midpoint_labels_used_for_training": False,
+        "joint_period": 1.,
+        "time_bounds": config["coordinate_bounds"][2],
+        "intervals_per_cycle": (config["frames"] - 1) / config["cycles"],
+        "monitoring": "Fixed uniform samples without replacement; image MSE; no validation gradients",
+        "monitor_lr_convention": "Learning rates after scheduler step, for the next optimizer update",
+    })
+    if config.get("temporal_weight", 0) > 0:
+        config["loss"] += " + temporal_weight * intensity_temporal_l2"
+
+
+def snapshot_source(root, out):
+    """Save actual Python sources (including local edits) and their hashes."""
+    hashes = {}
+    with ZipFile(out / "source.zip", "w", compression=ZIP_DEFLATED) as archive:
+        for path in sorted(root.rglob("*.py")):
+            relative = path.relative_to(root)
+            if relative.parts[0] in ("archive", "results"):
+                continue
+            name = str(Path(root.name) / relative)
+            content = path.read_bytes()
+            hashes[name] = hashlib.sha256(content).hexdigest()
+            archive.writestr(name, content)
+
+    commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=root,
+        capture_output=True, text=True, check=False,
+    )
+    return {
+        "git_commit": commit.stdout.strip() if commit.returncode == 0 else None,
+        "source_archive": "source.zip",
+        "source_sha256": hashes,
+    }
+
+
+def save_checkpoint(out, model, optimizer, scheduler, config, step):
+    """Save an explicitly requested intermediate step, including optimizer/RNG."""
+    checkpoint_dir = Path(out) / "checkpoints"
+    checkpoint_dir.mkdir(exist_ok=True)
+    checkpoint = {
+        "config": config,
+        "step": step,
+        "state_dict": model.state_dict(),
+        "optimizer": optimizer.state_dict(),
+        "scheduler": scheduler.state_dict(),
+        "torch_rng_state": torch.get_rng_state(),
+    }
+    torch.save(checkpoint, checkpoint_dir / f"step_{step:06d}.pt")
 
 
 SUMMARY_FIELDS = (
@@ -58,45 +138,70 @@ SUMMARY_FIELDS = (
 
 
 def summary_row(run, config, report=None):
-    row = {key: config.get(key, '') for key in SUMMARY_FIELDS}
-    row.update(run=run.name, status=config.get('status', 'unknown'),
-               git_commit=config.get('code_provenance', {}).get('git_commit', ''))
-    if config['model'] != 'nested_low_rank_hash_nf':
-        row['rank'] = ''
-    intensity = config.get('encoding', {})
-    motion = {**intensity, **config.get('motion_encoding', {})}
-    for branch, settings in (('intensity', intensity), ('motion', motion)):
-        if config['model'] not in ('nested_hash_nf', 'nested_low_rank_hash_nf'):
-            continue
-        for key in ('levels', 'min_resolution', 'max_resolution'):
-            value = settings.get(key, '')
-            row[f'{branch}_{key}'] = json.dumps(value) if isinstance(value, list) else value
+    """Build one labeled CSV row; missing metrics stay blank, not zero.
+
+    The two evaluation protocols select different image/intensity domains.
+    Motion always uses the existing foreground displacement metrics.
+    """
+    # Configuration and provenance.
+    row = {key: config.get(key, "") for key in SUMMARY_FIELDS}
+    row["run"] = run.name
+    row["status"] = config.get("status", "unknown")
+    row["git_commit"] = config.get("code_provenance", {}).get("git_commit", "")
+    if config["model"] != "nested_low_rank_hash_nf":
+        row["rank"] = ""
+
+    # Motion settings inherit from the intensity hash unless overridden.
+    if config["model"] in ("nested_hash_nf", "nested_low_rank_hash_nf"):
+        intensity_settings = config.get("encoding", {})
+        motion_settings = {**intensity_settings, **config.get("motion_encoding", {})}
+        for branch, settings in (("intensity", intensity_settings), ("motion", motion_settings)):
+            for key in ("levels", "min_resolution", "max_resolution"):
+                value = settings.get(key, "")
+                if isinstance(value, list):
+                    value = json.dumps(value)  # Per-axis resolutions fit in one CSV cell.
+                row[f"{branch}_{key}"] = value
+
+    # Select saved metrics; do not recompute or normalize any values here.
     if report is not None:
-        blocks = report['evaluation_split'] == 'blocks'
-        image = report['image']['test_pixels' if blocks else 'unseen_time_midpoints']
-        intensity = (report.get('reference_intensity_full_grid', {}) if blocks else
-                     report.get('reference_intensity', {}).get('unseen_time_midpoints', {}))
-        motion = report.get('motion', {})
-        motion = (motion if blocks else motion.get('midpoint', {})).get('foreground', {})
-        for name, scores in (('image', image), ('intensity', intensity)):
-            for key in ('rrmse', 'psnr_db', 'ssim'):
-                row[f'{name}_{key}'] = scores.get(key, '')
-        for key in ('vector_rrmse', 'endpoint_rmse_pixels', 'mean_endpoint_error_pixels'):
-            row[f'motion_{key}'] = motion.get(key, '')
-        row['training_seconds'] = report['training_seconds']
-    if (run / 'loss.csv').exists():
-        with (run / 'loss.csv').open() as stream:
-            last = None
-            for last in csv.DictReader(stream):
-                pass
-        if last:
-            for key in ('fixed_training_mse', 'fixed_validation_mse'):
-                row[key] = last.get(key, '')
+        if report["evaluation_split"] == "blocks":
+            image_scores = report["image"]["test_pixels"]
+            intensity_scores = report.get("reference_intensity_full_grid", {})
+            motion_scores = report.get("motion", {}).get("foreground", {})
+        else:
+            image_scores = report["image"]["unseen_time_midpoints"]
+            intensity_scores = report.get("reference_intensity", {}).get("unseen_time_midpoints", {})
+            motion_scores = report.get("motion", {}).get("midpoint", {}).get("foreground", {})
+
+        for branch, scores in (("image", image_scores), ("intensity", intensity_scores)):
+            for metric in ("rrmse", "psnr_db", "ssim"):
+                row[f"{branch}_{metric}"] = scores.get(metric, "")
+        for metric in ("vector_rrmse", "endpoint_rmse_pixels", "mean_endpoint_error_pixels"):
+            row[f"motion_{metric}"] = motion_scores.get(metric, "")
+        row["training_seconds"] = report["training_seconds"]
+
+    # Even an incomplete run can have a useful final monitoring row.
+    last_losses = read_last_losses(run)
+    for key in ("fixed_training_mse", "fixed_validation_mse"):
+        if last_losses:
+            row[key] = last_losses.get(key, "")
     return row
 
 
+def read_last_losses(run):
+    """Read the final logged step without loading the full loss history."""
+    path = run / "loss.csv"
+    if not path.exists():
+        return {}
+    last_row = {}
+    with path.open() as stream:
+        for row in csv.DictReader(stream):
+            last_row = row
+    return last_row
+
+
 def update_summary(root):
-    """Regenerate summary.csv from flat child runs; never mix evaluation protocols."""
+    """Regenerate summary.csv with explicit protocol labels under a writer lock."""
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
     # Lock the directory itself so no extra lock file is left in results/.
@@ -104,17 +209,21 @@ def update_summary(root):
     try:
         fcntl.flock(descriptor, fcntl.LOCK_EX)
         rows = []
-        for path in sorted(root.glob('*/config.json')):
-            config = json.loads(path.read_text())
-            report_path = path.parent / 'metrics.json'
-            report = (json.loads(report_path.read_text())
-                      if config.get('status') == 'complete' and report_path.exists() else None)
-            rows.append(summary_row(path.parent, config, report))
-        with tempfile.NamedTemporaryFile(mode='w', newline='', dir=root, delete=False) as stream:
+        for config_path in sorted(root.glob("*/config.json")):
+            run = config_path.parent
+            config = json.loads(config_path.read_text())
+            report_path = run / "metrics.json"
+            report = None
+            if config.get("status") == "complete" and report_path.exists():
+                report = json.loads(report_path.read_text())
+            rows.append(summary_row(run, config, report))
+
+        # Write the complete index before replacing the previous one.
+        with tempfile.NamedTemporaryFile(mode="w", newline="", dir=root, delete=False) as stream:
             temporary = Path(stream.name)
             writer = csv.DictWriter(stream, fieldnames=SUMMARY_FIELDS)
             writer.writeheader()
             writer.writerows(rows)
-        temporary.replace(root / 'summary.csv')
+        temporary.replace(root / "summary.csv")
     finally:
         os.close(descriptor)

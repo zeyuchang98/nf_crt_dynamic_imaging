@@ -175,3 +175,23 @@ No research experiment or parameter search was launched. New integration fixture
 used initialized models without optimizer updates; existing numerical unit tests
 retain their small synthetic optimizer checks. These checks establish software
 consistency, not model quality on the new benchmark.
+
+## Training readability refactor
+
+`run.train()` now reads as sampling, objective calculation, optimizer update and
+recording. Optimizer groups are built separately. `losses.compute_training_losses()`
+assembles named scalar terms and their weighted total; the monitor receives names
+instead of relying on tuple order. Run metadata, source snapshots and checkpoints
+are in `run_records.py`, whose summary extraction explicitly separates midpoint
+and block report fields. The README documents where to edit an agreed future loss.
+Current formulas, weights, defaults, logging intervals and output schemas are unchanged.
+
+**Validation completed:** 81 tests passed, including analytic objective/gradient
+checks and verification that zero temporal weight skips that penalty's queries.
+Compared with commit `208b8ffc4ec0c1b2232a0b174ee506ed822fe541`, seven four-step
+synthetic checks covered all four model families and both zero/nonzero temporal
+weight for nested models. Loss history, weights, RNG, optimizer/scheduler checkpoint
+state, monitoring indices, console values and loss CSV values matched exactly
+(elapsed time excluded). Sixteen summary-row comparisons also matched. Refreshed
+`BASELINE.json`; results remain empty except for `.gitkeep`. No research experiment
+or parameter search was launched, and no new scientific conclusion is implied.

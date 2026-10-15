@@ -48,12 +48,17 @@ class TrainingMonitor:
             csv.DictWriter(stream, fieldnames=self.columns).writeheader()
 
     def record(self, model, optimizer, step, elapsed, batch_losses=None):
+        """Record named scalar batch losses and evaluate the updated model.
+
+        batch_losses maps CSV column names to floats, not tensors. When adding
+        a loss term, add its name to self.columns and its curve to plot().
+        """
         row = dict(step=step, elapsed_seconds=elapsed,
                    fixed_training_mse=fixed_mse(model, *self.training[:2]))
         if self.validation is not None:
             row["fixed_validation_mse"] = fixed_mse(model, *self.validation[:2])
         if batch_losses is not None:
-            row.update(zip(("batch_mse", "temporal_l2", "total_loss"), batch_losses))
+            row.update(batch_losses)
         row.update(zip(self.lr_names, (group["lr"] for group in optimizer.param_groups)))
         if not all(np.isfinite(value) for value in row.values()):
             raise RuntimeError(f"Nonfinite training monitor value at step {step}")

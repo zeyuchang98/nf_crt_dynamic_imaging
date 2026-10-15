@@ -24,6 +24,7 @@ losses, coordinate conventions, model architectures or metric definitions.
 |---|---|
 | Shared model implementations | [models/README.md](models/README.md) |
 | Single training entry point | [run.py](run.py) |
+| Objective and individual loss terms | [losses.py](losses.py) |
 | Fixed losses, learning rates and curves | [training_monitor.py](training_monitor.py) |
 | Run log, metadata and summary index | [run_records.py](run_records.py) |
 | Data and sampling | [phantoms/data.py](phantoms/data.py), [phantoms/complex.py](phantoms/complex.py) |
@@ -35,6 +36,41 @@ backward displacement to reference coordinates and is zero at its reference time
 Low-rank intensity is a spatial hash basis times temporal MLP coefficients:
 `phi_intensity(q,t) = sum_k b_k(q) a_k(t)`. Total rank includes static intensity.
 R=2 is a working toy prototype, not an established bound for real objects.
+
+## Reading training code and changing a loss
+
+Start at `train()` in [run.py](run.py). Each iteration has four explicit stages:
+sample observed points, compute losses, backpropagate and update, then record.
+`build_optimizer()` defines hash/MLP parameter groups separately. Checkpoint,
+source snapshot and run metadata writing live in [run_records.py](run_records.py).
+Its summary code reads existing metrics with an explicit branch for each protocol;
+it does not calculate losses or metrics.
+
+The objective is assembled in `compute_training_losses()` in
+[losses.py](losses.py). It returns scalar tensors named `batch_mse`, `temporal_l2`
+and `total_loss`. Only `total_loss` is differentiated. Currently:
+
+```python
+total_loss = image_mse + temporal_weight * temporal_l2
+```
+
+The default temporal weight remains zero. That optional existing term still uses
+fixed, detached reference coordinates; it does not pass gradients into motion.
+No new loss or regularizer was introduced by the readability refactor.
+
+When an objective change has been agreed, edit its formula and weighted sum in
+`compute_training_losses()`. For a new term, return it under a meaningful name
+and add that name to `TrainingMonitor.columns` and the appropriate curve in
+`TrainingMonitor.plot()`. Update the loss description in
+`initialize_run_metadata()` and validate any new configuration options in
+`parse_configuration()`. No optimizer-loop changes are needed to backpropagate
+the new total. The returned `train()` history keeps its existing four columns;
+named terms are recorded in `loss.csv`.
+
+Batch losses describe the model **before** its update. Fixed training/validation
+MSE describes the model **after** its update, without gradients; these monitoring
+values remain image MSE even when the optimized objective has extra terms.
+Recorded learning rates are for the next update, after the scheduler step.
 
 ## Run organization
 
