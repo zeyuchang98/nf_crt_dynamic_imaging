@@ -2,6 +2,11 @@
 
 # Joint Motion / Intensity Hash Sweep
 
+The manifest in this directory is pinned to the historical source. Following the
+approved phantom-default update, prepare a fresh manifest in a new configuration
+directory before a new sweep; see the [current training guide](../../../README.md#run-a-fresh-experiment).
+The 36 parameter combinations already use the standard complex/3-cycle/379-frame data.
+
 Approved on 2026-10-14: **36 new runs, each with 24,000 optimizer steps**.
 
 For transfer to a persistent machine, use [Run on another machine](RUN_ON_ANOTHER_MACHINE.md).

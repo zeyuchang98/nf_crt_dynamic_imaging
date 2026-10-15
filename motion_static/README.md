@@ -11,10 +11,10 @@ The current runner fits toy images directly; it does not implement PACT measurem
 - [BASELINE.json](BASELINE.json): SHA-256 hashes of the 52 active Python files and 48 configuration files.
 - [Historical experiment records](results/README.md): configurations, metrics, numeric losses, and loss curves.
 
-The retained Python implementation was verified against pre-reset commit `1d4265e`.
-That identifier is provenance only; validate the current files with `BASELINE.json`.
-The cleanup removes old outputs and duplicate legacy code; it does not change models,
-coordinate conventions, losses, metric definitions, or experiment settings.
+At cleanup, the retained Python implementation was verified against pre-reset commit
+`1d4265e`. That identifier is provenance only. The subsequent approved default-sampling
+update is recorded in `PROGRESS.md`; validate the current files with `BASELINE.json`.
+Models, phantom dynamics, losses and metric definitions remain unchanged.
 
 ## Implementation map
 
@@ -41,6 +41,12 @@ not an established rank limit for real objects. See the [model guide](models/REA
 
 ## Run a fresh experiment
 
+The default benchmark is **complex, 64x64, 3 complete cycles, 379 training frames**.
+Time spans `[-0.5, 2.5]`, with 126 intervals per cycle and 378 unseen midpoint frames.
+All complex experiment presets use this sampling. The training entry point and the
+standalone phantom generator default to `complex`; missing sampling settings use
+the same shared defaults. The trainer prints its resolved sampling before starting.
+
 From the repository root, with PyTorch, NumPy, Matplotlib, SciPy, and scikit-image
 available in the Python environment:
 
@@ -49,18 +55,32 @@ python -m unittest discover -s motion_static/tests -v
 python -m motion_static.run --help
 python -m motion_static.run --phantom complex --model nested_low_rank_hash_nf \
   --config motion_static/experiments/complex/nested_low_rank_hash_nf.json \
+  --rank 2 \
   --out motion_static/results/rerun/rank_2
 ```
 
 This is a usage example, not authorization to launch a new research run. Choose the
-configuration and training budget before running. The existing configuration is
-unchanged. For R=3, use `--rank 3` and a different output directory. Run the original
+configuration and training budget before running. Rank, hash settings and training
+budgets are not standardized by the phantom-default update; the base low-rank JSON
+still specifies rank 3, so this rank-2 example overrides it explicitly.
+For R=3, use `--rank 3` and a different output directory. Run the original
 nested model with `--model nested_hash_nf` and its corresponding configuration.
+
+An intentional single-cycle comparison must specify `--cycles 1 --frames 64`.
+The optional `--phantom simple` presets retain their original single-cycle/64-frame
+sampling. Saved configurations under `results/` describe historical runs and have
+not been rewritten to the new defaults.
 
 Always use a **new output directory**. Historical record directories are incomplete
 by design after cleanup and must not be passed to resume/skip validation as if they
 still contain trained models and predictions. The trainer already refuses to
 silently overwrite an existing output directory.
+
+The old sweep manifest pins the implementation used by the historical runs. For an
+approved fresh sweep, run `python -m motion_static.hash_sweep prepare --config-dir <new-config-directory>`
+first, then supply that directory and a new `--out` to `preflight` and `run`. This
+records the current source without changing old manifests or mixing runs from
+different implementations. Do not use `--publish`; see below.
 
 Every new run still writes final weights, source/configuration provenance, numeric
 loss/LR history, fixed training/validation losses, loss curves, predictions, metrics,

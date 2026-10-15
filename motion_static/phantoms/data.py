@@ -7,6 +7,13 @@ import numpy as np
 from . import simple, complex
 
 
+DEFAULT_PHANTOM = "complex"
+DEFAULT_SAMPLING = {
+    "complex": {"frames": 379, "cycles": 3},
+    "simple": {"frames": 64, "cycles": 1},
+}
+
+
 def get_phantom(name):
     return {"simple": simple, "complex": complex}[name]
 
@@ -41,7 +48,11 @@ def sample(name, size, times, time_bounds=(-0.5, 0.5)):
                 u_true=u.reshape(*shape, 2).astype(np.float32), foreground_mask=truth > 0)
 
 
-def make_pair(name, size=64, frames=64, cycles=1):
+def make_pair(name=DEFAULT_PHANTOM, size=64, frames=None, cycles=None):
+    """Use the approved phantom defaults unless sampling is explicitly supplied."""
+    defaults = DEFAULT_SAMPLING[name]
+    frames = defaults["frames"] if frames is None else frames
+    cycles = defaults["cycles"] if cycles is None else cycles
     if frames < 2:
         raise ValueError("Use at least two training frames")
     if not isinstance(cycles, int) or isinstance(cycles, bool) or cycles < 1:
@@ -54,13 +65,14 @@ def make_pair(name, size=64, frames=64, cycles=1):
             "midpoint": sample(name, size, (times[:-1] + times[1:]) / 2, bounds)}
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--phantom", choices=("simple", "complex"), required=True)
+    parser.add_argument("--phantom", choices=("simple", "complex"), default=DEFAULT_PHANTOM,
+                        help="Phantom to generate (default: complex)")
     parser.add_argument("--out", type=Path)
-    parser.add_argument("--frames", type=int, default=64)
-    parser.add_argument("--cycles", type=int, default=1)
-    args = parser.parse_args()
+    parser.add_argument("--frames", type=int, help="Training frames (complex: 379; simple: 64)")
+    parser.add_argument("--cycles", type=int, help="Complete cycles (complex: 3; simple: 1)")
+    args = parser.parse_args(argv)
     root = Path(__file__).resolve().parents[1]
     out = args.out or root / "results" / args.phantom / "phantom"
     out.mkdir(parents=True, exist_ok=False)

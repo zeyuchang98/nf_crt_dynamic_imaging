@@ -1,5 +1,11 @@
 # Run the 36-Configuration Hash Sweep on Another Machine
 
+This is the historical handoff. After the approved phantom-default update, use a
+fresh source manifest and output directory as described in the
+[current training guide](../../../README.md#run-a-fresh-experiment). The committed
+historical manifest intentionally remains unchanged; do not resume its old runs
+with the new implementation or use the historical `--publish` commands below.
+
 ## Purpose and current handoff
 
 This document transfers the **existing, approved 36-configuration experiment**.

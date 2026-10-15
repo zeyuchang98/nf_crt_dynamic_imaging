@@ -4,11 +4,37 @@ Last updated: 2026-10-14.
 
 **Goal: represent real dynamic objects for PACT reconstruction, including both motion and genuine intensity changes.** The phantom is an implementation and separation diagnostic, not the final target. No experiment below uses a PACT acoustic forward operator or real measurements yet. Known shapes, motion laws, and brightness curves are not built into the learned representation.
 
-**Current status:** the local 24k-step hash sweep remains stopped at 10/36 runs. The second machine has published a separate complete 36/36 sweep on GitHub at `1d4265e`; see the remote-inventory update below. Compact records from all 36 second-machine runs are now included; their large artifacts were removed, and the subsequent history reset below removes the supported recovery path. The active Python implementation matches that remote version exactly. The local sweep's lowest aggregate intensity and motion errors come from motion 4 levels/max 32 with intensity 8 levels/max 64, but that local run's predicted intensity is nearly static. In the October 14 GIF review, the user rated the earlier single-cycle, 8k R=2 result as very good and preferred it as a visual reference; see Step 2. Lower aggregate error alone does not establish better recovery of intensity dynamics. Keep local and second-machine runs distinct, even when their configurations match.
+**Current status:** the local 24k-step hash sweep remains stopped at 10/36 runs. The second machine has published a separate complete 36/36 sweep on GitHub at `1d4265e`; see the remote-inventory update below. Compact records from all 36 second-machine runs are now included; their large artifacts were removed, and the subsequent history reset below removes the supported recovery path. At cleanup, the active Python implementation matched that remote version exactly; the approved default-sampling update below was applied afterward. The local sweep's lowest aggregate intensity and motion errors come from motion 4 levels/max 32 with intensity 8 levels/max 64, but that local run's predicted intensity is nearly static. In the October 14 GIF review, the user rated the earlier single-cycle, 8k R=2 result as very good and preferred it as a visual reference; see Step 2. Lower aggregate error alone does not establish better recovery of intensity dynamics. Keep local and second-machine runs distinct, even when their configurations match.
 
 **Prior completed comparison:** low-rank intensity improves some branch errors; more cycles, frames, and steps improve image fitting without recovering the true decomposition; larger motion grid cells improve branch errors but worsen image fitting. In the eight-level, 32k-step intensity-resolution comparison, max 64 gives the lowest midpoint image/intensity RRMSE among max 128, 64, and 32: 3.13% / 35.10%. Max 32 reduces motion RMSE further to 3.29 px, but image/intensity errors rise to 3.60% / 42.04%. These are single-seed toy results; intensity remains blurred and motion-effect GIFs retain local distortions. Reliable separation remains unresolved. R=2 is the working prototype, not an established rank bound for real objects.
 
 This record collects the completed steps, their metrics, GIFs, loss histories, and limitations. Recent loss and input-coordinate ideas are marked as discussion only. Earlier simple-phantom, block-split, and temporal-L2 experiments are retained separately at the end.
+
+## Default phantom for future experiments, 2026-10-14
+
+**Approved and implemented:** use the complex 64x64 phantom with 3 complete cycles
+and 379 training frames as the default benchmark. Time is [-0.5, 2.5], with 126
+intervals per cycle and 378 unseen midpoint frames. This standardizes the existing
+multicycle data; it does not change geometry, motion or brightness dynamics.
+
+Updated the four remaining single-cycle complex presets. All 44 complex run
+configurations now use 3 cycles and 379 frames, including the existing 36-run
+sweep. The training entry point, phantom generator and missing-field fallback
+share these defaults. The trainer prints the actual phantom, size, cycles, frames
+and time range before generating data. Explicit sampling overrides remain
+available; the optional simple presets retain their original settings.
+
+Model rank, hash settings, training budgets, loss and metrics are unchanged.
+The README rank-2 example now explicitly passes `--rank 2`; its base low-rank
+configuration still specifies rank 3. Historical result files and the old sweep
+manifest remain untouched. Fresh sweeps must prepare a new manifest and use a new
+output directory so source versions and old results are not mixed.
+
+**Verified:** all 73 unit tests passed, including default frame/time sampling,
+disjoint midpoint evaluation, all complex presets, all four training model entry
+points, missing sampling fields, explicit single-cycle overrides and the optional
+simple preset. Refreshed `BASELINE.json` hashes. No new research training run was
+launched; no new performance result is claimed.
 
 ## 1. Representation and Evaluation Conventions
 

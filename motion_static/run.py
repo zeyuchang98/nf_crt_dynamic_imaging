@@ -16,7 +16,7 @@ from .models.coordinates import DEFAULT_BOUNDS
 from .models.nested_mlp import NestedMLP
 from .models.nested_hash_nf import NestedHashNF
 from .models.nested_low_rank_hash_nf import NestedLowRankHashNF
-from .phantoms.data import coordinate_grid, make_pair, sample
+from .phantoms.data import DEFAULT_PHANTOM, DEFAULT_SAMPLING, coordinate_grid, make_pair, sample
 from .splits import block_split
 from .evaluation.evaluate import evaluate
 from .evaluation.block_evaluate import evaluate_blocks
@@ -122,9 +122,10 @@ def snapshot_source(root, out):
                 source_archive="source.zip", source_sha256=hashes)
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--phantom", choices=("simple", "complex"), required=True)
+    parser.add_argument("--phantom", choices=("simple", "complex"), default=DEFAULT_PHANTOM,
+                        help="Phantom to fit (default: complex)")
     parser.add_argument("--model", choices=("hash_nf", "nested_mlp", "nested_hash_nf", "nested_low_rank_hash_nf"), required=True)
     parser.add_argument("--split", choices=("midpoints", "blocks"), default="midpoints")
     parser.add_argument("--out", type=Path, help="Use a new folder to preserve completed experiments")
@@ -137,7 +138,7 @@ def main():
     parser.add_argument("--rank", type=int, help="Total intensity rank, for nested_low_rank_hash_nf only")
     parser.add_argument("--temporal-weight", type=float, default=0., help="Weight of intensity time-derivative L2; 0 disables it")
     parser.add_argument("--temporal-step", type=float, help="Time difference in input units; defaults to one training interval")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     root = Path(__file__).resolve().parent
     config_path = args.config or root / "experiments" / args.phantom / f"{args.model}.json"
     if not config_path.exists():
@@ -145,7 +146,8 @@ def main():
     config = json.loads(config_path.read_text())
     if config["phantom"] != args.phantom or config["model"] != args.model:
         parser.error("Configuration phantom/model must match the command")
-    config.setdefault("cycles", 1)
+    for key, value in DEFAULT_SAMPLING[args.phantom].items():
+        config.setdefault(key, value)
     if args.rank is not None:
         if args.model != "nested_low_rank_hash_nf" or args.rank < 1:
             parser.error("--rank requires nested_low_rank_hash_nf and a positive integer")
@@ -180,6 +182,9 @@ def main():
     out = args.out or default_out
     if out.exists():
         parser.error("Output already exists; choose a new --out")
+    print(f"Phantom: {config['phantom']} | size: {config['size']}x{config['size']} | "
+          f"cycles: {config['cycles']} | training frames: {config['frames']} | "
+          f"time: [-0.5, {config['cycles'] - 0.5}]", flush=True)
     torch.set_num_threads(config["threads"])
     torch.manual_seed(config["seed"])
     if args.split == "midpoints":

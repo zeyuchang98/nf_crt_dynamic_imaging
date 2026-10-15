@@ -1,5 +1,11 @@
 """Check coordinate order, exact temporal sampling, and physical warp conventions."""
+from contextlib import redirect_stdout
+import io
+import json
+from pathlib import Path
+import tempfile
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 
@@ -17,7 +23,7 @@ class PhantomTests(unittest.TestCase):
     def test_temporal_split_and_reference(self):
         for name in ("simple", "complex"):
             with self.subTest(phantom=name):
-                pair = make_pair(name, size=16, frames=9)
+                pair = make_pair(name, size=16, frames=9, cycles=1)
                 fine = sample(name, 16, np.linspace(-.5, .5, 17))
                 np.testing.assert_array_equal(fine["truth"][..., ::2], pair["training"]["truth"])
                 np.testing.assert_array_equal(fine["truth"][..., 1::2], pair["midpoint"]["truth"])
@@ -46,7 +52,7 @@ class PhantomTests(unittest.TestCase):
         for name in ("simple", "complex"):
             pair = make_pair(name, size=16, frames=49, cycles=3)
             training, midpoint = pair["training"], pair["midpoint"]
-            original = make_pair(name, size=16, frames=17)["training"]
+            original = make_pair(name, size=16, frames=17, cycles=1)["training"]
             np.testing.assert_array_equal(training["t"][:17], original["t"])
             self.assertEqual(training["t"][-1], 2.5)
             self.assertEqual(len(np.intersect1d(training["t"], midpoint["t"])), 0)
@@ -67,6 +73,57 @@ class PhantomTests(unittest.TestCase):
         for cycles in (0, -1, 1.5, True):
             with self.assertRaises(ValueError):
                 make_pair("complex", size=16, frames=9, cycles=cycles)
+
+    def test_default_complex_baseline_has_379_frames_and_378_unseen_midpoints(self):
+        pair = make_pair(size=16)
+        training, midpoint = pair["training"], pair["midpoint"]
+        self.assertEqual(training["truth"].shape, (16, 16, 379))
+        self.assertEqual(midpoint["truth"].shape, (16, 16, 378))
+        np.testing.assert_array_equal(training["t"][[0, -1]], [-.5, 2.5])
+        np.testing.assert_allclose(np.diff(training["t"]), 1 / 126)
+        np.testing.assert_array_equal(midpoint["t"], (training["t"][:-1] + training["t"][1:]) / 2)
+        self.assertEqual(len(np.intersect1d(training["t"], midpoint["t"])), 0)
+        expected = sample("complex", 16, training["t"], time_bounds=(-.5, 2.5))
+        np.testing.assert_array_equal(training["truth"], expected["truth"])
+        simple = make_pair("simple", size=16)["training"]
+        self.assertEqual(simple["truth"].shape, (16, 16, 64))
+        np.testing.assert_array_equal(simple["t"][[0, -1]], [-.5, .5])
+
+    def test_all_complex_experiment_presets_use_the_approved_sampling(self):
+        directory = Path(__file__).resolve().parents[1] / "experiments" / "complex"
+        for path in directory.rglob("*.json"):
+            config = json.loads(path.read_text())
+            if "phantom" not in config:  # The sweep manifest contains hashes, not a data configuration.
+                continue
+            with self.subTest(config=path.name):
+                self.assertEqual((config["phantom"], config["size"], config["cycles"], config["frames"]),
+                                 ("complex", 64, 3, 379))
+
+    def test_training_entry_uses_baseline_and_preserves_explicit_overrides(self):
+        from motion_static.run import main
+
+        # Stop before allocating data or training; inspect the resolved sampling contract.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            commands = [(["--model", model], ("complex", 64, 379, 3)) for model in
+                        ("hash_nf", "nested_mlp", "nested_hash_nf", "nested_low_rank_hash_nf")]
+            commands += [(["--model", "hash_nf", "--cycles", "1", "--frames", "64"],
+                          ("complex", 64, 64, 1)),
+                         (["--phantom", "simple", "--model", "hash_nf"], ("simple", 64, 64, 1))]
+            config_path = Path(__file__).resolve().parents[1] / "experiments/complex/hash_nf.json"
+            config = json.loads(config_path.read_text())
+            config.pop("frames")
+            config.pop("cycles")
+            custom = root / "custom.json"
+            custom.write_text(json.dumps(config))
+            commands.append((["--model", "hash_nf", "--config", str(custom)], ("complex", 64, 379, 3)))
+            for arguments, expected in commands:
+                with self.subTest(arguments=arguments), redirect_stdout(io.StringIO()):
+                    with patch("motion_static.run.make_pair", side_effect=RuntimeError("sampling reached")) as generate:
+                        with self.assertRaisesRegex(RuntimeError, "sampling reached"):
+                            main([*arguments, "--out", str(root / "run")])
+                    generate.assert_called_once_with(*expected)
+            self.assertFalse((root / "run").exists())
 
 
 if __name__ == "__main__":
