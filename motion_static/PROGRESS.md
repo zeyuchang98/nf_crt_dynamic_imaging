@@ -569,6 +569,16 @@ joint baseline's better image fit therefore relies on incorrect, folded motion.
 These runs do not distinguish temporal-MLP capacity from optimization (learning
 rate 0.001, 8k steps).
 
+*Rank versus time (analysis of the saved A1 model, no training):* R=2 is not the
+limit, because the truth is exactly rank 2 and even its best rank-1 approximation
+has 5.80% RRMSE. A1's 19.04% reference-intensity error comes from the temporal
+coefficients. Keeping the learned a(t) and fitting optimal spatial bases by least
+squares only lowers it to 18.36%; keeping the learned b(q) and fitting optimal
+time coefficients lowers it to 5.60%. Of the learned coefficients' variance,
+78-82% lies below 1.5 cycles per period, whereas 99-100% of the true g(t) and
+g(t)s(t) variance lies above it. This is consistent with a low-frequency bias of
+the temporal MLP; capacity versus optimization remains untested.
+
 **A2, motion branch:** even with exact intensity, the learned motion recovers only
 part of the displacement and still folds 15.8% of the foreground. Per-frame
 foreground endpoint RMSE correlates with true displacement magnitude (r=0.60);
