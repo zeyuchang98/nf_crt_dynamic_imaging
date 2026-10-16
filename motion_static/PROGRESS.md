@@ -20,6 +20,64 @@ It retains the previous generic configuration's rank 3, 8k steps and eight-level
 claim. R=2 remains the working research prototype; select it explicitly when
 planning a run. Rank, budget and architecture changes require an agreed experiment.
 
+## Current best results (2026-10-15)
+
+Best joint models (both branches learned, no ground-truth branch), with the earlier
+joint baseline for reference. Details are in the dated sections below.
+
+| Metric | Joint baseline | J1 | J3 | **J5 (best)** |
+|---|---:|---:|---:|---:|
+| Motion time cells / time network / steps | 8-32 / Tanh MLP / 8k | 8-32 / grid 96 / 8k | 4-16 / grid 48 / 8k | **4-16 / grid 48 / 24k** |
+| Image RRMSE / PSNR (dB) / SSIM | 5.36% / 46.11 / 0.998119 | 1.51% / 57.12 / 0.999881 | 1.63% / 56.43 / 0.999839 | **0.92% / 61.42 / 0.999939** |
+| Ref. intensity RRMSE / PSNR (dB) / SSIM | 52.03% / 27.87 / 0.880784 | 40.61% / 30.02 / 0.921483 | 22.51% / 35.15 / 0.971153 | **9.61% / 42.54 / 0.994251** |
+| Ref. center / spot curve RRMSE | 79.45% / 22.37% | 1.20% / 0.83% | 0.81% / 0.74% | **0.36% / 0.36%** |
+| Motion EPE RMSE / mean / max (px) | 4.860 / 4.188 / 15.21 | 1.076 / 0.968 / 3.22 | 0.636 / 0.581 / 2.04 | **0.336 / 0.291 / 2.04** |
+| Motion vector RRMSE / folding | 80.07% / 31.39% | 17.72% / 0 | 10.48% / 0 | **5.53% / 0** |
+| Fixed training / validation MSE | 2.560e-05 / 2.613e-05 | 1.976e-06 / 1.783e-06 | 2.282e-06 / 2.128e-06 | **7.412e-07 / 7.272e-07** |
+| Parameters / training seconds | 224,372 / 265 | 85,102 / 223 | 79,336 / 264 | 79,336 / 876 |
+
+Links: [baseline](results/baselines_20261015_8k_low_rank_motion_r2_m32/metrics.json),
+[J1](results/joint_tuning_20261015_8k_j1_mt8-32_grid96/metrics.json),
+[J3](results/joint_tuning_20261015_8k_j3_mt4-16_grid48/metrics.json),
+[J5](results/joint_tuning_20261015_24k_j5_mt4-16_grid48/config.json) (config) /
+[metrics](results/joint_tuning_20261015_24k_j5_mt4-16_grid48/metrics.json).
+Zero-motion foreground EPE RMSE is 6.070 px.
+
+Single-branch diagnostic upper bounds use one ground-truth branch, so they are not
+reconstruction methods:
+[E4](results/intensity_fit_20261015_8k_e4_grid_c3-96/metrics.json) (true motion,
+time grid 3-96) gives image 0.42% and reference intensity 0.35%;
+[M1c](results/motion_fit_20261015_8k_m1c_s2-8_t8-96/metrics.json) (true
+intensity, motion cells [2,2,8]-[8,8,96]) gives image 0.42%, EPE 0.129 px and no
+folding.
+
+**J5 run name** `joint_tuning_20261015_24k_j5_mt4-16_grid48`:
+- `joint`: both branches learned.
+- `tuning`: part of the config-only reference-frame tuning series.
+- `24k`: 24,000 updates of 4,096 sampled space-time points; the cosine rate ends
+  at step 24,000.
+- `j5`: fifth run in that series.
+- `mt4-16`: motion hash time axis, 4 to 16 cells over [-0.5, 2.5] in eight levels
+  (about 5.3 cells, or 24 frames per cell, per cycle at the finest level).
+- `grid48`: the intensity time network is a six-level 1D grid with 3 to 48 cells
+  (16 cells per cycle at the finest level).
+- Not in the name: complex 64x64, 379 frames, R=2, seed 0, motion space 2-8
+  cells, intensity spatial hash 8-128, hash/MLP rates 0.01/0.001, image MSE only,
+  t0=-0.5. The `config.json` is authoritative; the name is only a label.
+
+**Metric domains:**
+- All RRMSE, PSNR, SSIM, curve and motion values here are from the 378 unseen
+  midpoint frames (`unseen_time_midpoints`, `motion.midpoint`).
+- Image and reference intensity cover the full 64x64 grid (ROI values are
+  nearly identical). Motion EPE, vector RRMSE and folding use the true
+  foreground mask.
+- Fixed training/validation MSE are on fixed 65,536-point subsamples of the
+  training frames and midpoint frames.
+- The ad hoc first-frame error quoted below for the jump uses training frame t0.
+
+**Limits:** single seed. J5's reference intensity is just under 10%, and a small
+reference-frame jump at t0 remains (first-frame image error 8.77%).
+
 ## Representation and conventions
 
 $$
