@@ -27,7 +27,7 @@ joint baseline for reference. Details are in the dated sections below.
 
 | Metric | Joint baseline | J1 | J3 | **J5 (best)** |
 |---|---:|---:|---:|---:|
-| Motion time cells / time network / steps | 8-32 / Tanh MLP / 8k | 8-32 / grid 96 / 8k | 4-16 / grid 48 / 8k | **4-16 / grid 48 / 24k** |
+| Motion cells space / time; time network; steps | 8-32 / 8-32; Tanh MLP; 8k | 2-8 / 8-32; grid 96; 8k | 2-8 / 4-16; grid 48; 8k | **2-8 / 4-16; grid 48; 24k** |
 | Image RRMSE / PSNR (dB) / SSIM | 5.36% / 46.11 / 0.998119 | 1.51% / 57.12 / 0.999881 | 1.63% / 56.43 / 0.999839 | **0.92% / 61.42 / 0.999939** |
 | Ref. intensity RRMSE / PSNR (dB) / SSIM | 52.03% / 27.87 / 0.880784 | 40.61% / 30.02 / 0.921483 | 22.51% / 35.15 / 0.971153 | **9.61% / 42.54 / 0.994251** |
 | Ref. center / spot curve RRMSE | 79.45% / 22.37% | 1.20% / 0.83% | 0.81% / 0.74% | **0.36% / 0.36%** |
