@@ -20,6 +20,7 @@ from .models.nested_hash_nf import NestedHashNF
 from .models.nested_low_rank_hash_nf import NestedLowRankHashNF
 from .models.low_rank_intensity import LowRankIntensity
 from .models.oracle_branches import PHANTOM_REFERENCE_TIME, TrueMotion, TrueReferenceIntensity
+from .models.time_grid import TimeGridField
 from .phantoms.data import DEFAULT_PHANTOM, DEFAULT_SAMPLING, coordinate_grid, make_pair, sample
 from .splits import block_split
 from .evaluation.evaluate import evaluate
@@ -59,6 +60,7 @@ def build_model(config):
             width=config["head_width"],
             temporal_width=config["temporal_width"],
             coordinate_bounds=bounds,
+            temporal_encoding=config.get("temporal_encoding"),
             **config["encoding"],
         )
     if config["model"] == "nested_low_rank_hash_nf":
@@ -69,6 +71,7 @@ def build_model(config):
             coordinate_bounds=bounds,
             reference_time=reference_time,
             motion_encoding=config.get("motion_encoding"),
+            temporal_encoding=config.get("temporal_encoding"),
             **config["encoding"],
         )
         return apply_oracle_branch(model, config)
@@ -128,15 +131,27 @@ def build_optimizer(model, config):
     learned_low_rank = config.get("oracle_branch") != "intensity"
     if model_name in ("low_rank_hash_nf", "nested_low_rank_hash_nf") and learned_low_rank:
         if model_name == "low_rank_hash_nf":
-            temporal_parameters = model.temporal.parameters()
-            temporal_group_name = "image_time_mlp"
+            temporal = model.temporal
+            prefix = "image_time"
         else:
-            temporal_parameters = model.intensity.temporal.parameters()
-            temporal_group_name = "intensity_time_mlp"
+            temporal = model.intensity.temporal
+            prefix = "intensity_time"
+        # The time MLP may use its own rate; it defaults to the shared MLP rate.
+        temporal_mlp_lr = config.get("temporal_mlp_lr", config["mlp_lr"])
+        if isinstance(temporal, TimeGridField):
+            # A time grid table is a feature table like a hash table.
+            groups.append({
+                "params": temporal.encoding.parameters(),
+                "lr": config["hash_lr"],
+                "name": f"{prefix}_grid",
+            })
+            temporal_parameters = temporal.mlp.parameters()
+        else:
+            temporal_parameters = temporal.parameters()
         groups.append({
             "params": temporal_parameters,
-            "lr": config["mlp_lr"],
-            "name": temporal_group_name,
+            "lr": temporal_mlp_lr,
+            "name": f"{prefix}_mlp",
         })
     return torch.optim.Adam(groups)
 
@@ -323,6 +338,21 @@ def parse_configuration(argv=None):
         config.update(temporal_weight=weight, temporal_step=delta,
                       temporal_sampling="detached warped training coordinates; same q at both times",
                       temporal_penalty="mean squared finite-difference time derivative")
+
+    # Optional time-network settings exist only for a learned low-rank intensity.
+    time_grid = config.get("temporal_encoding")
+    temporal_mlp_lr = config.get("temporal_mlp_lr")
+    if time_grid is not None or temporal_mlp_lr is not None:
+        if not low_rank or config.get("oracle_branch") == "intensity":
+            parser.error("temporal_encoding and temporal_mlp_lr require a learned low-rank intensity")
+    if time_grid is not None:
+        keys = {"levels", "features", "min_resolution", "max_resolution"}
+        if (not isinstance(time_grid, dict) or set(time_grid) != keys
+                or any(type(time_grid[key]) is not int or time_grid[key] < 1 for key in keys)
+                or time_grid["max_resolution"] < time_grid["min_resolution"]):
+            parser.error("temporal_encoding needs positive integer levels, features, min_resolution <= max_resolution")
+    if temporal_mlp_lr is not None and not (np.isfinite(temporal_mlp_lr) and temporal_mlp_lr > 0):
+        parser.error("temporal_mlp_lr must be finite and positive")
 
     # Oracle diagnostics replace one branch by the complex phantom's true field.
     oracle = config.get("oracle_branch")

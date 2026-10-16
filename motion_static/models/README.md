@@ -8,6 +8,7 @@ Inputs are rows of `(x, y, t)`, with shape `(N, 3)`.
 | [nested_hash_nf.py](nested_hash_nf.py) | Two hash fields: `intensity(r + motion(r, t), t)` |
 | [nested_low_rank_hash_nf.py](nested_low_rank_hash_nf.py) | Existing motion hash field + low-rank reference intensity |
 | [low_rank_intensity.py](low_rank_intensity.py) | 2D spatial hash basis and time MLP; reused directly by the motion-free baseline |
+| [time_grid.py](time_grid.py) | Optional low-rank time network: dense 1D multi-resolution grid + MLP, R outputs |
 | [oracle_branches.py](oracle_branches.py) | Torch copies of the complex phantom's true motion and reference intensity, for oracle diagnostics only |
 | [nested_mlp.py](nested_mlp.py) | The same composition using two coordinate MLPs |
 | [hash_nf.py](hash_nf.py) | One hash field: coordinate scaling, encoding, then MLP decoding |

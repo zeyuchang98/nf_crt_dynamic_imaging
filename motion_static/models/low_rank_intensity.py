@@ -9,13 +9,14 @@ from torch import nn
 
 from .coordinates import CoordinateNormalizer, DEFAULT_BOUNDS
 from .hash_grid import HashGridEncoding
+from .time_grid import TimeGridField
 
 
 class LowRankIntensity(nn.Module):
     """Continuous (qx,qy,t) -> intensity; rank includes any static component."""
 
     def __init__(self, rank=3, width=64, temporal_width=32,
-                 coordinate_bounds=DEFAULT_BOUNDS, **encoding_kwargs):
+                 coordinate_bounds=DEFAULT_BOUNDS, temporal_encoding=None, **encoding_kwargs):
         super().__init__()
         if not isinstance(rank, int) or isinstance(rank, bool) or rank < 1:
             raise ValueError("rank must be a positive integer")
@@ -29,11 +30,16 @@ class LowRankIntensity(nn.Module):
             nn.Linear(width, width), nn.ReLU(),
             nn.Linear(width, rank),
         )
-        self.temporal = nn.Sequential(
-            nn.Linear(1, temporal_width), nn.Tanh(),
-            nn.Linear(temporal_width, temporal_width), nn.Tanh(),
-            nn.Linear(temporal_width, rank),
-        )
+        if temporal_encoding is None:
+            # Default time network: Tanh MLP on signed time.
+            self.temporal = nn.Sequential(
+                nn.Linear(1, temporal_width), nn.Tanh(),
+                nn.Linear(temporal_width, temporal_width), nn.Tanh(),
+                nn.Linear(temporal_width, rank),
+            )
+        else:
+            # Optional 1D multi-resolution time grid; still R coefficients a_k(t).
+            self.temporal = TimeGridField(rank, temporal_width, **temporal_encoding)
 
     def forward(self, xyt):
         basis = self.spatial_basis(xyt[:, :2])

@@ -43,6 +43,17 @@ coordinates, without motion. `--rank` works for both low-rank models. The runner
 removes inapplicable `motion_encoding` and `reference_time` fields for the
 motion-free model and rejects the nested-only temporal penalty for it.
 
+### Low-rank time network options
+
+Both low-rank models keep `phi(q,t) = sum_k b_k(q) a_k(t)`. By default `a(t)` is
+the Tanh MLP of width `temporal_width`. Optional `temporal_encoding: {"levels",
+"features", "min_resolution", "max_resolution"}` replaces it with a dense 1D
+multi-resolution grid ([models/time_grid.py](../models/time_grid.py)) plus a
+ReLU MLP of width `temporal_width`; resolutions count cells over the whole time
+span, and the grid table uses `hash_lr`. Optional `temporal_mlp_lr` sets the
+time MLP's rate; it defaults to `mlp_lr`. Omitting both keys leaves existing
+models, parameter groups and checkpoints unchanged.
+
 ### Oracle-branch diagnostics
 
 `"oracle_branch": "motion"` or `"intensity"` replaces that branch of

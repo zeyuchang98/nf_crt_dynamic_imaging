@@ -149,7 +149,7 @@ SUMMARY_FIELDS = (
     'run', 'status', 'phantom', 'model', 'oracle_branch', 'evaluation_split', 'size', 'cycles', 'frames',
     'rank', 'steps', 'seed', 'motion_levels', 'motion_min_resolution', 'motion_max_resolution',
     'intensity_levels', 'intensity_min_resolution', 'intensity_max_resolution',
-    'image_rrmse', 'image_psnr_db', 'image_ssim', 'intensity_rrmse',
+    'temporal_width', 'temporal_encoding', 'temporal_mlp_lr', 'image_rrmse', 'image_psnr_db', 'image_ssim', 'intensity_rrmse',
     'intensity_psnr_db', 'intensity_ssim', 'motion_vector_rrmse',
     'motion_endpoint_rmse_pixels', 'motion_mean_endpoint_error_pixels',
     'fixed_training_mse', 'fixed_validation_mse', 'training_seconds', 'git_commit',
@@ -168,7 +168,9 @@ def summary_row(run, config, report=None):
     row["status"] = config.get("status", "unknown")
     row["git_commit"] = config.get("code_provenance", {}).get("git_commit", "")
     if config["model"] not in ("low_rank_hash_nf", "nested_low_rank_hash_nf"):
-        row["rank"] = ""
+        row["rank"] = row["temporal_width"] = ""
+    if isinstance(row["temporal_encoding"], dict):
+        row["temporal_encoding"] = json.dumps(row["temporal_encoding"], sort_keys=True)
 
     # Motion settings inherit from the intensity hash unless overridden.
     if config["model"] in ("nested_hash_nf", "low_rank_hash_nf", "nested_low_rank_hash_nf"):

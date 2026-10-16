@@ -14,11 +14,12 @@ from .nested_hash_nf import MotionHashNF
 class NestedLowRankHashNF(nn.Module):
     def __init__(self, rank=3, width=64, temporal_width=32,
                  coordinate_bounds=DEFAULT_BOUNDS, reference_time=None,
-                 motion_encoding=None, **encoding_kwargs):
+                 motion_encoding=None, temporal_encoding=None, **encoding_kwargs):
         super().__init__()
         self.intensity = LowRankIntensity(
             rank=rank, width=width, temporal_width=temporal_width,
-            coordinate_bounds=coordinate_bounds, **encoding_kwargs)
+            coordinate_bounds=coordinate_bounds, temporal_encoding=temporal_encoding,
+            **encoding_kwargs)
         self.motion = MotionHashNF(
             width=width, coordinate_bounds=coordinate_bounds,
             reference_time=reference_time, **(encoding_kwargs | (motion_encoding or {})))
