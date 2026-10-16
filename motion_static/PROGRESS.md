@@ -147,8 +147,10 @@ low-rank setup.
 - With true motion, an optional 1D multi-resolution time grid (R=2 hash space x time network kept)
   fits the intensity to 0.35% RRMSE (below). It has not been tried with learned motion.
 - With true intensity, a spatially coarse motion hash (x,y 2-8, t 8-96; same single 3D network)
-  recovers motion to 0.13 px foreground endpoint RMSE with no folding (below). The two fixes have not
-  yet been combined in joint training.
+  recovers motion to 0.13 px foreground endpoint RMSE with no folding (below).
+- Joint training with both fixes (below) removes folding and recovers the brightness waveforms, but
+  selects a different reference frame (about 1.4x / 1.5x larger) everywhere except at t0, via a jump
+  right after t0. How to fix or evaluate the reference frame is an open decision for the user.
 
 ## Current organization cleanup
 
@@ -724,3 +726,63 @@ criteria were met.
 2-8 spatial grid is a strong smoothness prior that may be too coarse for real
 local deformations. True intensity was supplied, and joint training with both
 fixes has not been run.
+
+## Joint training with both fixes (2026-10-15): completed
+
+Approved: one joint run (no oracle) combining the E4 time grid and the M1c motion
+resolution. Everything else matches the R=2, motion-max-32, 8k joint baseline
+(complex 64x64, 3 cycles, seed 0, same optimizer, image-MSE loss and evaluation).
+No code change; commit `40b3875`. Records:
+[config](results/joint_20261015_8k_r2_timegrid_motion_s2-8_t8-96/config.json),
+[metrics](results/joint_20261015_8k_r2_timegrid_motion_s2-8_t8-96/metrics.json),
+[loss curve](results/joint_20261015_8k_r2_timegrid_motion_s2-8_t8-96/loss.png),
+[losses](results/joint_20261015_8k_r2_timegrid_motion_s2-8_t8-96/loss.csv); GIFs:
+[image](results/joint_20261015_8k_r2_timegrid_motion_s2-8_t8-96/visuals/image.gif),
+[reference intensity](results/joint_20261015_8k_r2_timegrid_motion_s2-8_t8-96/visuals/reference_intensity.gif),
+[motion effect](results/joint_20261015_8k_r2_timegrid_motion_s2-8_t8-96/visuals/motion_effect.gif),
+[motion only](results/joint_20261015_8k_r2_timegrid_motion_s2-8_t8-96/visuals/motion_only.gif).
+
+| Metric (378 midpoints) | Joint baseline (motion 8-32, Tanh MLP) | Joint, time grid + motion [2,2,8]->[8,8,96] |
+|---|---:|---:|
+| Image RRMSE / PSNR / SSIM | 5.3585% / 46.11 / 0.998119 | 2.3155% / 53.40 / 0.999792 |
+| Reference intensity RRMSE / PSNR / SSIM | 52.03% / 27.87 / 0.880784 | 91.01% / 23.01 / 0.789538 |
+| Reference center / spot curve RRMSE | 79.45% / 22.37% | 10.45% / 1.93% |
+| Motion foreground EPE RMSE / mean / max (px) | 4.860 / 4.188 / 15.21 | 3.190 / 2.960 / 5.90 |
+| Motion vector RRMSE / folding | 80.07% / 31.39% | 52.55% / 0 |
+| Learned singular values (truth 96.46 / 5.60) | 114.70 / 8.25 | 140.85 / 7.43 |
+| Fixed training / validation MSE | 2.560e-05 / 2.613e-05 | 2.611e-06 / 4.152e-06 |
+| Parameters / training seconds | 224,372 / 265 | 102,574 / 232 |
+
+**Reference-frame (gauge) finding (ad hoc analysis of the saved model; not adopted
+metrics):**
+- The learned motion is nearly affine at every time, with a per-frame affine fit
+  residual of 0.14-0.50 px, and periodic. Relative to the truth it differs by one
+  fixed map: q_hat ~ W q_true + c, with W = [[1.382, -0.039], [-0.037, 1.516]] and
+  c = (0.79, -0.69) px. That is close to the phantom's maximum expansion (1.30, 1.45).
+- The anchor u(r,t0)=0 holds only at the instant t0. Within about 0.01 time units
+  after t0 (about one frame interval), the learned affine scale jumps from (1.00,
+  1.00) to about (1.36, 1.58), and the temporal coefficients jump with it.
+- Training-frame image RRMSE is 22.83% at t0 and 8.00%, 4.89%, 2.90% for the next
+  three frames, versus a 1.33% median.
+- The learned reference intensity is the same object enlarged by about 1.4x / 1.5x
+  (reference-intensity GIF), which explains the 91% raw reference-intensity error.
+- After removing the fitted fixed map W (fit with the true motion, t > -0.48),
+  motion error drops from 3.19 px to 0.52 px RMSE (max 2.63 px), and
+  reference-intensity RRMSE drops from 91.0% to 18.7%.
+- Interpretation: image MSE, rank 2 and a smooth motion field are unchanged by
+  any fixed reparameterization of the reference frame. A single-instant anchor
+  fixes that frame only at t0, so a flexible time representation can switch
+  frames immediately after t0 at a small image cost. The old baseline did not show
+  this behaviour (its motion slope relative to truth was 0.57, with large affine
+  residuals), but its branches were wrong for other reasons.
+
+**Post-run verification:** reloading the model reproduces final fixed training and
+validation MSE exactly; monitoring indices equal the baseline's; 18 finite loss/LR
+rows with all six optimizer groups and zero final rates; zero motion at t0; rank-2
+tail 3.4e-8; source archive hashes match `40b3875`. All four GIFs decode to 378
+frames; a sampled reference-intensity frame was inspected.
+
+**Open decision (not implemented):** how to pin the reference frame (for example
+limiting how fast motion may change after t0, or a different anchor definition),
+or whether to evaluate up to a fixed reference-frame map. These change the model
+meaning or the evaluation protocol and require the user's choice. Single seed.
