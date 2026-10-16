@@ -143,8 +143,9 @@ low-rank setup.
 - Proposed standardized metrics in `METRICS.md` require review before implementation.
 - Future training must retain numeric losses, learning rates, fixed training/held-out monitoring and a loss curve.
 - Oracle diagnostics (2026-10-15, below): with true motion the R=2 intensity still learns nearly static
-  brightness, and with true intensity the motion branch still misses most displacement. The follow-up
-  direction has not been chosen.
+  brightness, and with true intensity the motion branch still misses most displacement.
+- With true motion, an optional 1D multi-resolution time grid (R=2 hash space x time network kept)
+  fits the intensity to 0.35% RRMSE (below). It has not been tried with learned motion.
 
 ## Current organization cleanup
 
@@ -604,3 +605,68 @@ tail (3.9e-8), source archive hashes, and sampled GIF frames.
 checkpoints by design. Re-render them from their `source.zip` or the original
 commit. For this analysis, the baseline was loaded with `build_model` plus its
 `state_dict`; this reproduced its saved fixed validation MSE exactly.
+
+## Intensity fitting with true motion: time-network options (2026-10-15): completed
+
+The user asked to keep the architecture (R=2, hash spatial bases x time network)
+and to make the intensity fit with true motion, by widening the time MLP, using a
+1D time grid, or tuning. All runs use the A1 setting above (true motion, learned
+R=2 intensity, 8k steps, seed 0, identical data, batches and monitoring indices);
+only the time network or its learning rate changes. These are oracle diagnostics.
+
+Implementation commit `d0733e2` adds two optional keys; omitting both leaves models,
+parameter groups and checkpoints unchanged:
+- `temporal_encoding`: dense 1D multi-resolution grid with linear interpolation,
+  then a ReLU MLP (width `temporal_width`) to R coefficients. Its table uses `hash_lr`.
+- `temporal_mlp_lr`: the time MLP's own rate, defaulting to `mlp_lr`.
+
+E4 uses six levels with 3, 6, 12, 24, 48 and 96 cells over the three-cycle span
+(1 to 32 cells per cycle; 126 training intervals per cycle). It has no periodicity
+assumption. **Validation:** 105 tests passed (7 new: interpolation against
+`np.interp`, level rule shared with the hash grid, locality, rank bound,
+optimizer groups and rates, gradient flow, CLI rejection, complete run and reload).
+Replaying the saved A1 and baseline configurations reproduced their step-0 fixed
+MSE and step-1 batch MSE bitwise. Post-update fixed MSE differed by about 1e-10
+relative and varied between identical replays, consistent with the CPU
+nondeterminism noted in the 24k follow-up.
+
+| Run (true motion, R=2, 8k) | Time network | Image RRMSE | Ref. intensity RRMSE | Center / spot curve | Singular values (truth 96.46 / 5.60) | Fixed val. MSE | Params / s |
+|---|---|---:|---:|---:|---|---:|---:|
+| A1 | Tanh MLP w32, lr 1e-3 | 17.74% | 19.04% | 17.65% / 21.76% | 94.81 / 0.54 | 2.599e-04 | 67,468 / 48 |
+| [E1](results/intensity_fit_20261015_8k_e1_mlp_w32_tlr1e-2/metrics.json) | Tanh MLP w32, time lr 1e-2 | 14.51% | 15.51% | 13.75% / 18.62% | 94.88 / 2.84 | 1.682e-04 | 67,468 / 50 |
+| [E2](results/intensity_fit_20261015_8k_e2_mlp_w128/metrics.json) | Tanh MLP w128, lr 1e-3 | 17.13% | 18.43% | 16.97% / 20.99% | 94.46 / 0.99 | 2.467e-04 | 83,308 / 81 |
+| [E3](results/intensity_fit_20261015_8k_e3_mlp_w128_tlr1e-2/metrics.json) | Tanh MLP w128, time lr 1e-2 | 7.41% | 7.49% | 7.51% / 6.74% | 96.20 / 4.77 | 4.706e-05 | 83,308 / 95 |
+| [E4](results/intensity_fit_20261015_8k_e4_grid_c3-96/metrics.json) | 1D grid 3-96 + ReLU MLP w32 | **0.42%** | **0.35%** | **0.14% / 0.25%** | 96.51 / 5.69 | **1.532e-07** | 68,210 / 83 |
+
+Each run has its config, loss CSV/curve, monitoring indices, source and log beside
+the linked metrics. E4 GIFs:
+[image](results/intensity_fit_20261015_8k_e4_grid_c3-96/visuals/image.gif) and
+[reference intensity](results/intensity_fit_20261015_8k_e4_grid_c3-96/visuals/reference_intensity.gif).
+E4 reference-intensity PSNR/SSIM are 71.23 dB / 0.999995, with fixed training
+MSE 1.125e-07 versus validation 1.532e-07 on unseen midpoints.
+
+**Findings:**
+- The 1D grid meets the proposed success criteria (reference intensity < 5%,
+  point curves < 10%): both temporal waveforms are recovered. In the ad hoc
+  span(a_1, a_2, 1) fit, R^2 is 1.000 for both g(t) and g(t)s(t), versus 0.021 and
+  0.064 in A1. The A1 streak artifacts are absent; a sampled frame shows maximum
+  error 0.016.
+- For the Tanh MLP, width alone does nothing (E2) and a higher time rate alone
+  helps a little (E1). Together they reach 7.49% (E3), but a sampled waveform plot
+  shows E3 missing about one oscillation near t=1.0-1.4. This supports an
+  optimization/low-frequency limit of the Tanh MLP rather than rank; whether E3
+  converges with longer training was not tested.
+- The time grid did not need a separate learning rate; its table used the
+  existing hash rate.
+
+**Post-run verification:** all four reloads reproduce final fixed training and
+validation MSE exactly; monitoring indices equal the baseline's; 18 finite loss/LR
+rows each with the expected optimizer groups and zero final rates; zero motion at
+t0; rank-2 tails at most 4.0e-8; source archive hashes match commit `d0733e2`.
+The E4 GIFs were rendered afterwards with `evaluation.render` (no training or
+metric change), and sampled frames were inspected.
+
+**Not established:** single seed, one grid setting, toy phantom only. The grid
+has not been tested with learned motion, where a more flexible time network may
+also make crossfade-like explanations of motion easier. The grid resolution is a
+bandwidth assumption that would need a physical choice for real PACT data.
