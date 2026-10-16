@@ -150,7 +150,11 @@ low-rank setup.
   recovers motion to 0.13 px foreground endpoint RMSE with no folding (below).
 - Joint training with both fixes (below) removes folding and recovers the brightness waveforms, but
   selects a different reference frame (about 1.4x / 1.5x larger) everywhere except at t0, via a jump
-  right after t0. How to fix or evaluate the reference frame is an open decision for the user.
+  right after t0.
+- Config-only joint tuning (below): coarser motion time resolution (t 4-16) removes most of that
+  reference-frame shift. At 24k steps all raw criteria are met (reference intensity 9.61%, motion
+  0.34 px, no folding, image 0.92%); a small residual jump at t0 remains. The anchor definition and
+  evaluation protocol are unchanged.
 
 ## Current organization cleanup
 
@@ -786,3 +790,60 @@ frames; a sampled reference-intensity frame was inspected.
 limiting how fast motion may change after t0, or a different anchor definition),
 or whether to evaluate up to a fixed reference-frame map. These change the model
 meaning or the evaluation protocol and require the user's choice. Single seed.
+
+## Joint tuning against the reference-frame jump (2026-10-15): completed
+
+The user asked to keep tuning parameters (config only: anchor definition, loss and
+evaluation unchanged). Every run starts from the joint configuration above (R=2,
+time grid, motion space 2-8) and changes only the motion time resolution, the
+time-grid maximum resolution, `hash_lr` or the step budget. Seed 0, no GIFs during
+tuning, commit `a416cd6`; at most six runs were planned and five were used.
+Proposed success criteria on raw metrics: reference intensity < 10%, motion EPE <
+1 px, folding < 1%, image < 2%. `W` and the aligned EPE are ad hoc diagnostics
+(a fixed affine map fit with the true motion for t > -0.48), not adopted metrics.
+
+| Run | Motion t cells | Time grid max | Other | Image | Ref. intensity | Center / spot | Motion EPE RMSE (px) | Folding | W_xx / W_yy | Aligned EPE (px) | First-frame image error |
+|---|---|---:|---|---:|---:|---:|---:|---:|---|---:|---:|
+| Joint above | 8-96 | 96 | 8k | 2.32% | 91.01% | 10.5% / 1.9% | 3.190 | 0 | 1.382 / 1.516 | 0.520 | 22.83% |
+| [J1](results/joint_tuning_20261015_8k_j1_mt8-32_grid96/metrics.json) | 8-32 | 96 | 8k | 1.51% | 40.61% | 1.2% / 0.8% | 1.076 | 0 | 1.115 / 1.169 | 0.391 | 26.51% |
+| [J2](results/joint_tuning_20261015_8k_j2_mt8-32_grid48/metrics.json) | 8-32 | 48 | 8k | 1.62% | 45.64% | 1.2% / 0.9% | 1.202 | 0 | 1.139 / 1.190 | 0.424 | 32.43% |
+| [J3](results/joint_tuning_20261015_8k_j3_mt4-16_grid48/metrics.json) | 4-16 | 48 | 8k | 1.63% | 22.51% | 0.8% / 0.7% | 0.636 | 0 | 1.040 / 1.083 | 0.387 | 19.60% |
+| [J4](results/joint_tuning_20261015_8k_j4_mt4-16_grid48_hashlr3e-3/metrics.json) | 4-16 | 48 | hash lr 0.003 | 2.18% | 25.36% | 0.9% / 0.8% | 0.772 | 0 | 1.054 / 1.100 | 0.464 | 21.95% |
+| [J5](results/joint_tuning_20261015_24k_j5_mt4-16_grid48/metrics.json) | 4-16 | 48 | **24k steps** | **0.92%** | **9.61%** | **0.4% / 0.4%** | **0.336** | 0 | **1.017 / 1.023** | 0.247 | 8.77% |
+
+All tuning runs use motion space 2-8 cells; the time grid has six levels from 3
+cells. J5 full metrics: image PSNR/SSIM 61.42 dB / 0.999939; reference intensity
+42.54 dB / 0.994251; motion mean/max EPE 0.291 / 2.04 px and vector RRMSE 5.53%;
+fixed training/validation MSE 7.412e-07 / 7.272e-07; 79,336 parameters; 876 s.
+For the temporal coefficients, the ad hoc span R^2 is 1.000 for both waveforms.
+J5 GIFs: [image](results/joint_tuning_20261015_24k_j5_mt4-16_grid48/visuals/image.gif),
+[reference intensity](results/joint_tuning_20261015_24k_j5_mt4-16_grid48/visuals/reference_intensity.gif),
+[motion effect](results/joint_tuning_20261015_24k_j5_mt4-16_grid48/visuals/motion_effect.gif),
+[motion only](results/joint_tuning_20261015_24k_j5_mt4-16_grid48/visuals/motion_only.gif).
+
+**Findings:**
+- The motion's time resolution controls the reference-frame shift. Going from
+  8-96 to 8-32 to 4-16 cells moves W from 1.38/1.52 to 1.12/1.17 to 1.04/1.08.
+  Coarser motion time cells make an immediate frame switch after t0 more costly.
+- Halving the time-grid maximum (96 to 48) changed little. A lower shared hash
+  rate (J4) was slightly worse than J3.
+- With the J3 settings, the 24k schedule (J5) reaches every proposed criterion on
+  raw metrics, with W = 1.017/1.023. The reference-intensity GIF shows the
+  correct object size, with a thin edge-ring error (maximum about 0.14 in the
+  sampled frame).
+- A smaller residual jump remains: first-frame image error is 8.77% versus a
+  0.92% midpoint average. Motion t 4-16 means about 5.3 cells per cycle for motion
+  whose fastest component (y translation) has 2 oscillations per cycle. This is a
+  bandwidth assumption that suits this phantom but needs a physical basis for
+  real data.
+
+**Post-run verification:** all five reloads reproduce final fixed training and
+validation MSE exactly; monitoring indices equal the baseline's; finite loss/LR
+rows (18, or 50 for J5) with all six optimizer groups and zero final rates; zero
+motion at t0; rank-2 tails at most 3.6e-8; source archive hashes match
+`a416cd6`. J5 GIFs (378 frames) were rendered afterwards with `evaluation.render`.
+
+**Not established:** single seed. J5 differs from J3 in step budget and cosine
+horizon, not only extra updates. Reference intensity (9.61%) is only just under
+the proposed threshold. The single-instant anchor is still weak in principle;
+tuning made the frame switch costly rather than impossible.

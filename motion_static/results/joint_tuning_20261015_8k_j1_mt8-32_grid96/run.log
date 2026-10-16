@@ -1,0 +1,20 @@
+Phantom: complex | size: 64x64 | cycles: 3 | training frames: 379 | time: [-0.5, 2.5]
+complex/nested_low_rank_hash_nf step 1: MSE 0.00755611, temporal L2 0, total 0.00755611, fixed train 0.00786662, held-out 0.0077152
+complex/nested_low_rank_hash_nf step 500: MSE 6.59152e-05, temporal L2 0, total 6.59152e-05, fixed train 6.80196e-05, held-out 6.19371e-05
+complex/nested_low_rank_hash_nf step 1000: MSE 2.37876e-05, temporal L2 0, total 2.37876e-05, fixed train 3.13064e-05, held-out 2.59427e-05
+complex/nested_low_rank_hash_nf step 1500: MSE 2.14369e-05, temporal L2 0, total 2.14369e-05, fixed train 2.06779e-05, held-out 1.69201e-05
+complex/nested_low_rank_hash_nf step 2000: MSE 1.21395e-05, temporal L2 0, total 1.21395e-05, fixed train 1.22892e-05, held-out 1.09026e-05
+complex/nested_low_rank_hash_nf step 2500: MSE 1.1714e-05, temporal L2 0, total 1.1714e-05, fixed train 1.12758e-05, held-out 1.07596e-05
+complex/nested_low_rank_hash_nf step 3000: MSE 8.75621e-06, temporal L2 0, total 8.75621e-06, fixed train 7.77996e-06, held-out 7.16405e-06
+complex/nested_low_rank_hash_nf step 3500: MSE 1.11737e-05, temporal L2 0, total 1.11737e-05, fixed train 5.92597e-06, held-out 5.80623e-06
+complex/nested_low_rank_hash_nf step 4000: MSE 5.2694e-06, temporal L2 0, total 5.2694e-06, fixed train 5.46859e-06, held-out 5.03066e-06
+complex/nested_low_rank_hash_nf step 4500: MSE 2.91566e-06, temporal L2 0, total 2.91566e-06, fixed train 4.01213e-06, held-out 3.68615e-06
+complex/nested_low_rank_hash_nf step 5000: MSE 2.56848e-06, temporal L2 0, total 2.56848e-06, fixed train 3.33586e-06, held-out 3.13055e-06
+complex/nested_low_rank_hash_nf step 5500: MSE 1.89885e-06, temporal L2 0, total 1.89885e-06, fixed train 3.22049e-06, held-out 3.09714e-06
+complex/nested_low_rank_hash_nf step 6000: MSE 7.46649e-06, temporal L2 0, total 7.46649e-06, fixed train 2.49608e-06, held-out 2.32178e-06
+complex/nested_low_rank_hash_nf step 6500: MSE 3.5027e-06, temporal L2 0, total 3.5027e-06, fixed train 2.24366e-06, held-out 2.06482e-06
+complex/nested_low_rank_hash_nf step 7000: MSE 1.6208e-06, temporal L2 0, total 1.6208e-06, fixed train 2.06901e-06, held-out 1.88558e-06
+complex/nested_low_rank_hash_nf step 7500: MSE 1.45203e-06, temporal L2 0, total 1.45203e-06, fixed train 1.99888e-06, held-out 1.80984e-06
+complex/nested_low_rank_hash_nf step 8000: MSE 1.2046e-06, temporal L2 0, total 1.2046e-06, fixed train 1.97614e-06, held-out 1.78332e-06
+Midpoint image RRMSE=1.5085%, SSIM=0.9998808450442693
+Saved results: motion_static/results/joint_tuning_20261015_8k_j1_mt8-32_grid96
