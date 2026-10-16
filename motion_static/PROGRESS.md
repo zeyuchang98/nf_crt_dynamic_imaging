@@ -146,6 +146,9 @@ low-rank setup.
   brightness, and with true intensity the motion branch still misses most displacement.
 - With true motion, an optional 1D multi-resolution time grid (R=2 hash space x time network kept)
   fits the intensity to 0.35% RRMSE (below). It has not been tried with learned motion.
+- With true intensity, a spatially coarse motion hash (x,y 2-8, t 8-96; same single 3D network)
+  recovers motion to 0.13 px foreground endpoint RMSE with no folding (below). The two fixes have not
+  yet been combined in joint training.
 
 ## Current organization cleanup
 
@@ -670,3 +673,54 @@ metric change), and sampled frames were inspected.
 has not been tested with learned motion, where a more flexible time network may
 also make crossfade-like explanations of motion easier. The grid resolution is a
 bandwidth assumption that would need a physical choice for real PACT data.
+
+## Motion fitting with true intensity: per-axis motion hash resolution (2026-10-15): completed
+
+Approved: tune the existing motion network in the A2 setting (true reference
+intensity, learned motion, 8k steps, seed 0; identical data, monitoring indices and
+evaluation). The motion network stays one 3D (x,y,t) hash field plus MLP, anchored at
+t0; only the existing per-axis `motion_encoding` resolutions change. No code change;
+runs used commit `bb82ad0`. Separable motion was explicitly excluded by the user.
+All runs use eight levels, two features and 2^15 table entries per level.
+
+| Run (true intensity) | Motion cells (x,y,t) min -> max | Image RRMSE | Foreground EPE RMSE / mean / max (px) | Vector RRMSE | Folding | Fixed val. MSE | Params / s |
+|---|---|---:|---:|---:|---:|---:|---:|
+| A2 | 8 -> 32 (all axes) | 10.37% | 3.926 / 3.021 / 12.83 | 64.67% | 15.82% | 9.003e-05 | 156,904 / 135 |
+| [M1a](results/motion_fit_20261015_8k_m1a_s8-32_t8-96/metrics.json) | [8,8,8] -> [32,32,96] | 4.37% | 3.645 / 2.894 / 10.55 | 60.05% | 13.30% | 1.712e-05 | 224,500 / 154 |
+| [M1b](results/motion_fit_20261015_8k_m1b_s2-8_t8-32/metrics.json) | [2,2,8] -> [8,8,32] | 0.64% | 0.156 / 0.107 / 0.87 | 2.57% | 0 | 3.336e-07 | 16,892 / 176 |
+| [M1c](results/motion_fit_20261015_8k_m1c_s2-8_t8-96/metrics.json) | [2,2,8] -> [8,8,96] | **0.42%** | **0.129 / 0.087 / 0.69** | **2.12%** | 0 | **1.525e-07** | 34,364 / 196 |
+| [M1d](results/motion_fit_20261015_8k_m1d_s2-16_t8-96/metrics.json) | [2,2,8] -> [16,16,96] | 0.48% | 0.257 / 0.183 / 1.34 | 4.24% | 0 | 1.947e-07 | 94,258 / 181 |
+
+The zero-motion foreground EPE RMSE is 6.070 px. In M1a, the two finest levels
+exceed the table and are hashed; all M1b-M1d levels are dense. Each run has its
+config, loss CSV/curve, monitoring indices, source and log beside the linked metrics.
+M1c GIFs: [image](results/motion_fit_20261015_8k_m1c_s2-8_t8-96/visuals/image.gif) and
+[motion effect](results/motion_fit_20261015_8k_m1c_s2-8_t8-96/visuals/motion_effect.gif).
+
+**Findings:**
+- Spatial motion resolution was the limiting factor. Coarsening space to 2-8 cells
+  recovers motion (M1b-M1d meet the proposed criteria: EPE < 1 px, folding < 1%,
+  image < 2%). Refining only time while keeping space at 8-32 (M1a) leaves 3.6 px
+  error and 13% folding. A finer time axis gives a smaller further gain (M1b to M1c).
+- Ad hoc split (computed outside the pipeline, not an adopted metric): on
+  foreground pixels where the true frame has spatial gradient (63% of the
+  foreground) versus flat interior pixels, endpoint RMSE is 3.856 / 4.042 px for A2
+  and 0.147 / 0.089 px for M1c. A2 was also wrong at edges, and the coarse grid
+  interpolates the unobservable flat interior correctly for this globally affine
+  motion.
+- Whole-FOV EPE remains 2.650 px for M1c (zero motion: 6.722 px). Background motion
+  has no image signal there and is not constrained by the data.
+- A sampled M1c motion-effect frame matches the true panel; its fixed error scale
+  is 0-0.018, versus 0-0.38 for A2.
+
+**Post-run verification:** all four reloads reproduce final fixed training and
+validation MSE exactly; monitoring indices equal the baseline's; 18 finite loss/LR
+rows each with motion hash/MLP groups and zero final rates; zero motion at t0; source
+archive hashes match `bb82ad0`. M1c GIFs were rendered afterwards with
+`evaluation.render`. The optional learning-rate variants were not run, because the
+criteria were met.
+
+**Not established:** single seed, toy phantom with globally affine motion. A
+2-8 spatial grid is a strong smoothness prior that may be too coarse for real
+local deformations. True intensity was supplied, and joint training with both
+fixes has not been run.
