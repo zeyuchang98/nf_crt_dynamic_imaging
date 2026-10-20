@@ -905,3 +905,34 @@ motion at t0; rank-2 tails at most 3.6e-8; source archive hashes match
 horizon, not only extra updates. Reference intensity (9.61%) is only just under
 the proposed threshold. The single-instant anchor is still weak in principle;
 tuning made the frame switch costly rather than impossible.
+
+## DCE-MOBY z-slice extraction (2026-10-20): script ready, full extraction not run
+
+Goal: test the toy-validated model on the DCE-MOBY p0 data. The full set is too large
+(269 GB of p0 on Vista at `/work/03453/villa13/vista/proj/moby-data`), so the plan is
+to extract one z plane of every respiratory phase on Vista and copy only that back.
+
+Verified source facts (`p0_00000/00001`, `indicator_00000/00001`, copied to `~/Data/dce-moby/`):
+- `p0` is (x, y, z, frame) = (248, 248, 200, 73 or 72) float32, 0.15 mm voxels,
+  fov x,y 0-37.2 mm and z 26.25-56.25 mm, wavelength 800. Frame count is 73 for
+  phase 0 and 72 for phase 1 (the README says 72).
+- Frames are 10 s apart within a phase; phase p is offset by 0.05 p s
+  (indicator attribute `dt` = 0.05, 200 phases), so the interlaced series has 0.05 s
+  steps. Time 0 is injection; the series starts at -36 s.
+- Indicator files hold `artery`, `liver`, `tumor`, `tumor_core` partial volumes on
+  the same (248, 248, 200) grid with the same geometry attributes.
+
+[phantoms/moby_slice.py](phantoms/moby_slice.py) (numpy + h5py only, runs standalone)
+reads one z plane from every selected phase, interlaces all frames by `time`, and
+writes `p0` (x, y, frame) with `time`, `resp_phase`, `frame_in_phase`, the indicator
+planes (x, y, phase), source geometry, `z_index` and the code commit. Axis order is
+unchanged; nothing is resampled. It rejects inconsistent geometry and duplicate times.
+
+Validated: [tests/test_moby_slice.py](tests/test_moby_slice.py) (synthetic files, 3
+tests) passes. On the two local phases at z = 100 (test index only): 145 frames,
+every frame equals the source plane, indicator planes match, 2.3 s and 0.18 GB peak
+memory. Estimated full run: about 14,500 frames, 3.6 GB in memory.
+
+Open decisions (user): which z plane (e.g. through the tumor), whether the
+out-of-plane respiratory motion of a fixed z slice is acceptable for the 2D model,
+and the observation geometry and evaluation for this data.
