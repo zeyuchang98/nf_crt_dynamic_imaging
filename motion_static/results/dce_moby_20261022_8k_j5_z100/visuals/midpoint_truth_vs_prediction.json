@@ -1,0 +1,13 @@
+{
+  "frames": 75,
+  "duration_ms": 90,
+  "display_range": [
+    0,
+    0.05
+  ],
+  "still_frame": 37,
+  "file": "midpoint_truth_vs_prediction.gif",
+  "split": "midpoint",
+  "units": "raw p0 (normalized values times intensity_scale_value)",
+  "intensity_scale_value": 0.4503569006919861
+}

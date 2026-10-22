@@ -1027,3 +1027,9 @@ the 248-pixel grid, which would limit edges and 1-pixel vessels; each training p
 sampled about 7 times in 8k steps versus about 21 in the toy; the loss was still
 decreasing when the cosine rate reached zero. Motion and reference intensity are not
 evaluated, so whether the branches separate correctly is unknown. Single seed.
+
+Visual check (2026-10-22): [evaluation/moby_fit_gif.py](evaluation/moby_fit_gif.py) draws
+whole-image truth (left) and prediction (right) from a dce_moby run's saved predictions,
+in raw p0 units with the fixed 0..0.05 display range of the data GIFs.
+[visuals/midpoint_truth_vs_prediction.gif](results/dce_moby_20261022_8k_j5_z100/visuals/midpoint_truth_vs_prediction.gif)
+shows the 75 held-out frames (6.5 MB); `predictions.npz` itself stays local (34 MB).

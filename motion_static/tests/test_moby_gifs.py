@@ -6,6 +6,7 @@ import unittest
 import numpy as np
 from PIL import Image
 
+from motion_static.evaluation.moby_fit_gif import SEPARATOR_PIXELS, side_by_side
 from motion_static.evaluation.moby_gifs import fixed_phase_frames, respiratory_cycle_frames, save_animation
 
 
@@ -38,6 +39,15 @@ class MobyGifTests(unittest.TestCase):
             still = np.asarray(Image.open(path.with_suffix(".png")).convert("L"))
             image = still[52:52 + 4, :6]  # the image is pasted below the 52-pixel header
             self.assertEqual(np.argwhere(image == 255).tolist(), [[0, 5]])
+
+    def test_side_by_side_puts_truth_left_in_x_y_layout(self):
+        truth = np.arange(2 * 3 * 2, dtype=float).reshape(2, 3, 2)  # (y, x, t)
+        prediction = truth + 100
+        joined = side_by_side(truth, prediction, separator_value=-1)
+        self.assertEqual(joined.shape, (3 + SEPARATOR_PIXELS + 3, 2, 2))  # (x, y, t)
+        np.testing.assert_array_equal(joined[:3], np.transpose(truth, (1, 0, 2)))
+        np.testing.assert_array_equal(joined[3:3 + SEPARATOR_PIXELS], -1)
+        np.testing.assert_array_equal(joined[-3:], np.transpose(prediction, (1, 0, 2)))
 
 
 if __name__ == "__main__":
