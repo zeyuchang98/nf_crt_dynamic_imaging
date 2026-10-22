@@ -906,7 +906,7 @@ horizon, not only extra updates. Reference intensity (9.61%) is only just under
 the proposed threshold. The single-instant anchor is still weak in principle;
 tuning made the frame switch costly rather than impossible.
 
-## DCE-MOBY z-slice extraction (2026-10-20): script ready, full extraction not run
+## DCE-MOBY z-slice extraction (2026-10-20/21): completed for z = 100
 
 Goal: test the toy-validated model on the DCE-MOBY p0 data. The full set is too large
 (269 GB of p0 on Vista at `/work/03453/villa13/vista/proj/moby-data`), so the plan is
@@ -933,6 +933,24 @@ tests) passes. On the two local phases at z = 100 (test index only): 145 frames,
 every frame equals the source plane, indicator planes match, 2.3 s and 0.18 GB peak
 memory. Estimated full run: about 14,500 frames, 3.6 GB in memory.
 
-Open decisions (user): which z plane (e.g. through the tumor), whether the
-out-of-plane respiratory motion of a fixed z slice is acceptable for the 2D model,
-and the observation geometry and evaluation for this data.
+**Full extraction (2026-10-21):** user chose the z midpoint, `z_index = 100`
+(200 planes; 100 = 200 // 2, one of the two central planes). Ran as Slurm job 1087728
+on Vista (`gg` queue, 1 node, allocation ASC25089) in 55 min 46 s, about 16 s per
+phase; a first 30-min `idev` attempt timed out at phase 84 and wrote nothing. Job
+script, logs and output are in `$WORK/moby_slice/` on Vista (`/work/11803/zc7665/vista`);
+the script there was copied from commit `948d7b9`, so the file's `code_commit` reads
+`unknown`. Python on Vista: `module load gcc python3` plus a venv at `$WORK/envs/moby`
+(h5py, numpy), following the Vista user guide.
+
+Output `~/Data/dce-moby/moby_z100.h5` (1.46 GB, lzf): `p0` (248, 248, 14401), times
+-36 to 684 s, strictly increasing with 0.05 s steps; phases cycle 0..199; phase 0 has
+73 frames, the other 199 phases 72. Values finite, range 0 to 0.450. Indicator planes
+(248, 248, 200) for all four tissues.
+
+Verified: every frame of phases 0 and 1 and their indicator planes equal the local
+source files; frames (57, 30), (150, 0), (199, 71) have the same SHA-1 and time as the
+source files on Vista. Other phases were not compared frame by frame.
+
+Open decisions (user): whether the out-of-plane respiratory motion of a fixed z slice
+is acceptable for the 2D model, and the observation geometry and evaluation for this
+data.
