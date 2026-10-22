@@ -21,9 +21,10 @@ from .models.nested_low_rank_hash_nf import NestedLowRankHashNF
 from .models.low_rank_intensity import LowRankIntensity
 from .models.oracle_branches import PHANTOM_REFERENCE_TIME, TrueMotion, TrueReferenceIntensity
 from .models.time_grid import TimeGridField
+from .phantoms import moby
 from .phantoms.data import DEFAULT_PHANTOM, DEFAULT_SAMPLING, coordinate_grid, make_pair, sample
 from .splits import block_split
-from .evaluation.evaluate import evaluate
+from .evaluation.evaluate import evaluate, evaluate_image_only
 from .evaluation.block_evaluate import evaluate_blocks
 from .training_monitor import TrainingMonitor
 from .run_records import (
@@ -270,10 +271,21 @@ def parse_configuration(argv=None):
     config.setdefault("phantom", DEFAULT_PHANTOM)
     if args.model is not None:
         config["model"] = args.model
-    if config["phantom"] not in DEFAULT_SAMPLING:
+    measured = config["phantom"] == moby.NAME
+    if measured:
+        # The data file and window fix the grid, frame count and coordinate bounds.
+        if args.frames is not None or args.cycles is not None:
+            parser.error("dce_moby takes its window from config['data'], not --frames/--cycles")
+        try:
+            config["data"], window = moby.resolve_settings(config["data"])
+        except (KeyError, OSError, ValueError) as error:
+            parser.error(f"dce_moby data: {error}")
+        config.update(window)
+    elif config["phantom"] not in DEFAULT_SAMPLING:
         parser.error("Unknown phantom")
-    for key, value in DEFAULT_SAMPLING[config["phantom"]].items():
-        config.setdefault(key, value)
+    else:
+        for key, value in DEFAULT_SAMPLING[config["phantom"]].items():
+            config.setdefault(key, value)
     for key in ("steps", "seed", "frames", "cycles", "checkpoint_steps", "rank",
                 "temporal_weight", "temporal_step"):
         if getattr(args, key) is not None:
@@ -313,9 +325,16 @@ def parse_configuration(argv=None):
     config["output"] = options
 
     # Physical coordinates span complete periods, with the first frame as reference.
-    bounds = [[-.5, .5], [-.5, .5], [-.5, config["cycles"] - .5]]
-    if "coordinate_bounds" in config and config["coordinate_bounds"] != bounds:
-        parser.error("coordinate_bounds do not match the configured phantom domain")
+    if measured:
+        bounds = config["coordinate_bounds"]  # mm and seconds, from the data file
+        if config["evaluation_split"] != "midpoints":
+            parser.error("dce_moby supports the midpoints split only")
+        if options["gifs"]:
+            parser.error("GIFs are not implemented for dce_moby; use output.predictions")
+    else:
+        bounds = [[-.5, .5], [-.5, .5], [-.5, config["cycles"] - .5]]
+        if "coordinate_bounds" in config and config["coordinate_bounds"] != bounds:
+            parser.error("coordinate_bounds do not match the configured phantom domain")
     config["coordinate_bounds"] = bounds
     if nested and config.get("reference_time") is None:
         config["reference_time"] = bounds[2][0]
@@ -387,6 +406,8 @@ def parse_configuration(argv=None):
 
 def prepare_data(config):
     """Use saved settings for training or later inference, with no output files."""
+    if config["phantom"] == moby.NAME:
+        return moby.make_pair(config["data"]), None
     if config.get("evaluation_split", "midpoints") == "midpoints":
         pair = make_pair(config["phantom"], config["size"], config["frames"], config["cycles"])
         return pair, None
@@ -449,7 +470,10 @@ def execute(config, out):
 
             # Evaluate the complete configured grid, independently of export options.
             model.eval()
-            if split is None:
+            if config["phantom"] == moby.NAME:
+                # No true motion or reference intensity exists for measured data.
+                evaluate_image_only(model, data, config, out, seconds)
+            elif split is None:
                 evaluate(model, data, config, out, seconds)
             else:
                 evaluate_blocks(model, training, split, config, out, seconds)

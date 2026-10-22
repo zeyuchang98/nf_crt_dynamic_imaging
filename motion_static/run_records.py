@@ -77,7 +77,7 @@ def initialize_run_metadata(config):
         "true_motion_used_for_training": False,
         "reference_intensity_labels_used_for_training": False,
         "midpoint_labels_used_for_training": False,
-        "joint_period": 1.,
+        "joint_period": config.get("joint_period", 1.),
         "time_bounds": config["coordinate_bounds"][2],
         "intervals_per_cycle": (config["frames"] - 1) / config["cycles"],
         "monitoring": "Fixed uniform samples without replacement; image MSE; no validation gradients",

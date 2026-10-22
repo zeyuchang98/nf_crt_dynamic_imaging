@@ -22,12 +22,16 @@ def bounding_roi(volumes):
                  for axis, size in zip(indices, mask.shape))
 
 
-def scalar_report(out, name, data, truth, prediction, *, data_range=1, displacement=False):
-    """Reuse the existing RRMSE/SSIM/PSNR, ROI, point-curve and mean-curve metrics."""
+def scalar_report(out, name, data, truth, prediction, *, data_range=1, displacement=False, points=None):
+    """Reuse the existing RRMSE/SSIM/PSNR, ROI, point-curve and mean-curve metrics.
+
+    Default points are the toy phantoms' center and spot; other data pass their own.
+    """
     roi = bounding_roi([entry["truth"] for entry in data.values()] if displacement else list(truth.values()))
-    size = len(data["training"]["x"])
-    points = {"center": (size // 2, size // 2),
-              "spot_reference": (round(0.525 * (size - 1)), round(0.445 * (size - 1)))}
+    if points is None:
+        size = len(data["training"]["x"])
+        points = {"center": (size // 2, size // 2),
+                  "spot_reference": (round(0.525 * (size - 1)), round(0.445 * (size - 1)))}
     evaluations = {}
     for split, label in (("training", "training_grid"), ("midpoint", "unseen_time_midpoints")):
         entry = evaluate_sequence(truth[split], prediction[split], data_range=data_range,
@@ -162,6 +166,31 @@ def evaluate(model, data, config, out, training_seconds):
         from .render import save_gifs
         save_gifs(out / "visuals", data["midpoint"], predictions["midpoint"], config=config,
                   reference_time=float(model.motion.reference_time) if nested else None)
+    selected = image["unseen_time_midpoints"]
+    print(f"Midpoint image RRMSE={selected['rrmse']:.4%}, SSIM={selected['ssim']}", flush=True)
+    return report
+
+
+def evaluate_image_only(model, data, config, out, training_seconds):
+    """Score the predicted image on the observed and held-out midpoint frames.
+
+    For measured data there is no true motion or reference intensity, so the learned
+    branches are not scored. No point curves are defined for these data.
+    """
+    out = Path(out)
+    predictions = {split: predict(model, coordinate_grid(entry["x"], entry["y"], entry["t"])).reshape(entry["truth"].shape)
+                   for split, entry in data.items()}
+    image = scalar_report(out, "image", data, {s: d["truth"] for s, d in data.items()}, predictions, points={})
+    report = dict(schema_version=1, evaluation_split="midpoints",
+                  evaluation_scope="image only; no true motion or reference intensity",
+                  parameters=sum(p.numel() for p in model.parameters()),
+                  training_seconds=training_seconds, image=image)
+    save_metrics(out / "metrics.json", report)
+    if config.get("output", {}).get("predictions", False):
+        np.savez_compressed(out / "predictions.npz",
+            **{f"{split}_image": values for split, values in predictions.items()},
+            x=data["training"]["x"], y=data["training"]["y"],
+            training_t=data["training"]["t"], midpoint_t=data["midpoint"]["t"])
     selected = image["unseen_time_midpoints"]
     print(f"Midpoint image RRMSE={selected['rrmse']:.4%}, SSIM={selected['ssim']}", flush=True)
     return report

@@ -9,7 +9,6 @@ The interlaced series mixes two effects, so each GIF isolates one of them:
 python -m motion_static.evaluation.moby_gifs ~/Data/dce-moby/moby_z100.h5 --out motion_static/results/dce_moby_z100
 """
 import argparse
-import hashlib
 import json
 import subprocess
 from pathlib import Path
@@ -17,6 +16,8 @@ from pathlib import Path
 import h5py
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
+
+from ..phantoms.moby import file_sha256, global_maximum
 
 
 FRAME_DURATION_MS = 90  # same as the other project GIFs
@@ -37,12 +38,6 @@ def fixed_phase_frames(resp_phase, phase):
     if not frames.size:
         raise ValueError(f"No frames at phase {phase}")
     return frames
-
-
-def global_maximum(dataset, block=500):
-    """Maximum over all frames, read in blocks so the full series is never in memory."""
-    return max(float(dataset[..., start:start + block].max())
-               for start in range(0, dataset.shape[-1], block))
 
 
 def save_animation(path, images, captions, title, display_max, scale=2, still_index=None):
@@ -80,14 +75,6 @@ def git_commit():
         return "unknown"
 
 
-def sha256(path):
-    digest = hashlib.sha256()
-    with open(path, "rb") as f:
-        for block in iter(lambda: f.read(1 << 24), b""):
-            digest.update(block)
-    return digest.hexdigest()
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("slice_file", type=Path)
@@ -113,7 +100,7 @@ def main():
             f"contrast_phase{args.phase}": (fixed_phase_frames(resp_phase, args.phase),
                                             f"DCE-MOBY z={z_index}: contrast series at phase {args.phase}"),
         }
-        summary = dict(source=str(args.slice_file.resolve()), source_sha256=sha256(args.slice_file),
+        summary = dict(source=str(args.slice_file.resolve()), source_sha256=file_sha256(args.slice_file),
                        z_index=z_index, code_commit=git_commit(), global_maximum=maximum,
                        display_max_source="global maximum" if args.display_max is None else "--display-max",
                        axes="x to the right, y upward", gifs={})
