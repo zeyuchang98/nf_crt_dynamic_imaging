@@ -954,3 +954,19 @@ source files on Vista. Other phases were not compared frame by frame.
 Open decisions (user): whether the out-of-plane respiratory motion of a fixed z slice
 is acceptable for the 2D model, and the observation geometry and evaluation for this
 data.
+
+## DCE-MOBY z = 100 GIFs (2026-10-22): code ready, display range pending
+
+[evaluation/moby_gifs.py](evaluation/moby_gifs.py) writes two GIFs from the slice file
+so each effect is seen on its own: one respiratory cycle of consecutive frames (cycle 0,
+-36 to -26 s, before injection, so almost pure motion) and every frame of one phase
+(phase 0, 73 frames, -36 to 684 s, so only the contrast changes). Both use one fixed
+display range, x to the right and y upward like the toy GIFs, 90 ms per frame, a still
+PNG and a `gifs.json` with source hash, frame range and code commit.
+[tests/test_moby_gifs.py](tests/test_moby_gifs.py) (frame selection, orientation) passes.
+
+With the default range 0..0.450 (global maximum) the GIFs are 0.94 MB and 0.32 MB but
+almost black: the maximum comes from a few vessel voxels (99th / 99.9th percentile of
+nonzero values 0.029 / 0.108; tumor mean 0.008 to 0.048 over time). `--display-max`
+sets another fixed range; 0.05 shows organs and tumor enhancement clearly while
+clipping about 0.5% of nonzero pixels. Which range to publish is for the user to decide.
