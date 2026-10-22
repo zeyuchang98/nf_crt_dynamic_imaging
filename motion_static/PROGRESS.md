@@ -955,7 +955,7 @@ Open decisions (user): whether the out-of-plane respiratory motion of a fixed z 
 is acceptable for the 2D model, and the observation geometry and evaluation for this
 data.
 
-## DCE-MOBY z = 100 GIFs (2026-10-22): code ready, display range pending
+## DCE-MOBY z = 100 GIFs (2026-10-22): completed
 
 [evaluation/moby_gifs.py](evaluation/moby_gifs.py) writes two GIFs from the slice file
 so each effect is seen on its own: one respiratory cycle of consecutive frames (cycle 0,
@@ -968,5 +968,15 @@ PNG and a `gifs.json` with source hash, frame range and code commit.
 With the default range 0..0.450 (global maximum) the GIFs are 0.94 MB and 0.32 MB but
 almost black: the maximum comes from a few vessel voxels (99th / 99.9th percentile of
 nonzero values 0.029 / 0.108; tumor mean 0.008 to 0.048 over time). `--display-max`
-sets another fixed range; 0.05 shows organs and tumor enhancement clearly while
-clipping about 0.5% of nonzero pixels. Which range to publish is for the user to decide.
+sets another fixed range. The user chose 0..0.05 (a display normalization only; data
+and metrics are unchanged), which clips 0.31% of nonzero pixels over all frames.
+Published: [results/dce_moby_z100/](results/dce_moby_z100/) `respiratory_cycle0.gif`
+(2.3 MB) and `contrast_phase0.gif` (2.0 MB), stills and `gifs.json` (code `34fd088`).
+
+Observed in the slice (verified numerically):
+- Motion repeats every 50 phases (2.5 s): phases 0, 50, 100 and 150 give identical
+  images, so the 200 phases (10 s) hold four breaths, not one. Up to about 6,800
+  pixels change between phases.
+- In-plane motion is small: the tumor centroid moves by one pixel (0.15 mm) in x.
+- The z = 100 plane contains no liver (its indicator is zero); tumor and artery are
+  present.

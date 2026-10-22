@@ -1,0 +1,49 @@
+{
+  "source": "/Users/zeyuchang/Data/dce-moby/moby_z100.h5",
+  "source_sha256": "89958d215bf241eb14e2ecfdf83f313bbfea3a8a06da16e5f6ccca974d1359da",
+  "z_index": 100,
+  "code_commit": "34fd0884e64759ba9d622c41147e5d8af546a6a2",
+  "global_maximum": 0.4503569006919861,
+  "display_max_source": "--display-max",
+  "axes": "x to the right, y upward",
+  "gifs": {
+    "respiratory_cycle0": {
+      "frames": 200,
+      "duration_ms": 90,
+      "display_range": [
+        0,
+        0.05
+      ],
+      "still_frame": 100,
+      "file": "respiratory_cycle0.gif",
+      "frame_indices": [
+        0,
+        199
+      ],
+      "frame_count": 200,
+      "time_range_s": [
+        -36.0,
+        -26.049999237060547
+      ]
+    },
+    "contrast_phase0": {
+      "frames": 73,
+      "duration_ms": 90,
+      "display_range": [
+        0,
+        0.05
+      ],
+      "still_frame": 36,
+      "file": "contrast_phase0.gif",
+      "frame_indices": [
+        0,
+        14400
+      ],
+      "frame_count": 73,
+      "time_range_s": [
+        -36.0,
+        684.0
+      ]
+    }
+  }
+}
