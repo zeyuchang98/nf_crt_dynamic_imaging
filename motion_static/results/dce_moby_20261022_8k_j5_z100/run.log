@@ -1,0 +1,20 @@
+Phantom: dce_moby | size: 248x248 | cycles: 3 | training frames: 76 | time: [26.5, 34.0]
+dce_moby/nested_low_rank_hash_nf step 1: MSE 0.000681867, temporal L2 0, total 0.000681867, fixed train 0.000438617, held-out 0.000437742
+dce_moby/nested_low_rank_hash_nf step 500: MSE 2.25673e-05, temporal L2 0, total 2.25673e-05, fixed train 7.8793e-05, held-out 7.63213e-05
+dce_moby/nested_low_rank_hash_nf step 1000: MSE 0.000159477, temporal L2 0, total 0.000159477, fixed train 4.69473e-05, held-out 5.46546e-05
+dce_moby/nested_low_rank_hash_nf step 1500: MSE 6.16375e-05, temporal L2 0, total 6.16375e-05, fixed train 5.10476e-05, held-out 5.12467e-05
+dce_moby/nested_low_rank_hash_nf step 2000: MSE 3.96894e-05, temporal L2 0, total 3.96894e-05, fixed train 4.80276e-05, held-out 4.7344e-05
+dce_moby/nested_low_rank_hash_nf step 2500: MSE 2.9532e-05, temporal L2 0, total 2.9532e-05, fixed train 4.17547e-05, held-out 5.1818e-05
+dce_moby/nested_low_rank_hash_nf step 3000: MSE 1.17533e-05, temporal L2 0, total 1.17533e-05, fixed train 3.54324e-05, held-out 3.59051e-05
+dce_moby/nested_low_rank_hash_nf step 3500: MSE 4.02887e-05, temporal L2 0, total 4.02887e-05, fixed train 2.84064e-05, held-out 2.96961e-05
+dce_moby/nested_low_rank_hash_nf step 4000: MSE 5.46039e-06, temporal L2 0, total 5.46039e-06, fixed train 2.65274e-05, held-out 3.14089e-05
+dce_moby/nested_low_rank_hash_nf step 4500: MSE 1.14496e-05, temporal L2 0, total 1.14496e-05, fixed train 2.64957e-05, held-out 2.26917e-05
+dce_moby/nested_low_rank_hash_nf step 5000: MSE 1.73334e-05, temporal L2 0, total 1.73334e-05, fixed train 2.32753e-05, held-out 2.29578e-05
+dce_moby/nested_low_rank_hash_nf step 5500: MSE 9.34057e-06, temporal L2 0, total 9.34057e-06, fixed train 2.03495e-05, held-out 1.6827e-05
+dce_moby/nested_low_rank_hash_nf step 6000: MSE 2.27857e-05, temporal L2 0, total 2.27857e-05, fixed train 1.98194e-05, held-out 1.83171e-05
+dce_moby/nested_low_rank_hash_nf step 6500: MSE 4.89717e-06, temporal L2 0, total 4.89717e-06, fixed train 1.85555e-05, held-out 1.51631e-05
+dce_moby/nested_low_rank_hash_nf step 7000: MSE 3.72373e-06, temporal L2 0, total 3.72373e-06, fixed train 1.83362e-05, held-out 1.52013e-05
+dce_moby/nested_low_rank_hash_nf step 7500: MSE 1.73973e-05, temporal L2 0, total 1.73973e-05, fixed train 1.8465e-05, held-out 1.50102e-05
+dce_moby/nested_low_rank_hash_nf step 8000: MSE 5.6558e-06, temporal L2 0, total 5.6558e-06, fixed train 1.83198e-05, held-out 1.49126e-05
+Midpoint image RRMSE=18.0257%, SSIM=0.9966099647338721
+Saved results: motion_static/results/dce_moby_20261022_8k_j5_z100

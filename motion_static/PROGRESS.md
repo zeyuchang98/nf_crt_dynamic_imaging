@@ -980,3 +980,50 @@ Observed in the slice (verified numerically):
 - In-plane motion is small: the tumor centroid moves by one pixel (0.15 mm) in x.
 - The z = 100 plane contains no liver (its indicator is zero); tumor and artery are
   present.
+
+## J5 structure on the DCE-MOBY z = 100 plane (2026-10-22): completed, poor fit
+
+Question (user): can the existing structure fit this measured-style plane? Evaluation is
+image only, as agreed: there is no true motion or reference intensity for these data.
+
+Setup ([phantoms/moby.py](phantoms/moby.py), `dce_moby` path in [run.py](run.py),
+`evaluate_image_only` in [evaluation/evaluate.py](evaluation/evaluate.py)):
+- Window: frames 1250-1400 of `moby_z100.h5`, t = 26.5-34.0 s, 3 breaths (motion repeats
+  every 50 frames). Chosen where tumor enhancement rises fastest: tumor mean rises about
+  27% within the window, so both motion and intensity change.
+- Grid 248x248, no resampling. Physical coordinates (mm, s) with
+  `coordinate_bounds` [[0, 37.2], [0, 37.2], [26.5, 34.0]], normalized inside the model
+  by the existing `CoordinateNormalizer`; pixel centers at (i + 0.5) * 0.15 mm (assumed
+  from fov = 248 * 0.15). Reference time is the first frame, 26.5 s.
+- Intensity divided by the global maximum of the slice, 0.4504, so data lie in [0, 1].
+- Even frames observed (76), odd frames held out (75), as in the toy midpoint protocol.
+- Model and optimizer exactly J5 (R=2, motion hash 2-8 space / 4-16 time, intensity hash
+  8-128, time grid 3-48, rates 0.01/0.001), 8,000 steps of 4,096 points, seed 0.
+  Because 3 breaths map to [0, 1] in time like J5's 3 cycles, the time resolutions keep
+  their per-cycle meaning.
+
+Result [results/dce_moby_20261022_8k_j5_z100](results/dce_moby_20261022_8k_j5_z100/metrics.json)
+(188 s training, 79,336 parameters, code `24889b7`):
+
+| Image metric | Training frames | Held-out midpoints |
+|---|---:|---:|
+| RRMSE | 16.42% | 18.03% |
+| PSNR (dB, range 1) | 48.99 | 48.16 |
+| SSIM | 0.99700 | 0.99661 |
+| Fixed-sample MSE (final) | 1.83e-05 | 1.49e-05 |
+
+For comparison J3 (same structure, 8k steps, toy) reached 1.63% held-out image RRMSE.
+Per-frame held-out RRMSE ranges from 8.0% to 36.5% (median 16.6%).
+
+Where the error is (held-out frames, checked numerically and on a still frame):
+- The 0.10% of pixels brighter than raw 0.05 (small vessels, 1-2 px) carry 60% of the
+  squared error; pixels on sharp edges (3.85%) carry 66% (the two overlap). Away from
+  both, RRMSE is 7.55%. The prediction is visually close; errors line the organ and
+  body boundaries and the vessels.
+- Training and held-out errors are equal, so this is underfitting, not overfitting.
+
+Not established (untested explanations): the intensity hash maximum 128 is coarser than
+the 248-pixel grid, which would limit edges and 1-pixel vessels; each training point is
+sampled about 7 times in 8k steps versus about 21 in the toy; the loss was still
+decreasing when the cosine rate reached zero. Motion and reference intensity are not
+evaluated, so whether the branches separate correctly is unknown. Single seed.
