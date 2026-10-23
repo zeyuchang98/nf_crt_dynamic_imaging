@@ -1099,3 +1099,28 @@ Single-run differences below about 1 point are not resolved.
   single-run differences at 8k.
 - Lower rates are worse (hash 0.003: +1.4 points; MLP 0.0003: +3.1 points). Higher
   rates (hash 0.03, MLP 0.003) tie the defaults, so 0.01/0.001 are kept.
+
+**S4: step budget and batch** (t02 configuration, `threads=1`, seed 0, predictions
+saved locally; t19 uses the intensity 8-1024 hash of t08):
+
+| Run | Steps x batch | Train RRMSE | Held-out RRMSE | PSNR (dB) | SSIM | Worst held-out frame | Seconds |
+|---|---|---:|---:|---:|---:|---:|---:|
+| [t09](results/dce_moby_tuning_20261022_8k_t09_ih512_th1_s0/metrics.json) | 8k x 4,096 | 12.00% | 14.69% | 49.93 | 0.99810 | 31.40% | 399 |
+| [t16](results/dce_moby_tuning_20261022_24k_t16_ih512_th1/metrics.json) | 24k x 4,096 | 8.36% | 13.23% | 50.84 | 0.99842 | 31.50% | 1,012 |
+| [t17](results/dce_moby_tuning_20261022_48k_t17_ih512_th1/metrics.json) | 48k x 4,096 | 7.66% | 12.81% | 51.12 | 0.99847 | 29.21% | 1,773 |
+| [t18](results/dce_moby_tuning_20261022_12k_t18_ih512_th1_b16k/metrics.json) | 12k x 16,384 | 7.01% | 12.68% | 51.21 | 0.99846 | 25.74% | 1,667 |
+| [t19](results/dce_moby_tuning_20261022_24k_t19_ih1024_th1/metrics.json) | 24k x 4,096, intensity 8-1024 | 5.55% | 12.89% | 51.07 | 0.99853 | 27.67% | 1,076 |
+
+Seconds are training time with four runs in parallel on one thread each.
+
+- More samples help with diminishing returns: 14.7% -> 13.2% -> 12.8% held-out
+  RRMSE for 8k -> 24k -> 48k steps. At the same sample count as t17, the larger batch
+  (t18) gives 12.68% with similar wall time.
+- Training error keeps falling (to 5.6-8.4%) while held-out error levels off near
+  12.7-12.9%. In t18 the fixed held-out MSE stays at about 8.5e-6 from step 5,000
+  while the fixed training MSE keeps decreasing. The remaining error is mostly the
+  gap between observed and held-out frames, not fitting capacity.
+- The top runs (t17, t18, t19) lie within about one 8k seed standard deviation.
+- The fixed-sample training MSE is occasionally above the held-out value (t17: 1.5e-5
+  versus 8.5e-6) although the full-grid training RRMSE is lower. Probably a few large
+  vessel errors in the 65,536 fixed samples; not investigated further.
