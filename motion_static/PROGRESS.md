@@ -1082,3 +1082,20 @@ Single-run differences below about 1 point are not resolved.
 - SSIM follows RRMSE but stays within 0.9963-0.9984.
 - t02 (intensity 8-512, motion unchanged) is carried forward as the simplest of the
   tied best settings.
+
+**S3: seeds and learning rates** (t02 configuration, `threads=1`, 8k steps):
+
+| Run | Change from t02 | Train RRMSE | Held-out RRMSE | PSNR (dB) | SSIM |
+|---|---|---:|---:|---:|---:|
+| [t09](results/dce_moby_tuning_20261022_8k_t09_ih512_th1_s0/metrics.json) | seed 0 | 12.00% | 14.69% | 49.93 | 0.99810 |
+| [t10](results/dce_moby_tuning_20261022_8k_t10_ih512_th1_s1/metrics.json) | seed 1 | 12.65% | 15.13% | 49.68 | 0.99793 |
+| [t11](results/dce_moby_tuning_20261022_8k_t11_ih512_th1_s2/metrics.json) | seed 2 | 12.42% | 14.99% | 49.76 | 0.99800 |
+| [t12](results/dce_moby_tuning_20261022_8k_t12_ih512_th1_hlr3e-3/metrics.json) | hash rate 0.003 | 14.37% | 16.31% | 49.02 | 0.99715 |
+| [t13](results/dce_moby_tuning_20261022_8k_t13_ih512_th1_hlr3e-2/metrics.json) | hash rate 0.03 | 12.30% | 14.87% | 49.83 | 0.99781 |
+| [t14](results/dce_moby_tuning_20261022_8k_t14_ih512_th1_mlr3e-4/metrics.json) | MLP rate 0.0003 | 15.69% | 18.03% | 48.16 | 0.99579 |
+| [t15](results/dce_moby_tuning_20261022_8k_t15_ih512_th1_mlr3e-3/metrics.json) | MLP rate 0.003 | 12.29% | 14.92% | 49.80 | 0.99801 |
+
+- Seeds 0-2 give 14.94% +- 0.22 (sample standard deviation): the yardstick for
+  single-run differences at 8k.
+- Lower rates are worse (hash 0.003: +1.4 points; MLP 0.0003: +3.1 points). Higher
+  rates (hash 0.03, MLP 0.003) tie the defaults, so 0.01/0.001 are kept.
