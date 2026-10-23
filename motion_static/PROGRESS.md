@@ -1201,5 +1201,30 @@ t16 12.31%, t17 12.20%, t18 11.99%, t19 12.49%, t20 12.55%, t21 12.00%, t22 12.5
 test-frame RRMSE. The best setting (t18, t20, t21) gives 12.18% +- 0.32 on these
 frames, PSNR 51.57 dB, SSIM 0.9985.
 
-Next agreed run: the best setting with the plateau schedule at R=2 and R=3, seeds
-0-2 each (user, 2026-10-23).
+**Plateau runs at R=2 and R=3 (2026-10-23): completed.** The best setting (intensity
+hash 8-512, batch 16,384, rates 0.01/0.001, `threads=1`) with default plateau settings,
+step limit 100k, seeds 0-2, six runs in parallel. Test frames: the same 37 as above.
+
+| Run | Rank, seed | Kept / stop step | Reduction steps | Train RRMSE | Validation RRMSE | Test RRMSE | Test PSNR (dB) | Test SSIM | Minutes |
+|---|---|---|---|---:|---:|---:|---:|---:|---:|
+| [p01](results/dce_moby_plateau_20261023_p01_ih512_b16k_r2_s0/metrics.json) | R=2, 0 | 22,500 / 24,500 | 12.5k, 17k, 19k, 21k | 4.53% | 12.73% | 11.64% | 51.96 | 0.99863 | 88 |
+| [p02](results/dce_moby_plateau_20261023_p02_ih512_b16k_r2_s1/metrics.json) | R=2, 1 | 12,000 / 18,000 | 7.5k, 10.5k, 14k, 16k | 7.69% | 13.42% | 12.18% | 51.57 | 0.99841 | 68 |
+| [p03](results/dce_moby_plateau_20261023_p03_ih512_b16k_r2_s2/metrics.json) | R=2, 2 | 22,000 / 26,000 | 9k, 15k, 20k, 24k | 5.14% | 12.37% | 12.07% | 51.65 | 0.99856 | 91 |
+| [p04](results/dce_moby_plateau_20261023_p04_ih512_b16k_r3_s0/metrics.json) | R=3, 0 | 15,000 / 23,000 | 11.5k, 17k, 19k, 21k | 6.50% | 13.12% | 12.21% | 51.55 | 0.99850 | 85 |
+| [p05](results/dce_moby_plateau_20261023_p05_ih512_b16k_r3_s1/metrics.json) | R=3, 1 | 18,000 / 22,000 | 8.5k, 13k, 16k, 20k | 5.42% | 13.41% | 12.38% | 51.43 | 0.99860 | 82 |
+| [p06](results/dce_moby_plateau_20261023_p06_ih512_b16k_r3_s2/metrics.json) | R=3, 2 | 19,500 / 21,500 | 10.5k, 13k, 16k, 18k | 4.27% | 12.87% | 12.37% | 51.44 | 0.99860 | 80 |
+
+Minutes are training time with six runs in parallel on one thread each.
+
+- All six runs stopped at the plateau after four reductions (18k-26k steps); none
+  reached the step limit. The kept step varies by seed (12k-22.5k).
+- R=2: test RRMSE 11.96% +- 0.28, PSNR 51.73 dB, SSIM 0.9985, versus 12.18% +- 0.32
+  for the cosine 12k runs (t18, t20, t21) on the same frames: within seed variation,
+  with no step budget to choose, at about three times the training time.
+- R=3: test RRMSE 12.32% +- 0.10, PSNR 51.47 dB, SSIM 0.9986. It adds 98 parameters
+  and is not better than R=2 on the whole-image metrics; training RRMSE is similar
+  (5.40% versus 5.79%).
+- Training RRMSE falls to 4-8% while validation and test stay near 12-13%: the same
+  observed-to-held-out gap as before.
+- Not established: branch, dynamic or tissue-curve behaviour at R=3; other windows.
+  `predictions.npz` and `model.pt` stay local.

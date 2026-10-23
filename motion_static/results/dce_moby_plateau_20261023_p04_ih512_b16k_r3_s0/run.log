@@ -1,0 +1,51 @@
+Phantom: dce_moby | size: 248x248 | cycles: 3 | training frames: 76 | time: [26.5, 34.0]
+dce_moby/nested_low_rank_hash_nf step 1: MSE 0.000515109, temporal L2 0, total 0.000515109, fixed train 0.000405822, held-out 0.000352989
+dce_moby/nested_low_rank_hash_nf step 500: MSE 1.6608e-05, temporal L2 0, total 1.6608e-05, fixed train 4.11539e-05, held-out 3.05669e-05, validation frames 2.99307e-05
+dce_moby/nested_low_rank_hash_nf step 1000: MSE 7.19084e-06, temporal L2 0, total 7.19084e-06, fixed train 2.95621e-05, held-out 2.30436e-05, validation frames 2.16386e-05
+dce_moby/nested_low_rank_hash_nf step 1500: MSE 5.12439e-06, temporal L2 0, total 5.12439e-06, fixed train 1.77348e-05, held-out 2.33187e-05, validation frames 1.64701e-05
+dce_moby/nested_low_rank_hash_nf step 2000: MSE 5.87522e-06, temporal L2 0, total 5.87522e-06, fixed train 2.20268e-05, held-out 1.3655e-05, validation frames 1.51602e-05
+dce_moby/nested_low_rank_hash_nf step 2500: MSE 4.17932e-06, temporal L2 0, total 4.17932e-06, fixed train 1.46665e-05, held-out 1.28277e-05, validation frames 1.45972e-05
+dce_moby/nested_low_rank_hash_nf step 3000: MSE 2.0692e-05, temporal L2 0, total 2.0692e-05, fixed train 1.29458e-05, held-out 1.36409e-05, validation frames 1.45235e-05
+dce_moby/nested_low_rank_hash_nf step 3500: MSE 5.90764e-06, temporal L2 0, total 5.90764e-06, fixed train 1.315e-05, held-out 1.15159e-05, validation frames 1.39098e-05
+dce_moby/nested_low_rank_hash_nf step 4000: MSE 1.25749e-05, temporal L2 0, total 1.25749e-05, fixed train 1.53623e-05, held-out 1.44436e-05, validation frames 1.33951e-05
+dce_moby/nested_low_rank_hash_nf step 4500: MSE 5.24429e-06, temporal L2 0, total 5.24429e-06, fixed train 1.14385e-05, held-out 8.57214e-06, validation frames 1.18509e-05
+dce_moby/nested_low_rank_hash_nf step 5000: MSE 4.55941e-06, temporal L2 0, total 4.55941e-06, fixed train 1.14575e-05, held-out 1.05451e-05, validation frames 1.17068e-05
+dce_moby/nested_low_rank_hash_nf step 5500: MSE 3.44408e-06, temporal L2 0, total 3.44408e-06, fixed train 8.65429e-06, held-out 1.12191e-05, validation frames 1.18494e-05
+dce_moby/nested_low_rank_hash_nf step 6000: MSE 2.44663e-06, temporal L2 0, total 2.44663e-06, fixed train 8.62846e-06, held-out 1.02401e-05, validation frames 1.11362e-05
+dce_moby/nested_low_rank_hash_nf step 6500: MSE 5.76743e-06, temporal L2 0, total 5.76743e-06, fixed train 9.81982e-06, held-out 1.50853e-05, validation frames 1.19005e-05
+dce_moby/nested_low_rank_hash_nf step 7000: MSE 5.2214e-06, temporal L2 0, total 5.2214e-06, fixed train 7.31881e-06, held-out 1.28089e-05, validation frames 1.1266e-05
+dce_moby/nested_low_rank_hash_nf step 7500: MSE 6.29527e-06, temporal L2 0, total 6.29527e-06, fixed train 4.39142e-06, held-out 1.1086e-05, validation frames 1.10194e-05
+dce_moby/nested_low_rank_hash_nf step 8000: MSE 5.87855e-06, temporal L2 0, total 5.87855e-06, fixed train 6.64236e-06, held-out 9.69354e-06, validation frames 1.11012e-05
+dce_moby/nested_low_rank_hash_nf step 8500: MSE 4.09009e-06, temporal L2 0, total 4.09009e-06, fixed train 6.43571e-06, held-out 1.12889e-05, validation frames 1.05466e-05
+dce_moby/nested_low_rank_hash_nf step 9000: MSE 1.17916e-05, temporal L2 0, total 1.17916e-05, fixed train 8.19708e-06, held-out 1.28113e-05, validation frames 1.16275e-05
+dce_moby/nested_low_rank_hash_nf step 9500: MSE 2.61068e-06, temporal L2 0, total 2.61068e-06, fixed train 7.71904e-06, held-out 1.24754e-05, validation frames 9.35546e-06
+dce_moby/nested_low_rank_hash_nf step 10000: MSE 5.56966e-06, temporal L2 0, total 5.56966e-06, fixed train 4.16076e-06, held-out 1.21409e-05, validation frames 1.04169e-05
+dce_moby/nested_low_rank_hash_nf step 10500: MSE 3.86572e-06, temporal L2 0, total 3.86572e-06, fixed train 7.04957e-06, held-out 1.0162e-05, validation frames 1.03719e-05
+dce_moby/nested_low_rank_hash_nf step 11000: MSE 5.05486e-06, temporal L2 0, total 5.05486e-06, fixed train 4.76544e-06, held-out 9.57444e-06, validation frames 1.06988e-05
+dce_moby/nested_low_rank_hash_nf step 11500: MSE 2.19521e-06, temporal L2 0, total 2.19521e-06, fixed train 3.97964e-06, held-out 9.51605e-06, validation frames 1.06654e-05
+dce_moby/nested_low_rank_hash_nf step 12000: MSE 1.20865e-06, temporal L2 0, total 1.20865e-06, fixed train 1.57284e-06, held-out 8.5474e-06, validation frames 9.28949e-06
+dce_moby/nested_low_rank_hash_nf step 12500: MSE 2.4368e-06, temporal L2 0, total 2.4368e-06, fixed train 1.99886e-06, held-out 1.16513e-05, validation frames 9.19175e-06
+dce_moby/nested_low_rank_hash_nf step 13000: MSE 1.29334e-06, temporal L2 0, total 1.29334e-06, fixed train 2.18496e-06, held-out 1.00078e-05, validation frames 9.22786e-06
+dce_moby/nested_low_rank_hash_nf step 13500: MSE 3.69501e-06, temporal L2 0, total 3.69501e-06, fixed train 2.45748e-06, held-out 9.66336e-06, validation frames 8.42304e-06
+dce_moby/nested_low_rank_hash_nf step 14000: MSE 3.00998e-06, temporal L2 0, total 3.00998e-06, fixed train 1.74714e-06, held-out 9.71269e-06, validation frames 8.9119e-06
+dce_moby/nested_low_rank_hash_nf step 14500: MSE 3.04957e-06, temporal L2 0, total 3.04957e-06, fixed train 1.63568e-06, held-out 8.29574e-06, validation frames 8.95375e-06
+dce_moby/nested_low_rank_hash_nf step 15000: MSE 4.29696e-06, temporal L2 0, total 4.29696e-06, fixed train 1.59425e-06, held-out 8.88164e-06, validation frames 8.11237e-06
+dce_moby/nested_low_rank_hash_nf step 15500: MSE 2.74842e-06, temporal L2 0, total 2.74842e-06, fixed train 2.02409e-06, held-out 8.23581e-06, validation frames 9.20997e-06
+dce_moby/nested_low_rank_hash_nf step 16000: MSE 2.44244e-06, temporal L2 0, total 2.44244e-06, fixed train 1.70176e-06, held-out 9.07694e-06, validation frames 8.60617e-06
+dce_moby/nested_low_rank_hash_nf step 16500: MSE 3.91996e-06, temporal L2 0, total 3.91996e-06, fixed train 1.8618e-06, held-out 8.2148e-06, validation frames 9.09831e-06
+dce_moby/nested_low_rank_hash_nf step 17000: MSE 1.79437e-06, temporal L2 0, total 1.79437e-06, fixed train 1.37651e-06, held-out 7.63105e-06, validation frames 8.26367e-06
+dce_moby/nested_low_rank_hash_nf step 17500: MSE 2.08566e-06, temporal L2 0, total 2.08566e-06, fixed train 1.19065e-06, held-out 8.18068e-06, validation frames 8.51893e-06
+dce_moby/nested_low_rank_hash_nf step 18000: MSE 8.16089e-07, temporal L2 0, total 8.16089e-07, fixed train 1.09315e-06, held-out 7.61002e-06, validation frames 8.42678e-06
+dce_moby/nested_low_rank_hash_nf step 18500: MSE 8.86024e-07, temporal L2 0, total 8.86024e-07, fixed train 9.40714e-07, held-out 7.72528e-06, validation frames 8.89072e-06
+dce_moby/nested_low_rank_hash_nf step 19000: MSE 1.03957e-06, temporal L2 0, total 1.03957e-06, fixed train 1.05939e-06, held-out 8.20252e-06, validation frames 8.76804e-06
+dce_moby/nested_low_rank_hash_nf step 19500: MSE 6.41384e-07, temporal L2 0, total 6.41384e-07, fixed train 1.12952e-06, held-out 8.09236e-06, validation frames 8.56594e-06
+dce_moby/nested_low_rank_hash_nf step 20000: MSE 1.14239e-06, temporal L2 0, total 1.14239e-06, fixed train 9.27011e-07, held-out 7.88121e-06, validation frames 8.56963e-06
+dce_moby/nested_low_rank_hash_nf step 20500: MSE 8.76013e-07, temporal L2 0, total 8.76013e-07, fixed train 1.0276e-06, held-out 7.6714e-06, validation frames 8.61301e-06
+dce_moby/nested_low_rank_hash_nf step 21000: MSE 9.51231e-07, temporal L2 0, total 9.51231e-07, fixed train 1.02133e-06, held-out 7.23739e-06, validation frames 8.62612e-06
+dce_moby/nested_low_rank_hash_nf step 21500: MSE 2.77135e-06, temporal L2 0, total 2.77135e-06, fixed train 1.00086e-06, held-out 7.83688e-06, validation frames 8.57481e-06
+dce_moby/nested_low_rank_hash_nf step 22000: MSE 9.33123e-07, temporal L2 0, total 9.33123e-07, fixed train 8.59219e-07, held-out 7.9872e-06, validation frames 8.62169e-06
+dce_moby/nested_low_rank_hash_nf step 22500: MSE 1.09026e-06, temporal L2 0, total 1.09026e-06, fixed train 9.46387e-07, held-out 7.59271e-06, validation frames 8.44224e-06
+dce_moby/nested_low_rank_hash_nf step 23000: MSE 7.46357e-07, temporal L2 0, total 7.46357e-07, fixed train 9.43983e-07, held-out 7.50995e-06, validation frames 8.38067e-06
+Plateau schedule stopped at step 23000 (plateau); kept step 15000 with validation-frame MSE 8.11237e-06
+Test-frame image RRMSE=12.2112%, SSIM=0.9985046764212925
+Saved results: motion_static/results/dce_moby_plateau_20261023_p04_ih512_b16k_r3_s0
