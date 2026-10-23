@@ -14,6 +14,7 @@ import numpy as np
 
 from .moby_gifs import save_animation
 from ..phantoms import moby
+from ..run import prepare_data
 
 
 SEPARATOR_PIXELS = 2
@@ -29,8 +30,9 @@ def side_by_side(truth, prediction, separator_value):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("run", type=Path)
-    parser.add_argument("--split", choices=("midpoint", "training"), default="midpoint",
-                        help="held-out midpoint frames (default) or observed training frames")
+    parser.add_argument("--split", choices=("midpoint", "training", "validation", "test"), default=None,
+                        help="held-out midpoint frames (default; test frames for the alternate split), "
+                             "observed training frames, or the alternate split's validation frames")
     parser.add_argument("--display-max", type=float, default=0.05,
                         help="upper end of the fixed display range, raw p0 units (default 0.05, as the data GIFs)")
     parser.add_argument("--scale", type=int, default=2, help="integer pixel upscaling")
@@ -41,13 +43,18 @@ def main():
         parser.error("Run is not a dce_moby run")
     predictions = np.load(args.run / "predictions.npz")
     scale = config["data"]["intensity_scale_value"]
-    entry = moby.make_pair(config["data"])[args.split]
+    data, _ = prepare_data(config)
+    if args.split is None:
+        args.split = "test" if "test" in data else "midpoint"
+    if args.split not in data:
+        parser.error(f"This run has no {args.split} frames; it has {sorted(data)}")
+    entry = data[args.split]
     prediction = predictions[f"{args.split}_image"]
     if prediction.shape != entry["truth"].shape or not np.allclose(predictions[f"{args.split}_t"], entry["t"]):
         raise ValueError("Saved predictions do not match the run's data window")
 
     images = side_by_side(entry["truth"] * scale, prediction * scale, args.display_max)
-    label = "held-out" if args.split == "midpoint" else "training"
+    label = {"midpoint": "held-out", "training": "training", "validation": "validation", "test": "test"}[args.split]
     captions = [f"t={t:.2f} s | {label} frame {k}" for k, t in enumerate(entry["t"])]
     out = args.run / "visuals"
     out.mkdir(exist_ok=True)

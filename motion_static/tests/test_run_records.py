@@ -30,12 +30,12 @@ def small_config():
     return config
 
 
-def record_initial_model(model, coordinates, intensities, config, *, out, validation):
+def record_initial_model(model, coordinates, intensities, config, *, out, validation, selection=None):
     """Integration fixture: save monitoring outputs without any optimizer update."""
     optimizer = torch.optim.Adam(model.parameters(), lr=.001)
     monitor = TrainingMonitor(out, coordinates, intensities, validation, config, optimizer)
     monitor.record(model, optimizer, 0, 0.)
-    return [], 0.
+    return [], 0., None
 
 
 class CompactRunTests(unittest.TestCase):

@@ -74,6 +74,12 @@ compatibility alias to the same protocol-labeled index. `diagnose_branches` and
 checkpoints. These commands are never invoked automatically by training.
 Known-shape geometry diagnosis remains specific to the toy phantom.
 
+`moby_split_eval` re-scores saved dce_moby runs (from their `model.pt`) on the
+alternate validation/test split of the midpoints and writes
+`metrics_alternate_split.json`, leaving `metrics.json` unchanged; this compares
+cosine runs with plateau-schedule runs on the same test frames. `moby_fit_gif`
+draws the test frames by default for runs that use that split.
+
 `monitor_samples.npz` stores fixed training/validation pool indices used by
 `loss.csv`. The generator is independent of training batches, and validation has
 no gradients. For block experiments, indices address the selected observed and

@@ -7,6 +7,8 @@ intensity is normalized, by one fixed scale for the whole series.
 
 Even frames of the window are observed; odd frames are the held-out midpoints, as in
 the toy `midpoints` protocol. The window therefore starts and ends on observed frames.
+With `held_out_split = "alternate_validation_test"` the midpoints are further divided
+into validation frames (which may steer training) and test frames (only scored).
 """
 import hashlib
 from pathlib import Path
@@ -88,3 +90,18 @@ def make_pair(data):
     truth = np.transpose(values, (1, 0, 2)) / np.float32(data["intensity_scale_value"])
     return {split: dict(x=x, y=y, t=time[start::2], truth=np.ascontiguousarray(truth[..., start::2]))
             for split, start in (("training", 0), ("midpoint", 1))}
+
+
+def split_midpoints(pair):
+    """Alternate the held-out midpoints into validation and test frames.
+
+    Midpoint j is window frame 2j + 1. Even j (window frames 1, 5, 9, ...) are
+    validation frames, odd j (3, 7, 11, ...) test frames, so both cover the whole
+    window and every breathing phase. Training frames are unchanged.
+    """
+    midpoint = pair["midpoint"]
+    split = {"training": pair["training"]}
+    for name, start in (("validation", 0), ("test", 1)):
+        split[name] = dict(x=midpoint["x"], y=midpoint["y"], t=midpoint["t"][start::2],
+                           truth=np.ascontiguousarray(midpoint["truth"][..., start::2]))
+    return split

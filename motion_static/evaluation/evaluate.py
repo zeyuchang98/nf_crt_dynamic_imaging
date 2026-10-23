@@ -22,10 +22,18 @@ def bounding_roi(volumes):
                  for axis, size in zip(indices, mask.shape))
 
 
-def scalar_report(out, name, data, truth, prediction, *, data_range=1, displacement=False, points=None):
+MIDPOINT_SPLITS = (("training", "training_grid"), ("midpoint", "unseen_time_midpoints"))
+# Alternate held-out split: validation frames may steer training, test frames are only scored.
+ALTERNATE_SPLITS = (("training", "training_grid"), ("validation", "validation_midpoints"),
+                    ("test", "test_midpoints"))
+
+
+def scalar_report(out, name, data, truth, prediction, *, data_range=1, displacement=False, points=None,
+                  splits=MIDPOINT_SPLITS):
     """Reuse the existing RRMSE/SSIM/PSNR, ROI, point-curve and mean-curve metrics.
 
     Default points are the toy phantoms' center and spot; other data pass their own.
+    `splits` maps data keys to report labels.
     """
     roi = bounding_roi([entry["truth"] for entry in data.values()] if displacement else list(truth.values()))
     if points is None:
@@ -33,7 +41,7 @@ def scalar_report(out, name, data, truth, prediction, *, data_range=1, displacem
         points = {"center": (size // 2, size // 2),
                   "spot_reference": (round(0.525 * (size - 1)), round(0.445 * (size - 1)))}
     evaluations = {}
-    for split, label in (("training", "training_grid"), ("midpoint", "unseen_time_midpoints")):
+    for split, label in splits:
         entry = evaluate_sequence(truth[split], prediction[split], data_range=data_range,
                                   times=data[split]["t"], roi=roi, points=points)
         if displacement:
@@ -171,26 +179,43 @@ def evaluate(model, data, config, out, training_seconds):
     return report
 
 
-def evaluate_image_only(model, data, config, out, training_seconds):
-    """Score the predicted image on the observed and held-out midpoint frames.
-
-    For measured data there is no true motion or reference intensity, so the learned
-    branches are not scored. No point curves are defined for these data.
-    """
-    out = Path(out)
+def image_only_report(model, data, config, training_seconds):
+    """Image metrics and predictions for every split of `data`, without writing files."""
+    alternate = "test" in data
     predictions = {split: predict(model, coordinate_grid(entry["x"], entry["y"], entry["t"])).reshape(entry["truth"].shape)
                    for split, entry in data.items()}
-    image = scalar_report(out, "image", data, {s: d["truth"] for s, d in data.items()}, predictions, points={})
+    image = scalar_report(None, "image", data, {s: d["truth"] for s, d in data.items()}, predictions, points={},
+                          splits=ALTERNATE_SPLITS if alternate else MIDPOINT_SPLITS)
     report = dict(schema_version=1, evaluation_split="midpoints",
                   evaluation_scope="image only; no true motion or reference intensity",
                   parameters=sum(p.numel() for p in model.parameters()),
                   training_seconds=training_seconds, image=image)
+    if alternate:
+        report["held_out_split"] = config["held_out_split"]
+        if "early_stopping" in config:
+            report["early_stopping"] = config["early_stopping"]
+    return report, predictions
+
+
+def evaluate_image_only(model, data, config, out, training_seconds):
+    """Score the predicted image on the observed and held-out midpoint frames.
+
+    For measured data there is no true motion or reference intensity, so the learned
+    branches are not scored. No point curves are defined for these data. With the
+    alternate split, validation and test frames are reported separately.
+    """
+    out = Path(out)
+    report, predictions = image_only_report(model, data, config, training_seconds)
     save_metrics(out / "metrics.json", report)
     if config.get("output", {}).get("predictions", False):
         np.savez_compressed(out / "predictions.npz",
             **{f"{split}_image": values for split, values in predictions.items()},
             x=data["training"]["x"], y=data["training"]["y"],
-            training_t=data["training"]["t"], midpoint_t=data["midpoint"]["t"])
-    selected = image["unseen_time_midpoints"]
-    print(f"Midpoint image RRMSE={selected['rrmse']:.4%}, SSIM={selected['ssim']}", flush=True)
+            **{f"{split}_t": entry["t"] for split, entry in data.items()})
+    if "test" in data:
+        selected = report["image"]["test_midpoints"]
+        print(f"Test-frame image RRMSE={selected['rrmse']:.4%}, SSIM={selected['ssim']}", flush=True)
+    else:
+        selected = report["image"]["unseen_time_midpoints"]
+        print(f"Midpoint image RRMSE={selected['rrmse']:.4%}, SSIM={selected['ssim']}", flush=True)
     return report

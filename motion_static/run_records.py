@@ -93,6 +93,13 @@ def initialize_run_metadata(config):
             reference_intensity_labels_used_for_training=oracle == "intensity",
             oracle_note=f"Diagnostic only: the {oracle} branch is the phantom's ground truth, not learned",
         )
+    # Validation frames steer the plateau schedule without gradients; test frames stay unseen.
+    if config.get("schedule") == "plateau":
+        config.update(
+            scheduler="reduce on validation-frame plateau; stop after max_reductions; keep best weights",
+            validation_labels_used_for="learning-rate reductions, stop and kept weights; no gradients",
+            test_labels_used_for_training=False,
+        )
 
 
 def snapshot_source(root, out):
@@ -192,6 +199,11 @@ def summary_row(run, config, report=None):
             image_scores = report["image"]["test_pixels"]
             intensity_scores = report.get("reference_intensity_full_grid", {})
             motion_scores = report.get("motion", {}).get("foreground", {})
+        elif "test_midpoints" in report["image"]:
+            # Alternate split: score only the test half; validation frames steered training.
+            row["evaluation_split"] = "midpoints, test half"
+            image_scores = report["image"]["test_midpoints"]
+            intensity_scores, motion_scores = {}, {}
         else:
             image_scores = report["image"]["unseen_time_midpoints"]
             intensity_scores = report.get("reference_intensity", {}).get("unseen_time_midpoints", {})

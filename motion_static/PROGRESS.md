@@ -1150,6 +1150,56 @@ Seconds are training time with four runs in parallel on one thread each.
   runs. No GIFs were made for these runs; branch, dynamic and tissue-curve metrics
   were not evaluated. The tuning used 24 runs, four more than the planned ~20,
   because of the added repeat, 1024-hash and seed runs.
-- Not established: whether the setting transfers to other windows or a longer window,
-  and whether the plateau comes from the model's temporal interpolation or from the
-  0.05 s frame spacing of the data.
+- Not established: whether the setting transfers to other windows or a longer window.
+- Data-only check (2026-10-23, no model): averaging the two true training frames
+  around each held-out frame gives 12.76% held-out RRMSE (previous frame alone:
+  17.65%), close to the best model's 12.63%. Per-frame model errors correlate with
+  this interpolation error (r = 0.85 for t18). The 15 hardest frames lie at fast
+  breathing transitions and are intermediate states, not copies of a neighbour (1 of
+  15); there t18 averages 18.1% versus 21.2% for the truth average. The held-out
+  plateau therefore mostly reflects how much the image changes between 0.1 s training
+  frames. At 8k steps a finer motion time axis lowered the easier frames slightly
+  (11.7% -> 11.0%) but not the hardest ones; the user decided not to test it further.
+
+## Plateau schedule and early stop (2026-10-23): implemented
+
+Approved by the user (2026-10-23) so that the step budget no longer needs tuning.
+Optional `"schedule": "plateau"` for dce_moby ([run.py](run.py), documented in
+[experiments/README.md](experiments/README.md)) with
+`"held_out_split": "alternate_validation_test"`
+([phantoms/moby.py](phantoms/moby.py) `split_midpoints`): the 75 midpoints become 38
+validation frames (window frames 1, 5, 9, ...) and 37 test frames (3, 7, 11, ...).
+Every 500 steps the MSE on all validation frames sets `ReduceLROnPlateau` (factor
+0.5, patience 3, relative threshold 1e-3, all rate groups together); the plateau
+after 4 reductions stops the run, `steps` is an upper limit, and the weights with the
+lowest validation-frame MSE are kept and evaluated. Validation labels never enter the
+loss; test frames are not seen in training or monitoring. `metrics.json` reports
+training, validation and test frames; the summary row uses the test frames.
+[evaluation/moby_split_eval.py](evaluation/moby_split_eval.py) re-scores saved runs
+from `model.pt` on the same test frames (`metrics_alternate_split.json`).
+
+**Validation completed:** 122 unit tests pass (5 new in
+[tests/test_plateau_schedule.py](tests/test_plateau_schedule.py): split, rate
+reductions and stop on a synthetic plateau, kept weights equal the best logged
+validation MSE, configuration rules, end-to-end outputs and re-scoring). Without
+`schedule`, a 400-step `threads=1` dce_moby run reproduces the pre-change loss
+history, metrics and predictions exactly. The reloaded t18 model reproduces its saved
+`metrics.json` exactly. A 3000-step smoke run (patience 1, at most 2 reductions,
+every 100 steps) halved all rates once after two non-improving evaluations, stopped
+at the step limit and kept step 2,900; one full validation evaluation costs about
+5 s. The smoke run was not kept.
+
+Cosine runs re-scored on the 37 test frames
+([t16](results/dce_moby_tuning_20261022_24k_t16_ih512_th1/metrics_alternate_split.json),
+[t17](results/dce_moby_tuning_20261022_48k_t17_ih512_th1/metrics_alternate_split.json),
+[t18](results/dce_moby_tuning_20261022_12k_t18_ih512_th1_b16k/metrics_alternate_split.json),
+[t19](results/dce_moby_tuning_20261022_24k_t19_ih1024_th1/metrics_alternate_split.json),
+[t20](results/dce_moby_tuning_20261022_12k_t20_ih512_th1_b16k_s1/metrics_alternate_split.json),
+[t21](results/dce_moby_tuning_20261022_12k_t21_ih512_th1_b16k_s2/metrics_alternate_split.json),
+[t22](results/dce_moby_tuning_20261022_12k_t22_ih1024_th1_b16k/metrics_alternate_split.json)):
+t16 12.31%, t17 12.20%, t18 11.99%, t19 12.49%, t20 12.55%, t21 12.00%, t22 12.51%
+test-frame RRMSE. The best setting (t18, t20, t21) gives 12.18% +- 0.32 on these
+frames, PSNR 51.57 dB, SSIM 0.9985.
+
+Next agreed run: the best setting with the plateau schedule at R=2 and R=3, seeds
+0-2 each (user, 2026-10-23).

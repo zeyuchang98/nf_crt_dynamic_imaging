@@ -67,6 +67,24 @@ without an oracle. Only the complex phantom, midpoint split and reference time
 and an `oracle_branch` summary column. They diagnose branch capacity and
 identifiability; they are not reconstruction methods.
 
+### Plateau schedule and early stop (dce_moby only)
+
+`"schedule": "plateau"` replaces the cosine schedule and requires
+`"held_out_split": "alternate_validation_test"`, which divides the held-out midpoints
+into validation frames (window frames 1, 5, 9, ...) and test frames (3, 7, 11, ...).
+Every `log_interval` steps the image MSE on all validation frames is evaluated after
+the update. Optional `"plateau": {"factor", "patience", "threshold", "max_reductions"}`
+(defaults 0.5, 3, 1e-3, 4) follows `torch.optim.lr_scheduler.ReduceLROnPlateau`:
+after more than `patience` evaluations without a relative improvement of `threshold`,
+all rates are multiplied by `factor`. The plateau after `max_reductions` reductions
+stops the run; `steps` is only an upper limit. The weights with the lowest
+validation-frame MSE are kept in `model.pt` and evaluated. Validation labels never
+enter the loss; test frames are not used during training or monitoring. `config.json`
+and `metrics.json` record `early_stopping` (kept step, stop step, reduction steps).
+`metrics.json` reports `training_grid`, `validation_midpoints` and `test_midpoints`;
+the summary row uses the test frames. Without `schedule` the cosine schedule and all
+outputs are unchanged.
+
 ## Usage
 
 From the repository root, inspect the resolved configuration without training or

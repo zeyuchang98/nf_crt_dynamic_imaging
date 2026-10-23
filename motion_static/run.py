@@ -1,6 +1,7 @@
 """One training entry point for image and nested fields. Run from the repository root."""
 import argparse
 from contextlib import redirect_stdout, redirect_stderr
+import copy
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -26,7 +27,7 @@ from .phantoms.data import DEFAULT_PHANTOM, DEFAULT_SAMPLING, coordinate_grid, m
 from .splits import block_split
 from .evaluation.evaluate import evaluate, evaluate_image_only
 from .evaluation.block_evaluate import evaluate_blocks
-from .training_monitor import TrainingMonitor
+from .training_monitor import TrainingMonitor, fixed_mse
 from .run_records import (
     Tee,
     initialize_run_metadata,
@@ -36,6 +37,14 @@ from .run_records import (
     utc_now,
     write_json,
 )
+
+# Plateau schedule (ReduceLROnPlateau semantics): every log_interval steps the MSE on
+# all validation frames is compared with its best value; after more than `patience`
+# evaluations without a relative improvement of `threshold`, every rate is multiplied
+# by `factor`. The run stops at the plateau after `max_reductions` reductions, or at
+# `steps`, and keeps the weights with the lowest validation MSE.
+PLATEAU_DEFAULTS = dict(factor=0.5, patience=3, threshold=1e-3, max_reductions=4)
+HELD_OUT_SPLITS = ("midpoints", "alternate_validation_test")
 
 
 def build_model(config):
@@ -157,16 +166,32 @@ def build_optimizer(model, config):
     return torch.optim.Adam(groups)
 
 
-def train(model, coordinates, intensities, config, *, out=None, validation=None):
+def train(model, coordinates, intensities, config, *, out=None, validation=None, selection=None):
     """One step = one random batch and one joint optimizer update.
 
     Loss definitions live in losses.compute_training_losses. Validation is used
     only by the monitor, after updates, without gradients. Passing out=None skips
-    file output. Return the logged (step, image MSE, temporal L2, total) history
-    and elapsed seconds; the model is updated in place.
+    file output. With the plateau schedule, `selection` (all validation frames)
+    sets the learning rate, the stop and the kept weights; it never enters the loss.
+    Return the logged (step, image MSE, temporal L2, total) history, elapsed
+    seconds and the plateau summary (None for cosine); the model is updated in place.
     """
     optimizer = build_optimizer(model, config)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["steps"])
+    plateau = config.get("schedule") == "plateau"
+    if plateau:
+        if selection is None:
+            raise ValueError("The plateau schedule needs validation frames")
+        settings = config["plateau"]
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, mode="min", factor=settings["factor"], patience=settings["patience"],
+            threshold=settings["threshold"], threshold_mode="rel")
+        selection_coordinates = torch.as_tensor(selection[0], dtype=torch.float32)
+        selection_values = torch.as_tensor(np.asarray(selection[1]).reshape(-1), dtype=torch.float32)
+        best = dict(mse=float("inf"), step=None, state=None)
+        reduction_steps = []
+    else:
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["steps"])
+    stopped_by = "step limit"
     training_coordinates = torch.as_tensor(coordinates, dtype=torch.float32)
     observed_intensities = torch.as_tensor(intensities.reshape(-1), dtype=torch.float32)
     checkpoint_steps = set(config.get("checkpoint_steps", []))
@@ -197,7 +222,18 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None)
         optimizer.zero_grad(set_to_none=True)
         total_loss.backward()
         optimizer.step()
-        scheduler.step()
+        selection_mse = None
+        if not plateau:
+            scheduler.step()
+        elif step % log_interval == 0 or step == config["steps"]:
+            # The plateau rates follow the validation MSE, evaluated after the update.
+            selection_mse = fixed_mse(model, selection_coordinates, selection_values)
+            if selection_mse < best["mse"]:
+                best.update(mse=selection_mse, step=step, state=copy.deepcopy(model.state_dict()))
+            previous_rates = [group["lr"] for group in optimizer.param_groups]
+            scheduler.step(selection_mse)
+            if any(group["lr"] < rate for group, rate in zip(optimizer.param_groups, previous_rates)):
+                reduction_steps.append(step)
 
         # 4. Log pre-update batch losses and post-update fixed-sample MSE.
         should_log = (
@@ -212,14 +248,19 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None)
                             scalar_losses["temporal_l2"], scalar_losses["total_loss"]))
             monitoring_text = ""
             if monitor is not None:
+                logged = dict(scalar_losses)
+                if selection_mse is not None:
+                    logged["validation_frames_mse"] = selection_mse
                 row = monitor.record(
                     model, optimizer, step, time.perf_counter() - start,
-                    batch_losses=scalar_losses,
+                    batch_losses=logged,
                 )
                 monitoring_text = (
                     f", fixed train {row['fixed_training_mse']:.6g}, "
                     f"held-out {row.get('fixed_validation_mse', float('nan')):.6g}"
                 )
+            if selection_mse is not None:
+                monitoring_text += f", validation frames {selection_mse:.6g}"
             print(
                 f"{config['phantom']}/{config['model']} step {step}: "
                 f"MSE {scalar_losses['batch_mse']:.6g}, "
@@ -231,7 +272,19 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None)
         if out is not None and step in checkpoint_steps:
             save_checkpoint(out, model, optimizer, scheduler, config, step)
 
-    return history, time.perf_counter() - start
+        # The reduction after the last allowed one marks the final plateau.
+        if plateau and len(reduction_steps) > settings["max_reductions"]:
+            stopped_by = "plateau"
+            break
+
+    if not plateau:
+        return history, time.perf_counter() - start, None
+    model.load_state_dict(best["state"])
+    summary = dict(best_step=best["step"], best_validation_frames_mse=best["mse"], stop_step=step,
+                   stopped_by=stopped_by, rate_reduction_steps=reduction_steps[:settings["max_reductions"]])
+    print(f"Plateau schedule stopped at step {step} ({stopped_by}); kept step {best['step']} "
+          f"with validation-frame MSE {best['mse']:.6g}", flush=True)
+    return history, time.perf_counter() - start, summary
 
 
 def parse_configuration(argv=None):
@@ -373,6 +426,31 @@ def parse_configuration(argv=None):
     if temporal_mlp_lr is not None and not (np.isfinite(temporal_mlp_lr) and temporal_mlp_lr > 0):
         parser.error("temporal_mlp_lr must be finite and positive")
 
+    # The plateau schedule selects on validation frames, so it needs a held-out split
+    # that keeps separate test frames; only the DCE-MOBY window provides one so far.
+    held_out_split = config.get("held_out_split", "midpoints")
+    if held_out_split not in HELD_OUT_SPLITS:
+        parser.error(f"held_out_split must be one of {HELD_OUT_SPLITS}")
+    if held_out_split != "midpoints" and not measured:
+        parser.error("held_out_split alternate_validation_test is implemented for dce_moby only")
+    schedule = config.get("schedule", "cosine")
+    if schedule not in ("cosine", "plateau"):
+        parser.error("schedule must be cosine or plateau")
+    if schedule == "plateau":
+        if not measured:
+            parser.error("The plateau schedule is implemented for dce_moby only")
+        if held_out_split != "alternate_validation_test":
+            parser.error("The plateau schedule requires held_out_split alternate_validation_test")
+        settings = {**PLATEAU_DEFAULTS, **config.get("plateau", {})}
+        if set(settings) != set(PLATEAU_DEFAULTS):
+            parser.error(f"plateau accepts only {sorted(PLATEAU_DEFAULTS)}")
+        if not (0 < settings["factor"] < 1 and settings["threshold"] >= 0
+                and all(type(settings[key]) is int and settings[key] >= 0 for key in ("patience", "max_reductions"))):
+            parser.error("plateau needs 0 < factor < 1, threshold >= 0 and nonnegative integer patience, max_reductions")
+        config["plateau"] = settings
+    elif "plateau" in config:
+        parser.error("plateau settings require schedule plateau")
+
     # Oracle diagnostics replace one branch by the complex phantom's true field.
     oracle = config.get("oracle_branch")
     if oracle is not None:
@@ -407,7 +485,10 @@ def parse_configuration(argv=None):
 def prepare_data(config):
     """Use saved settings for training or later inference, with no output files."""
     if config["phantom"] == moby.NAME:
-        return moby.make_pair(config["data"]), None
+        pair = moby.make_pair(config["data"])
+        if config.get("held_out_split", "midpoints") == "alternate_validation_test":
+            pair = moby.split_midpoints(pair)
+        return pair, None
     if config.get("evaluation_split", "midpoints") == "midpoints":
         pair = make_pair(config["phantom"], config["size"], config["frames"], config["cycles"])
         return pair, None
@@ -442,7 +523,8 @@ def execute(config, out):
             coordinates = coordinate_grid(training["x"], training["y"], training["t"])
             intensities = training["truth"].reshape(-1)
             if split is None:
-                held_out = data["midpoint"]
+                # Test frames, when present, are never shown to training or monitoring.
+                held_out = data["validation"] if "validation" in data else data["midpoint"]
                 validation = (
                     coordinate_grid(held_out["x"], held_out["y"], held_out["t"]),
                     held_out["truth"].reshape(-1),
@@ -465,8 +547,15 @@ def execute(config, out):
             # Optimize, then retain the final weights for later inference.
             model = build_model(config)
             write_json(out / "config.json", config)
-            _, seconds = train(model, coordinates, intensities, config, out=out, validation=validation)
-            torch.save(dict(config=config, step=config["steps"], state_dict=model.state_dict()), out / "model.pt")
+            selection = validation if config.get("schedule") == "plateau" else None
+            _, seconds, stopping = train(model, coordinates, intensities, config, out=out,
+                                         validation=validation, selection=selection)
+            kept_step = config["steps"]
+            if stopping is not None:
+                config["early_stopping"] = stopping
+                kept_step = stopping["best_step"]
+                write_json(out / "config.json", config)
+            torch.save(dict(config=config, step=kept_step, state_dict=model.state_dict()), out / "model.pt")
 
             # Evaluate the complete configured grid, independently of export options.
             model.eval()

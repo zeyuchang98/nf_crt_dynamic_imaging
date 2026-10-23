@@ -43,6 +43,9 @@ class TrainingMonitor:
         self.lr_names = [f"next_lr_{group.get('name', i)}" for i, group in enumerate(optimizer.param_groups)]
         self.columns = ["step", "batch_mse", "temporal_l2", "total_loss",
                         "fixed_training_mse", "fixed_validation_mse", "elapsed_seconds", *self.lr_names]
+        if config.get("schedule") == "plateau":
+            # MSE on all validation frames, the quantity that steers the plateau schedule.
+            self.columns.insert(self.columns.index("elapsed_seconds"), "validation_frames_mse")
         self.rows = []
         with (self.out / "loss.csv").open("w", newline="") as stream:
             csv.DictWriter(stream, fieldnames=self.columns).writeheader()
@@ -74,7 +77,8 @@ class TrainingMonitor:
         steps = [row["step"] for row in self.rows]
         labels = (("batch_mse", "Random training batch (before update)", "0.65"),
                   ("fixed_training_mse", "Fixed training samples (after update)", "C0"),
-                  ("fixed_validation_mse", "Fixed held-out samples (after update)", "C1"))
+                  ("fixed_validation_mse", "Fixed held-out samples (after update)", "C1"),
+                  ("validation_frames_mse", "All validation frames (steers the plateau schedule)", "C2"))
         for key, label, color in labels:
             values = [row.get(key, np.nan) for row in self.rows]
             if np.isfinite(values).any():
