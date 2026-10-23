@@ -1,6 +1,6 @@
 # Motion and Intensity Separation: Current Progress
 
-Last updated: 2026-10-15.
+Last updated: 2026-10-22.
 
 ## Goal and current baseline
 
@@ -1033,3 +1033,52 @@ whole-image truth (left) and prediction (right) from a dce_moby run's saved pred
 in raw p0 units with the fixed 0..0.05 display range of the data GIFs.
 [visuals/midpoint_truth_vs_prediction.gif](results/dce_moby_20261022_8k_j5_z100/visuals/midpoint_truth_vs_prediction.gif)
 shows the 75 held-out frames (6.5 MB); `predictions.npz` itself stays local (34 MB).
+
+## DCE-MOBY whole-image tuning (2026-10-22): in progress
+
+Goal (user, 2026-10-22): before defining dynamic or branch metrics, tune the existing
+structure on the same z = 100 window for the three whole-image metrics (RRMSE, PSNR,
+SSIM). Approved plan: about 20 config-only runs in stages (intensity hash, motion hash,
+learning rates, step budget and batch, extra seeds). Held-out midpoint image RRMSE
+selects; PSNR ranks identically on the same data, SSIM is reported. Window, even/odd
+split, loss, R=2, anchor and evaluation are unchanged. Selecting on the held-out
+midpoints makes them a validation set: no independent test frames remain.
+
+Setup: start from the J5 structure of `dce_moby_20261022_8k_j5_z100` (8k steps), run
+on the second machine (Apple M6, CPU, torch 2.14.0). Inputs are generated from that
+configuration; each run's `config.json` is authoritative.
+
+| Run | Change from J5 | Train RRMSE | Held-out RRMSE | PSNR (dB) | SSIM | Params |
+|---|---|---:|---:|---:|---:|---:|
+| [t00](results/dce_moby_tuning_20261022_8k_t00_base/metrics.json) | none | 17.23% | 18.68% | 47.85 | 0.99652 | 79,336 |
+| [t00b](results/dce_moby_tuning_20261022_8k_t00b_base_repeat/metrics.json) | none (repeat) | 17.91% | 19.35% | 47.54 | 0.99632 | 79,336 |
+| [t01](results/dce_moby_tuning_20261022_8k_t01_ih256/metrics.json) | intensity hash 8-256, table 2^17 | 14.16% | 16.28% | 49.04 | 0.99718 | 229,102 |
+| [t02](results/dce_moby_tuning_20261022_8k_t02_ih512/metrics.json) | intensity hash 8-512, table 2^19 | 12.19% | 14.48% | 50.06 | 0.99809 | 776,062 |
+| [t03](results/dce_moby_tuning_20261022_8k_t03_ih512_l12/metrics.json) | as t02, 12 levels | 12.95% | 15.31% | 49.57 | 0.99780 | 1,010,706 |
+| [t08](results/dce_moby_tuning_20261022_8k_t08_ih1024/metrics.json) | intensity hash 8-1024, table 2^21 | 10.93% | 14.09% | 50.29 | 0.99840 | 2,822,768 |
+| [t04](results/dce_moby_tuning_20261022_8k_t04_ih512_mt32/metrics.json) | t02 + motion t max 32 | 11.48% | 14.25% | 50.20 | 0.99813 | 780,506 |
+| [t05](results/dce_moby_tuning_20261022_8k_t05_ih512_mt64/metrics.json) | t02 + motion t max 64 | 10.32% | 14.38% | 50.12 | 0.99814 | 788,888 |
+| [t06](results/dce_moby_tuning_20261022_8k_t06_ih512_ms16/metrics.json) | t02 + motion x,y max 16 | 14.42% | 16.54% | 48.90 | 0.99761 | 787,444 |
+| [t07](results/dce_moby_tuning_20261022_8k_t07_ih512_ms32/metrics.json) | t02 + motion x,y max 32 | 14.30% | 16.63% | 48.86 | 0.99770 | 828,742 |
+
+Table sizes keep every level dense (vertex count at most the table size). Motion tables
+stay 2^15, dense for all motion settings above. All runs: seed 0, `threads=4`.
+
+**Run-to-run variation:** with `threads=4` the training is not bitwise reproducible.
+The same J5 configuration gave 18.03% (first machine), 18.68% and 19.35% (this machine);
+loss histories agree at step 1 and differ by step 500, with identical code, torch,
+numpy and Python versions. In a 600-step check, two `threads=1` runs had identical
+loss histories while two `threads=4` runs did not; `threads=1` was about 1.45 times
+slower per run. From S3 on, all runs use `threads=1` (a compute setting only).
+Single-run differences below about 1 point are not resolved.
+
+**Findings so far (single runs):**
+- Intensity hash maximum 128 -> 256 -> 512 lowers held-out RRMSE 18.7% -> 16.3% ->
+  14.5%, with training RRMSE falling alike: the J5 run was underfitting spatially.
+  Twelve levels at 512 were not better; 1024 (14.1%) is within the variation of 512.
+- A finer spatial motion hash (x,y maximum 16 or 32) is worse by about 2 points.
+  A finer motion time axis (32 or 64) lowers training RRMSE (11.5%, 10.3%) but not
+  held-out RRMSE, and raises the worst held-out frame (36.0%, 37.6% versus 30.6%).
+- SSIM follows RRMSE but stays within 0.9963-0.9984.
+- t02 (intensity 8-512, motion unchanged) is carried forward as the simplest of the
+  tied best settings.
