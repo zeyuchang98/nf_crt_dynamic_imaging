@@ -1228,3 +1228,49 @@ Minutes are training time with six runs in parallel on one thread each.
   observed-to-held-out gap as before.
 - Not established: branch, dynamic or tissue-curve behaviour at R=3; other windows.
   `predictions.npz` and `model.pt` stay local.
+
+## Branch GIFs of the best R=2 run (2026-10-23): branches not cleanly separated
+
+On request, [evaluation/moby_branch_gifs.py](evaluation/moby_branch_gifs.py) draws three
+views of p01 (R=2, seed 0, kept step 22,500) over all 151 window frames in time order,
+from `model.pt`; there is no true motion or reference intensity for these data:
+[image](results/dce_moby_plateau_20261023_p01_ih512_b16k_r2_s0/visuals/window_image.gif)
+(truth | prediction | absolute error),
+[intensity](results/dce_moby_plateau_20261023_p01_ih512_b16k_r2_s0/visuals/window_intensity.gif)
+(J(q, t) at fixed pixels, no motion | J(q, t) - J(q, t0)) and
+[motion](results/dce_moby_plateau_20261023_p01_ih512_b16k_r2_s0/visuals/window_motion.gif)
+(J(r + d(r, t), t0), learned intensity frozen at t0 = 26.5 s and moved by the learned
+motion | |d(r, t)| in mm). These are the toy `reference_intensity` and `motion_only`
+definitions. Fixed raw ranges: images 0..0.05, error 0..0.02, change +-0.01,
+displacement 0..0.55 mm. One shared undithered palette keeps the GIFs at 5.4, 4.5 and
+10.9 MB. [branch_gifs.json](results/dce_moby_plateau_20261023_p01_ih512_b16k_r2_s0/visuals/branch_gifs.json)
+stores the settings and, per frame, ||V(t) - V(t0)|| / ||V(t0)|| for each view.
+[tests/test_moby_branch_gifs.py](tests/test_moby_branch_gifs.py) (3 tests) passes; all
+125 tests pass.
+
+Observed (relative change from t0; frames 50, 100, 150 share t0's breathing geometry,
+verified before injection, so the truth changes there by contrast only):
+
+| View | Max | At frames 50 / 100 / 150 | Mean over other frames | Profile correlation with truth |
+|---|---:|---:|---:|---:|
+| Truth | 79.5% | 3.1 / 5.7 / 7.9% | 55.4% | 1 |
+| Prediction | 80.1% | 9.1 / 10.3 / 11.3% | 55.3% | 0.99 |
+| Intensity J(q, t) | 68.5% | 14.5 / 14.6 / 15.2% | 46.8% | 0.95 |
+| Motion only J(r + d, t0) | 72.0% | 19.8 / 19.8 / 20.1% | 52.8% | 0.88 |
+
+- The intensity branch carries most of the breathing change: J at fixed coordinates
+  changes by up to 68.5%, following the truth's breathing profile, where contrast alone
+  would change it by about 3-8%. The change view shows red/blue dipoles along organ
+  boundaries, i.e. moving edges.
+- The learned motion is smooth and small (maximum 0.50 mm). Ad hoc, from `model.pt`:
+  the body-mean |d| is about 0.19 mm at frames 25 and 75 (mid-breath) and about
+  0.07 mm at frames 50, 100 and 150, so it follows the breathing period but does not
+  return to zero at t0's geometry.
+- Contrast is not cleanly in the intensity branch either. Ad hoc tumor means at frames
+  50/100/150 relative to t0 (each frame's own indicator; J with t0's indicator): truth
+  9.3/18.5/27.6%, prediction 11.3/17.9/20.7%, J at fixed coordinates 2.4/4.6/6.2%; tumor
+  core truth 19.1/38.8/58.7%, prediction 20.7/30.2/34.7%, J 11.9/14.2/16.2%.
+- Not established: how much of the breathing change an in-plane displacement can
+  represent at all. The z = 100 slice has out-of-plane motion (tumor area per phase
+  245-284 pixels), so part of it must appear as intensity change in a 2D model.
+  Visual and ad hoc diagnostics only; no branch metric is defined for these data.
