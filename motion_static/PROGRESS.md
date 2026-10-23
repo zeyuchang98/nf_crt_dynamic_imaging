@@ -1229,7 +1229,7 @@ Minutes are training time with six runs in parallel on one thread each.
 - Not established: branch, dynamic or tissue-curve behaviour at R=3; other windows.
   `predictions.npz` and `model.pt` stay local.
 
-## Branch GIFs of the best R=2 run (2026-10-23): branches not cleanly separated
+## Branch GIFs of the best R=2 run (2026-10-23): motion partly captured, not cleanly separated
 
 On request, [evaluation/moby_branch_gifs.py](evaluation/moby_branch_gifs.py) draws three
 views of p01 (R=2, seed 0, kept step 22,500) over all 151 window frames in time order,
@@ -1258,14 +1258,23 @@ verified before injection, so the truth changes there by contrast only):
 | Intensity J(q, t) | 68.5% | 14.5 / 14.6 / 15.2% | 46.8% | 0.95 |
 | Motion only J(r + d, t0) | 72.0% | 19.8 / 19.8 / 20.1% | 52.8% | 0.88 |
 
-- The intensity branch carries most of the breathing change: J at fixed coordinates
-  changes by up to 68.5%, following the truth's breathing profile, where contrast alone
-  would change it by about 3-8%. The change view shows red/blue dipoles along organ
-  boundaries, i.e. moving edges.
-- The learned motion is smooth and small (maximum 0.50 mm). Ad hoc, from `model.pt`:
-  the body-mean |d| is about 0.19 mm at frames 25 and 75 (mid-breath) and about
-  0.07 mm at frames 50, 100 and 150, so it follows the breathing period but does not
-  return to zero at t0's geometry.
+- The intensity branch carries most of the image change from breathing: J at fixed
+  coordinates changes by up to 68.5%, following the truth's breathing profile, where
+  contrast alone would change it by about 3-8%. The change view shows red/blue dipoles
+  along internal organ boundaries, i.e. moving edges. These norms are dominated by
+  high-contrast edges, so shifts of 1-2 pixels already give large relative changes.
+- The true in-plane motion is small, and the learned motion matches its size and
+  direction at the body outline (ad hoc checks on the truth, from `model.pt`). Over the
+  window the body area varies by 0.84%; the body outline moves at most by a mean of
+  1.52 px (0.23 mm; 95th percentile 3 px, maximum 4 px) from frame 0, at frame 27. On
+  that outline the learned |d| is 1.46 px on average (95th percentile 2.63 px).
+  Moving frame 0 by the learned motion lowers the symmetric outline distance to frame k
+  from about 1.5 to 0.7 px at mid-breath frames (22, 27, 75, 125) and raises the tumor
+  IoU from 0.65 to 0.72-0.74.
+- The learned motion is smooth (maximum 0.50 mm): the body-mean |d| is about 0.19 mm
+  at frames 25 and 75 and about 0.07 mm at frames 50, 100 and 150. It follows the
+  breathing period but does not return to zero at t0's geometry; at frame 40, close
+  to that geometry, it lowers the tumor IoU from 0.81 to 0.71.
 - Contrast is not cleanly in the intensity branch either. Ad hoc tumor means at frames
   50/100/150 relative to t0 (each frame's own indicator; J with t0's indicator): truth
   9.3/18.5/27.6%, prediction 11.3/17.9/20.7%, J at fixed coordinates 2.4/4.6/6.2%; tumor
