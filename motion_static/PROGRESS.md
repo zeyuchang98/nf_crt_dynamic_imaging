@@ -1034,7 +1034,7 @@ in raw p0 units with the fixed 0..0.05 display range of the data GIFs.
 [visuals/midpoint_truth_vs_prediction.gif](results/dce_moby_20261022_8k_j5_z100/visuals/midpoint_truth_vs_prediction.gif)
 shows the 75 held-out frames (6.5 MB); `predictions.npz` itself stays local (34 MB).
 
-## DCE-MOBY whole-image tuning (2026-10-22): in progress
+## DCE-MOBY whole-image tuning (2026-10-22/23): completed
 
 Goal (user, 2026-10-22): before defining dynamic or branch metrics, tune the existing
 structure on the same z = 100 window for the three whole-image metrics (RRMSE, PSNR,
@@ -1047,6 +1047,15 @@ midpoints makes them a validation set: no independent test frames remain.
 Setup: start from the J5 structure of `dce_moby_20261022_8k_j5_z100` (8k steps), run
 on the second machine (Apple M6, CPU, torch 2.14.0). Inputs are generated from that
 configuration; each run's `config.json` is authoritative.
+
+**Result (24 runs, S0-S5):** the best setting is J5 with an intensity hash of 8-512
+(table 2^19), unchanged motion hash and learning rates, and 12k steps of 16,384
+points (`threads=1`). Over seeds 0-2 (t18, t20, t21) it gives held-out image RRMSE
+**12.63% +- 0.12**, PSNR **51.25 +- 0.08 dB** and SSIM **0.9985**. The J5
+configuration itself gave 18.03-19.35% (three single runs). The remaining error is
+mainly the gap from training to held-out frames: training RRMSE is 7.15% +- 0.41.
+More intensity capacity (8-1024) lowers training error further but not held-out
+error. Single window, one data set, held-out frames used for selection.
 
 | Run | Change from J5 | Train RRMSE | Held-out RRMSE | PSNR (dB) | SSIM | Params |
 |---|---|---:|---:|---:|---:|---:|
@@ -1124,3 +1133,23 @@ Seconds are training time with four runs in parallel on one thread each.
 - The fixed-sample training MSE is occasionally above the held-out value (t17: 1.5e-5
   versus 8.5e-6) although the full-grid training RRMSE is lower. Probably a few large
   vessel errors in the 65,536 fixed samples; not investigated further.
+
+**S5: seeds of the best setting and a combination** (12k x 16,384, `threads=1`):
+
+| Run | Setting | Train RRMSE | Held-out RRMSE | PSNR (dB) | SSIM | Worst held-out frame |
+|---|---|---:|---:|---:|---:|---:|
+| [t18](results/dce_moby_tuning_20261022_12k_t18_ih512_th1_b16k/metrics.json) | intensity 8-512, seed 0 | 7.01% | 12.68% | 51.21 | 0.99846 | 25.74% |
+| [t20](results/dce_moby_tuning_20261022_12k_t20_ih512_th1_b16k_s1/metrics.json) | intensity 8-512, seed 1 | 7.61% | 12.71% | 51.19 | 0.99842 | 20.56% |
+| [t21](results/dce_moby_tuning_20261022_12k_t21_ih512_th1_b16k_s2/metrics.json) | intensity 8-512, seed 2 | 6.83% | 12.49% | 51.34 | 0.99851 | 25.90% |
+| [t22](results/dce_moby_tuning_20261022_12k_t22_ih1024_th1_b16k/metrics.json) | intensity 8-1024, seed 0 | 4.11% | 13.24% | 50.84 | 0.99844 | 30.60% |
+
+- The t18 setting is stable over seeds (held-out RRMSE sd 0.12 points).
+- Combining the 8-1024 hash with the larger batch is worse on held-out frames (13.24%)
+  while its training RRMSE drops to 4.11%.
+- `predictions.npz` and `model.pt` of t16-t22 are kept locally only, as for earlier
+  runs. No GIFs were made for these runs; branch, dynamic and tissue-curve metrics
+  were not evaluated. The tuning used 24 runs, four more than the planned ~20,
+  because of the added repeat, 1024-hash and seed runs.
+- Not established: whether the setting transfers to other windows or a longer window,
+  and whether the plateau comes from the model's temporal interpolation or from the
+  0.05 s frame spacing of the data.
