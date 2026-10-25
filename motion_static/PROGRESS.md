@@ -1283,3 +1283,45 @@ verified before injection, so the truth changes there by contrast only):
   represent at all. The z = 100 slice has out-of-plane motion (tumor area per phase
   245-284 pixels), so part of it must appear as intensity change in a 2D model.
   Visual and ad hoc diagnostics only; no branch metric is defined for these data.
+
+## Semiseparable SS(r) baseline on the DCE-MOBY window (2026-10-25): completed
+
+Approved by the user as the first baseline (2026-10-25), following the SS(r) comparisons
+in Lozenski et al. 2022 and 2024. [evaluation/moby_svd_baseline.py](evaluation/moby_svd_baseline.py)
+takes the uncentered truncated SVD of the 76 training frames (61,504 x 76), so
+f(r, t) ~ sum_i u_i(r) v_i(t) with r (61,504 + 76) parameters. Validation and test frames
+never enter the SVD; they use v_i(t) linearly interpolated in time. Scores come from the
+same image report and the same 37 test frames as the neural fields.
+[tests/test_moby_svd_baseline.py](tests/test_moby_svd_baseline.py) (2 tests: exact
+recovery of rank-2 data with linear curves, outputs) passes; 127 tests pass. Results:
+[svd_ranks.csv](results/dce_moby_svd_20261025_z100_w1250/svd_ranks.csv) (r = 1-76),
+[svd_baseline.json](results/dce_moby_svd_20261025_z100_w1250/svd_baseline.json), full
+reports for r = 1, 12, 13, 46 and
+[rrmse_vs_parameters.png](results/dce_moby_svd_20261025_z100_w1250/rrmse_vs_parameters.png).
+The J5 runs t00/t00b were re-scored on the test frames for this comparison.
+
+| Representation | Parameters | Test RRMSE | Test PSNR (dB) | Test SSIM |
+|---|---:|---:|---:|---:|
+| SS(1) | 61,580 | 37.70% | | |
+| NF, J5 structure, 8k (t00 / t00b) | 79,336 | 18.25% / 18.77% | 48.06 / 47.81 | 0.9967 / 0.9964 |
+| SS(2) | 123,160 | 22.50% | | |
+| SS(5) | 307,900 | 13.11% | | |
+| SS(8) | 492,640 | 12.20% | | |
+| SS(12) | 738,960 | 12.19% | 51.56 | 0.99869 |
+| NF best, plateau (p01-p03) | 776,062 | 11.96% +- 0.28 | 51.73 | 0.9985 |
+| NF best, cosine 12k (t18, t20, t21) | 776,062 | 12.18% +- 0.32 | 51.57 | 0.9985 |
+| SS(13) | 800,540 | 12.28% | | |
+| NF hash 8-1024 (t19 / t22) | 2,822,768 | 12.49% / 12.51% | | |
+| SS(r), r >= 30 | >= 1.85 M | 12.14% | | |
+
+- SS(r) reaches a floor of 12.14% (minimum 12.12% at r = 25) once it reproduces the
+  training frames (training RRMSE 0.36% at r = 30, 0 at r = 76). At full rank it equals
+  linear interpolation of the true training frames, the data-only check above.
+- At a small budget the NF is much better: 79k parameters give 18.3-18.8% versus 37.7%
+  for SS(1) and 22.5% for SS(2) with 1.6 times the parameters.
+- At the tuned budget the two are comparable: 11.96% +- 0.28 (plateau) versus 12.19% for
+  SS(12) and 12.28% for SS(13). The best NF seed (11.64%) is below the SS floor, but
+  SS(8) already reaches 12.20% with 493k parameters, and SS(12) has the higher SSIM.
+- Both are limited by the change between 0.1 s training frames; this window cannot
+  separate them further. Consistent with Lozenski et al. 2024, where the NF matched a
+  semiseparable approximation of similar size in embedding.
