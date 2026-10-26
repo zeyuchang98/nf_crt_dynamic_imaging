@@ -19,10 +19,14 @@ def fixed_mse(model, coordinates, values):
     """Data MSE only; validation labels never contribute to the optimized loss."""
     was_training = model.training
     model.eval()
+    device = next(model.parameters()).device
     squared_error = 0.
     try:
         for x, y in zip(coordinates.split(8192), values.split(8192)):
-            squared_error += (model(x) - y).double().square().sum().item()
+            residual = model(x.to(device)) - y.to(device)
+            if residual.device.type == "mps":
+                residual = residual.cpu()  # MPS has no float64; accumulate on the CPU
+            squared_error += residual.double().square().sum().item()
     finally:
         model.train(was_training)
     return squared_error / len(values)

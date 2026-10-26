@@ -9,6 +9,8 @@ Even frames of the window are observed; odd frames are the held-out midpoints, a
 the toy `midpoints` protocol. The window therefore starts and ends on observed frames.
 With `held_out_split = "alternate_validation_test"` the midpoints are further divided
 into validation frames (which may steer training) and test frames (only scored).
+With `held_out_split = "none"` (the embedding protocol of Lozenski et al. 2022) every
+window frame is fitted and scored.
 """
 import hashlib
 from pathlib import Path
@@ -78,8 +80,8 @@ def resolve_settings(data):
     return data, run
 
 
-def make_pair(data):
-    """Observed (even) and held-out (odd) frames of the window, normalized intensity."""
+def read_window(data):
+    """Every frame of the window: pixel centers x, y, times and normalized (y, x, t) truth."""
     frames = window_frames(data)
     with h5py.File(data["file"], "r") as f:
         values = f["p0"][..., frames[0]:frames[-1] + 1]  # (x, y, t)
@@ -88,8 +90,20 @@ def make_pair(data):
     x = pixel_centers(fov[0], spacing[0], values.shape[0])
     y = pixel_centers(fov[1], spacing[1], values.shape[1])
     truth = np.transpose(values, (1, 0, 2)) / np.float32(data["intensity_scale_value"])
+    return x, y, time, truth
+
+
+def make_pair(data):
+    """Observed (even) and held-out (odd) frames of the window, normalized intensity."""
+    x, y, time, truth = read_window(data)
     return {split: dict(x=x, y=y, t=time[start::2], truth=np.ascontiguousarray(truth[..., start::2]))
             for split, start in (("training", 0), ("midpoint", 1))}
+
+
+def make_all_frames(data):
+    """Embedding protocol: every window frame is observed and scored; nothing is held out."""
+    x, y, time, truth = read_window(data)
+    return {"training": dict(x=x, y=y, t=time, truth=np.ascontiguousarray(truth))}
 
 
 def split_midpoints(pair):

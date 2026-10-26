@@ -74,6 +74,13 @@ compatibility alias to the same protocol-labeled index. `diagnose_branches` and
 checkpoints. These commands are never invoked automatically by training.
 Known-shape geometry diagnosis remains specific to the toy phantom.
 
+`moby_svd_baseline` computes the semiseparable baseline SS(r) for a dce_moby window,
+with `--protocol heldout` (fit the training frames, interpolate held-out frames) or
+`--protocol embedding` (fit and score every window frame). `moby_embedding_figures`
+draws the embedding-study figures and table in the format of Lozenski et al. 2022 for
+SS(r) against saved neural-field runs of the same protocol. `moby_branch_gifs` animates
+a run's image, fixed-coordinate intensity and motion-only views.
+
 `moby_split_eval` re-scores saved dce_moby runs (from their `model.pt`) on the
 alternate validation/test split of the midpoints and writes
 `metrics_alternate_split.json`, leaving `metrics.json` unchanged; this compares

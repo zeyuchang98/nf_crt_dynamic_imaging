@@ -234,6 +234,10 @@ agreement before use. No pipeline implementation or saved result is claimed.
 - **Temporal domain:** midpoint experiments separately evaluate training-grid
   times and unseen midpoint times. One-cycle and three-cycle results cover
   different domains. Compare them only on explicitly shared evaluation times.
+- **Embedding protocol (dce_moby, approved 2026-10-25):** `held_out_split = "none"`
+  fits and scores the same, complete set of window frames (`all_window_frames`), as in
+  Lozenski et al. 2022. It measures representation only and is reported separately from
+  the held-out protocols; their scores are not interchangeable.
 - **Alternate held-out split (dce_moby, approved 2026-10-23):** for plateau-schedule
   runs the midpoints are split into validation frames (window frames 1, 5, 9, ...),
   which steer the learning rate, stop and kept weights, and test frames (3, 7,

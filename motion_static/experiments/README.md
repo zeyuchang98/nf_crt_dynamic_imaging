@@ -67,6 +67,22 @@ without an oracle. Only the complex phantom, midpoint split and reference time
 and an `oracle_branch` summary column. They diagnose branch capacity and
 identifiability; they are not reconstruction methods.
 
+### Compute device
+
+Optional `"device"`: `"cpu"` (default, unchanged), `"cuda"` (or `"cuda:N"`) or `"mps"`.
+The model, training batches, validation frames, monitoring and evaluation run on that
+device; batch indices are still drawn with the CPU generator, and `model.pt` is saved
+on the CPU. GPU runs are not bitwise reproducible. Unavailable devices and oracle
+branches with a GPU device are rejected. MPS accumulates monitoring MSE on the CPU,
+since it has no float64.
+
+### Embedding protocol (dce_moby only)
+
+`"held_out_split": "none"` fits and scores every window frame, as in the embedding
+study of Lozenski et al. 2022; nothing is held out or monitored. `metrics.json`
+reports `all_window_frames`; the summary row is labelled "embedding, all frames". It
+cannot be combined with the plateau schedule, which needs validation frames.
+
 ### Plateau schedule and early stop (dce_moby only)
 
 `"schedule": "plateau"` replaces the cosine schedule and requires

@@ -67,7 +67,7 @@ def initialize_run_metadata(config):
     config.update({
         "status": "running",
         "started_at": utc_now(),
-        "device": "cpu",
+        "device": config.get("device", "cpu"),
         "scheduler": "cosine to zero",
         "torch_version": str(torch.__version__),
         "numpy_version": np.__version__,
@@ -93,6 +93,10 @@ def initialize_run_metadata(config):
             reference_intensity_labels_used_for_training=oracle == "intensity",
             oracle_note=f"Diagnostic only: the {oracle} branch is the phantom's ground truth, not learned",
         )
+    # Embedding protocol: the midpoint frames are fitted too, so nothing is held out.
+    if config.get("held_out_split") == "none":
+        config.update(midpoint_labels_used_for_training=True,
+                      embedding_protocol="every window frame is fitted and scored; no held-out frames")
     # Validation frames steer the plateau schedule without gradients; test frames stay unseen.
     if config.get("schedule") == "plateau":
         config.update(
@@ -144,7 +148,7 @@ def save_checkpoint(out, model, optimizer, scheduler, config, step):
     checkpoint = {
         "config": config,
         "step": step,
-        "state_dict": model.state_dict(),
+        "state_dict": {name: value.detach().cpu() for name, value in model.state_dict().items()},
         "optimizer": optimizer.state_dict(),
         "scheduler": scheduler.state_dict(),
         "torch_rng_state": torch.get_rng_state(),
@@ -199,6 +203,11 @@ def summary_row(run, config, report=None):
             image_scores = report["image"]["test_pixels"]
             intensity_scores = report.get("reference_intensity_full_grid", {})
             motion_scores = report.get("motion", {}).get("foreground", {})
+        elif "all_window_frames" in report["image"]:
+            # Embedding protocol: fitted and scored on the same, complete set of frames.
+            row["evaluation_split"] = "embedding, all frames"
+            image_scores = report["image"]["all_window_frames"]
+            intensity_scores, motion_scores = {}, {}
         elif "test_midpoints" in report["image"]:
             # Alternate split: score only the test half; validation frames steered training.
             row["evaluation_split"] = "midpoints, test half"

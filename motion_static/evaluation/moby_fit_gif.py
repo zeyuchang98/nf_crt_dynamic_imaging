@@ -45,7 +45,7 @@ def main():
     scale = config["data"]["intensity_scale_value"]
     data, _ = prepare_data(config)
     if args.split is None:
-        args.split = "test" if "test" in data else "midpoint"
+        args.split = "test" if "test" in data else ("midpoint" if "midpoint" in data else "training")
     if args.split not in data:
         parser.error(f"This run has no {args.split} frames; it has {sorted(data)}")
     entry = data[args.split]

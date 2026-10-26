@@ -44,7 +44,17 @@ from .run_records import (
 # by `factor`. The run stops at the plateau after `max_reductions` reductions, or at
 # `steps`, and keeps the weights with the lowest validation MSE.
 PLATEAU_DEFAULTS = dict(factor=0.5, patience=3, threshold=1e-3, max_reductions=4)
-HELD_OUT_SPLITS = ("midpoints", "alternate_validation_test")
+HELD_OUT_SPLITS = ("midpoints", "alternate_validation_test", "none")
+
+
+def torch_device(config):
+    """The configured compute device; batches are still drawn with the CPU generator."""
+    return torch.device(config.get("device", "cpu"))
+
+
+def cpu_state(model):
+    """State dict on the CPU, so saved weights load on any machine."""
+    return {name: value.detach().cpu() for name, value in model.state_dict().items()}
 
 
 def build_model(config):
@@ -176,6 +186,8 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None,
     Return the logged (step, image MSE, temporal L2, total) history, elapsed
     seconds and the plateau summary (None for cosine); the model is updated in place.
     """
+    device = torch_device(config)
+    model.to(device)
     optimizer = build_optimizer(model, config)
     plateau = config.get("schedule") == "plateau"
     if plateau:
@@ -185,15 +197,15 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None,
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             optimizer, mode="min", factor=settings["factor"], patience=settings["patience"],
             threshold=settings["threshold"], threshold_mode="rel")
-        selection_coordinates = torch.as_tensor(selection[0], dtype=torch.float32)
-        selection_values = torch.as_tensor(np.asarray(selection[1]).reshape(-1), dtype=torch.float32)
+        selection_coordinates = torch.as_tensor(selection[0], dtype=torch.float32, device=device)
+        selection_values = torch.as_tensor(np.asarray(selection[1]).reshape(-1), dtype=torch.float32, device=device)
         best = dict(mse=float("inf"), step=None, state=None)
         reduction_steps = []
     else:
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["steps"])
     stopped_by = "step limit"
-    training_coordinates = torch.as_tensor(coordinates, dtype=torch.float32)
-    observed_intensities = torch.as_tensor(intensities.reshape(-1), dtype=torch.float32)
+    training_coordinates = torch.as_tensor(coordinates, dtype=torch.float32, device=device)
+    observed_intensities = torch.as_tensor(intensities.reshape(-1), dtype=torch.float32, device=device)
     checkpoint_steps = set(config.get("checkpoint_steps", []))
     log_interval = config.get("log_interval", 500)
     history = []
@@ -208,7 +220,8 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None,
 
     for step in range(1, config["steps"] + 1):
         # 1. Sample observed space-time points, with replacement.
-        indices = torch.randint(len(observed_intensities), (config["batch_size"],))
+        # The CPU generator draws the indices on every device, so a seed selects the same batches.
+        indices = torch.randint(len(observed_intensities), (config["batch_size"],)).to(device)
         batch_coordinates = training_coordinates[indices]
         batch_targets = observed_intensities[indices]
 
@@ -334,6 +347,9 @@ def parse_configuration(argv=None):
         except (KeyError, OSError, ValueError) as error:
             parser.error(f"dce_moby data: {error}")
         config.update(window)
+        if config.get("held_out_split") == "none":
+            # The embedding protocol observes every window frame, not only the even ones.
+            config["frames"] = len(moby.window_frames(config["data"]))
     elif config["phantom"] not in DEFAULT_SAMPLING:
         parser.error("Unknown phantom")
     else:
@@ -432,7 +448,7 @@ def parse_configuration(argv=None):
     if held_out_split not in HELD_OUT_SPLITS:
         parser.error(f"held_out_split must be one of {HELD_OUT_SPLITS}")
     if held_out_split != "midpoints" and not measured:
-        parser.error("held_out_split alternate_validation_test is implemented for dce_moby only")
+        parser.error(f"held_out_split {held_out_split} is implemented for dce_moby only")
     schedule = config.get("schedule", "cosine")
     if schedule not in ("cosine", "plateau"):
         parser.error("schedule must be cosine or plateau")
@@ -450,6 +466,21 @@ def parse_configuration(argv=None):
         config["plateau"] = settings
     elif "plateau" in config:
         parser.error("plateau settings require schedule plateau")
+
+    # CPU by default. GPU runs move the model and data; they are not bitwise reproducible.
+    device = config.get("device", "cpu")
+    try:
+        device_type = torch.device(device).type
+    except (RuntimeError, TypeError):
+        parser.error(f"Unknown device {device!r}")
+    if device_type == "cuda" and not torch.cuda.is_available():
+        parser.error("device cuda requested but CUDA is not available")
+    if device_type == "mps" and not torch.backends.mps.is_available():
+        parser.error("device mps requested but MPS is not available")
+    if device_type not in ("cpu", "cuda", "mps"):
+        parser.error("device must be cpu, cuda (optionally cuda:N) or mps")
+    if device_type != "cpu" and config.get("oracle_branch") is not None:
+        parser.error("Oracle branches evaluate the phantom on the CPU; use device cpu")
 
     # Oracle diagnostics replace one branch by the complex phantom's true field.
     oracle = config.get("oracle_branch")
@@ -485,8 +516,11 @@ def parse_configuration(argv=None):
 def prepare_data(config):
     """Use saved settings for training or later inference, with no output files."""
     if config["phantom"] == moby.NAME:
+        held_out_split = config.get("held_out_split", "midpoints")
+        if held_out_split == "none":
+            return moby.make_all_frames(config["data"]), None
         pair = moby.make_pair(config["data"])
-        if config.get("held_out_split", "midpoints") == "alternate_validation_test":
+        if held_out_split == "alternate_validation_test":
             pair = moby.split_midpoints(pair)
         return pair, None
     if config.get("evaluation_split", "midpoints") == "midpoints":
@@ -524,8 +558,9 @@ def execute(config, out):
             intensities = training["truth"].reshape(-1)
             if split is None:
                 # Test frames, when present, are never shown to training or monitoring.
-                held_out = data["validation"] if "validation" in data else data["midpoint"]
-                validation = (
+                # The embedding protocol has no held-out frames to monitor.
+                held_out = data.get("validation", data.get("midpoint"))
+                validation = None if held_out is None else (
                     coordinate_grid(held_out["x"], held_out["y"], held_out["t"]),
                     held_out["truth"].reshape(-1),
                 )
@@ -555,7 +590,7 @@ def execute(config, out):
                 config["early_stopping"] = stopping
                 kept_step = stopping["best_step"]
                 write_json(out / "config.json", config)
-            torch.save(dict(config=config, step=kept_step, state_dict=model.state_dict()), out / "model.pt")
+            torch.save(dict(config=config, step=kept_step, state_dict=cpu_state(model)), out / "model.pt")
 
             # Evaluate the complete configured grid, independently of export options.
             model.eval()

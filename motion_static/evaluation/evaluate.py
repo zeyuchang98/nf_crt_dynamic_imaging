@@ -8,9 +8,17 @@ from .metrics import evaluate_sequence, error_metrics, save_metrics
 from ..phantoms.data import coordinate_grid, get_phantom
 
 
+def module_device(module):
+    """Device of a module's parameters or buffers (CPU for a module with neither)."""
+    for tensor in (*module.parameters(), *module.buffers()):
+        return tensor.device
+    return torch.device("cpu")
+
+
 @torch.no_grad()
 def predict(function, coordinates):
-    pieces = [function(torch.as_tensor(batch, dtype=torch.float32)).cpu().numpy()
+    device = module_device(function)
+    pieces = [function(torch.as_tensor(batch, dtype=torch.float32, device=device)).cpu().numpy()
               for batch in np.array_split(coordinates, max(1, int(np.ceil(len(coordinates) / 8192))))]
     return np.concatenate(pieces)
 
@@ -26,6 +34,15 @@ MIDPOINT_SPLITS = (("training", "training_grid"), ("midpoint", "unseen_time_midp
 # Alternate held-out split: validation frames may steer training, test frames are only scored.
 ALTERNATE_SPLITS = (("training", "training_grid"), ("validation", "validation_midpoints"),
                     ("test", "test_midpoints"))
+# Embedding protocol (Lozenski et al. 2022): every window frame is fitted and scored.
+EMBEDDING_SPLITS = (("training", "all_window_frames"),)
+
+
+def image_splits(data):
+    """Report labels for the splits present: alternate, embedding or the default midpoints."""
+    if "test" in data:
+        return ALTERNATE_SPLITS
+    return MIDPOINT_SPLITS if "midpoint" in data else EMBEDDING_SPLITS
 
 
 def scalar_report(out, name, data, truth, prediction, *, data_range=1, displacement=False, points=None,
@@ -181,16 +198,16 @@ def evaluate(model, data, config, out, training_seconds):
 
 def image_only_report(model, data, config, training_seconds):
     """Image metrics and predictions for every split of `data`, without writing files."""
-    alternate = "test" in data
+    splits = image_splits(data)
     predictions = {split: predict(model, coordinate_grid(entry["x"], entry["y"], entry["t"])).reshape(entry["truth"].shape)
                    for split, entry in data.items()}
     image = scalar_report(None, "image", data, {s: d["truth"] for s, d in data.items()}, predictions, points={},
-                          splits=ALTERNATE_SPLITS if alternate else MIDPOINT_SPLITS)
+                          splits=splits)
     report = dict(schema_version=1, evaluation_split="midpoints",
                   evaluation_scope="image only; no true motion or reference intensity",
                   parameters=sum(p.numel() for p in model.parameters()),
                   training_seconds=training_seconds, image=image)
-    if alternate:
+    if splits is not MIDPOINT_SPLITS:
         report["held_out_split"] = config["held_out_split"]
         if "early_stopping" in config:
             report["early_stopping"] = config["early_stopping"]
@@ -215,6 +232,9 @@ def evaluate_image_only(model, data, config, out, training_seconds):
     if "test" in data:
         selected = report["image"]["test_midpoints"]
         print(f"Test-frame image RRMSE={selected['rrmse']:.4%}, SSIM={selected['ssim']}", flush=True)
+    elif "midpoint" not in data:
+        selected = report["image"]["all_window_frames"]
+        print(f"All-frame (embedding) image RRMSE={selected['rrmse']:.4%}, SSIM={selected['ssim']}", flush=True)
     else:
         selected = report["image"]["unseen_time_midpoints"]
         print(f"Midpoint image RRMSE={selected['rrmse']:.4%}, SSIM={selected['ssim']}", flush=True)
