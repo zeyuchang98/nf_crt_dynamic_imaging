@@ -1,0 +1,123 @@
+{
+  "protocol": "embedding",
+  "scored_split": "training",
+  "scored_label": "all_window_frames",
+  "scored_frames": 151,
+  "svd_results": "motion_static/results/dce_moby_svd_20261025_z100_w1250_embedding",
+  "nf_runs": [
+    "dce_moby_embedding_20261025_12k_e01_ih512_b16k_r2_s0",
+    "dce_moby_embedding_20261025_12k_e02_ih512_b16k_r2_s1",
+    "dce_moby_embedding_20261025_12k_e03_ih512_b16k_r2_s2"
+  ],
+  "nf_label": "NF (ours)",
+  "ranks": {
+    "6": "first to reach the NF SSIM",
+    "7": "first to reach the NF RRMSE",
+    "13": "closest parameter count"
+  },
+  "frame_rule": "scored frames nearest to and farthest from window frame 0 (norm of the difference)",
+  "frames": [
+    {
+      "index": 0,
+      "time": 26.5
+    },
+    {
+      "index": 122,
+      "time": 32.599998474121094
+    }
+  ],
+  "point_rule": "tumor centroid at window frame 0; body pixel with the largest temporal std of the scored truth",
+  "points": [
+    {
+      "name": "Point 1: tumor centroid",
+      "iy": 195,
+      "ix": 121
+    },
+    {
+      "name": "Point 2: largest temporal std",
+      "iy": 162,
+      "ix": 60
+    }
+  ],
+  "decomposition_times": [
+    26.5,
+    28.0,
+    29.5,
+    31.0,
+    32.5,
+    34.0
+  ],
+  "display": {
+    "image": [
+      0,
+      0.05
+    ],
+    "change": [
+      -0.01,
+      0.01
+    ]
+  },
+  "code_commit": "e648a69c755260802292089e29471c95efbbbeac",
+  "table": [
+    {
+      "method": "SS(6)",
+      "parameters": 369930,
+      "rrmse": 0.09065118210389232,
+      "psnr_db": 54.13965624525177,
+      "ssim": 0.999082485653592,
+      "note": "first to reach the NF SSIM"
+    },
+    {
+      "method": "SS(7)",
+      "parameters": 431585,
+      "rrmse": 0.07991880060064167,
+      "psnr_db": 55.23414652992112,
+      "ssim": 0.999292227463389,
+      "note": "first to reach the NF RRMSE"
+    },
+    {
+      "method": "SS(13)",
+      "parameters": 801515,
+      "rrmse": 0.051804303862862104,
+      "psnr_db": 58.99980883771331,
+      "ssim": 0.9996281941798304,
+      "note": "closest parameter count"
+    },
+    {
+      "method": "NF (ours)",
+      "parameters": 776062,
+      "rrmse": 0.08863019821487365,
+      "psnr_db": 54.337873160949925,
+      "ssim": 0.9990689633096231,
+      "note": "mean of 3 runs"
+    }
+  ],
+  "nf_runs_scores": [
+    {
+      "run": "dce_moby_embedding_20261025_12k_e01_ih512_b16k_r2_s0",
+      "parameters": 776062,
+      "rrmse": 0.0863648306641794,
+      "psnr_db": 54.56038716309868,
+      "ssim": 0.9991013050519696
+    },
+    {
+      "run": "dce_moby_embedding_20261025_12k_e02_ih512_b16k_r2_s1",
+      "parameters": 776062,
+      "rrmse": 0.0913894228888675,
+      "psnr_db": 54.06920698326145,
+      "ssim": 0.9989945312016979
+    },
+    {
+      "run": "dce_moby_embedding_20261025_12k_e03_ih512_b16k_r2_s2",
+      "parameters": 776062,
+      "rrmse": 0.08813634109157402,
+      "psnr_db": 54.38402533648964,
+      "ssim": 0.999111053675202
+    }
+  ],
+  "nf_spread": {
+    "rrmse": 0.002548441268653132,
+    "psnr_db": 0.24882124054533594,
+    "ssim": 6.464412526581056e-05
+  }
+}

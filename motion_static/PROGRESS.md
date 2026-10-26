@@ -1325,3 +1325,61 @@ The J5 runs t00/t00b were re-scored on the test frames for this comparison.
 - Both are limited by the change between 0.1 s training frames; this window cannot
   separate them further. Consistent with Lozenski et al. 2024, where the NF matched a
   semiseparable approximation of similar size in embedding.
+
+## Embedding study in the format of Lozenski et al. 2022 (2026-10-25): completed
+
+Approved by the user (2026-10-25): compare only SS(r) and the current architecture, under
+both protocols, and add a compute-device option for later full-frame runs on Vista.
+
+Code (commits `13f0cb8`, `e648a69`):
+- Optional `"device"` (`cpu` default, `cuda`, `mps`) in [run.py](run.py); batches are still
+  drawn with the CPU generator and `model.pt` is saved on the CPU. Without it, 400-step
+  cosine and plateau runs reproduce the pre-change loss histories, metrics and
+  predictions exactly. On this machine's MPS a 400-step run matched the CPU at steps 0-1
+  and then drifted slightly (held-out RRMSE 30.08% versus 30.30%), 2.4 times faster.
+  **CUDA is not verified yet** (no NVIDIA GPU here).
+- Protocol A, `"held_out_split": "none"` ([phantoms/moby.py](phantoms/moby.py)): all 151
+  window frames are fitted and scored (`all_window_frames`). Protocol B is the held-out
+  setting above (37 test frames).
+- [evaluation/moby_svd_baseline.py](evaluation/moby_svd_baseline.py) `--protocol embedding`;
+  [evaluation/moby_embedding_figures.py](evaluation/moby_embedding_figures.py) draws the
+  paper's Figs. 4-6 and Table IV for our data, and in place of the POUnet partition maps
+  (Fig. 7) the NF's intensity change and displacement at six times. SS ranks follow the
+  paper's rules (closest parameter count, first to reach the NF's SSIM, first to reach its
+  RRMSE). Frames: the scored frame nearest to and farthest from window frame 0. Points:
+  tumor centroid at frame 0 and the body pixel with the largest temporal std.
+- [tests/test_moby_embedding.py](tests/test_moby_embedding.py) (3 tests); 130 tests pass.
+
+Protocol A runs: the best setting (intensity hash 8-512, 12k cosine steps of 16,384
+points, `threads=1`) on all frames, seeds 0-2
+([e01](results/dce_moby_embedding_20261025_12k_e01_ih512_b16k_r2_s0/metrics.json),
+[e02](results/dce_moby_embedding_20261025_12k_e02_ih512_b16k_r2_s1/metrics.json),
+[e03](results/dce_moby_embedding_20261025_12k_e03_ih512_b16k_r2_s2/metrics.json)):
+8.64%, 9.14%, 8.81% all-frame RRMSE, 26 minutes each with three in parallel.
+SS(r) embedding: [svd_ranks.csv](results/dce_moby_svd_20261025_z100_w1250_embedding/svd_ranks.csv).
+
+| Protocol | Representation | Parameters | RRMSE | PSNR (dB) | SSIM |
+|---|---|---:|---:|---:|---:|
+| A (all 151 frames) | SS(6) | 369,930 | 9.07% | 54.14 | 0.9991 |
+| A | SS(7) | 431,585 | 7.99% | 55.23 | 0.9993 |
+| A | SS(13) | 801,515 | 5.18% | 59.00 | 0.9996 |
+| A | NF (3 runs) | 776,062 | 8.86% +- 0.25 | 54.34 +- 0.25 | 0.9991 |
+| B (37 test frames) | SS(6) | 369,480 | 12.75% | 51.17 | 0.9985 |
+| B | SS(13) | 800,540 | 12.28% | 51.50 | 0.9987 |
+| B | SS(25) | 1,539,500 | 12.12% | 51.61 | 0.9988 |
+| B | NF (plateau, 3 runs) | 776,062 | 11.96% +- 0.28 | 51.73 +- 0.21 | 0.9985 |
+
+Figures and tables: [A](results/dce_moby_embedding_20261025_A_all_frames/table.md),
+[B](results/dce_moby_embedding_20261025_B_test_frames/table.md) (each folder holds
+`fig_singular_values`, `fig_frames`, `fig_activity_curves`, `fig_nf_decomposition` and
+`table` PNGs, plus `embedding_figures.json` with every choice).
+
+- Under the paper's embedding protocol, SS(r) is more parameter-efficient than the NF on
+  this window: at about the same size SS(13) reaches 5.18% versus 8.86%, and SS(7)
+  already beats the NF with 56% of its parameters. Under the held-out protocol the NF is
+  slightly better than every SS(r), whose floor is frame interpolation.
+- At the tumor centroid no representation follows the slow enhancement closely in either
+  protocol; the breathing pixel is reproduced by all of them.
+- Not established: whether the NF's embedding fit is limited by its 12k-step budget,
+  which was tuned on the held-out protocol with half as many fitted frames (protocol A
+  has no validation frames for the plateau schedule). Single window and slice.
