@@ -80,6 +80,9 @@ with `--protocol heldout` (fit the training frames, interpolate held-out frames)
 draws the embedding-study figures and table in the format of Lozenski et al. 2022 for
 SS(r) against saved neural-field runs of the same protocol. `moby_branch_gifs` animates
 a run's image, fixed-coordinate intensity and motion-only views.
+`moby_series_checks` is data only (no model): tissue mean curves over a whole slice
+series, the time-grid resolution they need, the breathing periodicity, and the SVD of
+frames of one respiratory phase (the rank of the intensity change without motion).
 
 `moby_split_eval` re-scores saved dce_moby runs (from their `model.pt`) on the
 alternate validation/test split of the midpoints and writes
