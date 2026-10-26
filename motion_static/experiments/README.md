@@ -129,6 +129,21 @@ exact divisibility; 379 frames are incompatible with a temporal block size of 2.
 The runner rejects that combination rather than modifying the protocol. Choose
 compatible settings only as part of an explicitly agreed block experiment.
 
+### Vista (TACC) runs
+
+[dce_moby_full_series.json](dce_moby_full_series.json) is the input for the whole
+DCE-MOBY z = 100 series on Vista (all 14,401 frames, protocol A, R = 3, `device` cuda;
+its data path is Vista's). [vista/train.sbatch](vista/train.sbatch) runs one
+configuration on one GH200 node, using the venv `$WORK/envs/nf-crt` (Python 3.11 module,
+torch with CUDA); see `PROGRESS.md` for its setup. From the repository root on Vista:
+
+```bash
+sbatch -p gh-dev -t 02:00:00 motion_static/experiments/vista/train.sbatch motion_static/experiments/dce_moby_full_series.json NAME
+```
+
+Extra arguments go to `run.py` (for example `--steps`). The job log, with the peak host
+memory, and a per-minute GPU record are moved into the run folder.
+
 ## Output and later visualization
 
 Normal runs save `config.json`, `metrics.json`, `loss.csv`, `loss.png`, `model.pt`,
