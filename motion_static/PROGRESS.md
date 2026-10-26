@@ -27,10 +27,13 @@ at the end of this file.
 - **Local only on the second machine (not on GitHub):** `model.pt` of the DCE-MOBY runs
   (33 files, 116 MB) and `predictions.npz` (14 files, 454 MB). Re-scoring, branch GIFs
   and the embedding figures need `model.pt`.
-- **Open, to decide with the user:** design of full-frame or longer-window runs on Vista
-  (time range, held-out split, motion time modelling, rank); verifying CUDA on Vista;
-  more spatial compression for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF
-  budget under protocol A; POUnet as a later baseline.
+- **Full-series run on Vista (planning, 2026-10-26):** agreed so far: protocol A, no
+  model change, rank from a data-only check; a breathing-phase motion input (M2) is
+  recorded as an idea only. Still open: time range (the user leans to all 14,401
+  frames), intensity time resolution, step budget. See the last section.
+- **Open, to decide with the user:** verifying CUDA on Vista; more spatial compression
+  for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
+  POUnet as a later baseline.
 
 ## Goal and current baseline
 
@@ -1413,3 +1416,46 @@ Figures and tables: [A](results/dce_moby_embedding_20261025_A_all_frames/table.m
 - Not established: whether the NF's embedding fit is limited by its 12k-step budget,
   which was tuned on the held-out protocol with half as many fitted frames (protocol A
   has no validation frames for the plateau schedule). Single window and slice.
+
+## Full-series fit on Vista (2026-10-26): planning, nothing run
+
+Discussion with the user; no code changed and nothing run yet.
+
+Agreed so far (user, 2026-10-26):
+- Protocol A (embedding, `held_out_split: "none"`): every frame is fitted and scored.
+- No model change for now. Time stays in the existing motion time hash and intensity
+  time grid; only their configured resolutions change.
+- Rank is chosen from a data-only check: the SVD of frames that share one breathing
+  phase (every 50th frame, same geometry), i.e. the rank of the contrast change alone.
+
+Scale (checked against the code and the slice file):
+- The whole series is 14,401 frames = 288 breaths x 50 frames + 1 (-36 to 684 s), which
+  the existing window definition covers exactly (`first_frame` 0, `frames_per_cycle` 50,
+  `cycles` 288). That is 61,504 x 14,401 = 885.7 M points; the data are 3.5 GB as float32.
+- `run.py` materializes the full coordinate grid (float64 in numpy, 21 GB, plus the
+  meshgrid copies; 10.6 GB as float32 on the device). Coordinates must be computed from
+  the sampled indices instead. No resume from a checkpoint exists yet.
+- Time is normalized over the window, so the current resolutions lose their per-breath
+  meaning: the motion time hash (4-16 cells over 3 breaths, 5.3 per breath) would need
+  about 1,536 cells for 288 breaths, and the intensity time grid (3-48, 16 per breath)
+  4,608 to keep its per-breath resolution.
+- Reference effort: e01 sampled each of its 9.3 M points about 21 times (12k x 16,384).
+  The same density on the full series would be 18.8 B samples; the frames are highly
+  redundant, so the actual budget is to be set from measured throughput and a pilot.
+
+Recorded idea, not to be implemented without approval (M2): drive the motion branch by
+the breathing phase psi(t) = (t mod T) / T with T = 2.5 s (50 frames), d(r, psi), so
+all breaths share one displacement field. It is exact for this phantom (motion repeats
+every 50 frames, verified) but real data are only quasi-periodic and would need a
+respiratory signal or a learned phase; it is a physical assumption and a model change.
+
+Still open:
+- Time range: the user leans to all 14,401 frames (alternative: -36 to about 100 s).
+- Intensity time resolution. If its finest cell is too coarse to follow the 2.5 s
+  breathing, breathing must go to the motion branch or remain as error; the artery
+  first pass may need finer cells. A data-only check of the tissue mean curves over
+  the series would set this.
+- Step budget and batch size, after CUDA verification and a throughput measurement.
+- Vista environment: the GH200 nodes are aarch64, so torch with CUDA for aarch64 is
+  needed (the `$WORK/envs/moby` venv has only h5py and numpy); the `gh` queue time limit
+  decides whether resume is needed first.
