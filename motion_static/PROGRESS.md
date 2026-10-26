@@ -29,8 +29,11 @@ at the end of this file.
   and the embedding figures need `model.pt`.
 - **Full-series run on Vista (planning, 2026-10-26):** agreed so far: protocol A, no
   model change, rank from a data-only check; a breathing-phase motion input (M2) is
-  recorded as an idea only. Still open: time range (the user leans to all 14,401
-  frames), intensity time resolution, step budget. See the last section.
+  recorded as an idea only. Data-only checks done: the contrast change has rank 3,
+  the kinetics are slow (fastest rise 23 s) and breathing repeats only approximately
+  every 50 frames. Recommended (not yet confirmed): R = 3 and an intensity time grid of
+  at most 288 cells. Still open: time range (the user leans to all 14,401 frames), step
+  budget. See the last section.
 - **Open, to decide with the user:** verifying CUDA on Vista; more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -1009,7 +1012,9 @@ Published: [results/dce_moby_z100/](results/dce_moby_z100/) `respiratory_cycle0.
 Observed in the slice (verified numerically):
 - Motion repeats every 50 phases (2.5 s): phases 0, 50, 100 and 150 give identical
   images, so the 200 phases (10 s) hold four breaths, not one. Up to about 6,800
-  pixels change between phases.
+  pixels change between phases. *Correction (2026-10-26):* the repetition is exact for
+  these phases but only approximate in general; 19 of 150 phase pairs p, p + 50 differ
+  by more than 1%, up to 33% (see the full-series data checks at the end).
 - In-plane motion is small: the tumor centroid moves by one pixel (0.15 mm) in x.
 - The z = 100 plane contains no liver (its indicator is zero); tumor and artery are
   present.
@@ -1417,16 +1422,14 @@ Figures and tables: [A](results/dce_moby_embedding_20261025_A_all_frames/table.m
   which was tuned on the held-out protocol with half as many fitted frames (protocol A
   has no validation frames for the plateau schedule). Single window and slice.
 
-## Full-series fit on Vista (2026-10-26): planning, nothing run
-
-Discussion with the user; no code changed and nothing run yet.
+## Full-series fit on Vista (2026-10-26): planning; data-only checks done, no training
 
 Agreed so far (user, 2026-10-26):
 - Protocol A (embedding, `held_out_split: "none"`): every frame is fitted and scored.
 - No model change for now. Time stays in the existing motion time hash and intensity
   time grid; only their configured resolutions change.
-- Rank is chosen from a data-only check: the SVD of frames that share one breathing
-  phase (every 50th frame, same geometry), i.e. the rank of the contrast change alone.
+- Rank is chosen from a data-only check (below): the SVD of frames of one respiratory
+  phase, i.e. the rank of the contrast change alone.
 
 Scale (checked against the code and the slice file):
 - The whole series is 14,401 frames = 288 breaths x 50 frames + 1 (-36 to 684 s), which
@@ -1445,16 +1448,66 @@ Scale (checked against the code and the slice file):
 
 Recorded idea, not to be implemented without approval (M2): drive the motion branch by
 the breathing phase psi(t) = (t mod T) / T with T = 2.5 s (50 frames), d(r, psi), so
-all breaths share one displacement field. It is exact for this phantom (motion repeats
-every 50 frames, verified) but real data are only quasi-periodic and would need a
-respiratory signal or a learned phase; it is a physical assumption and a model change.
+all breaths share one displacement field. Even this phantom is only approximately
+periodic (data checks below: most phases repeat to 0.1%, a few transition phases differ
+by up to 33%), and real data would need a respiratory signal or a learned phase; it is
+a physical assumption and a model change.
+
+**Data-only checks (2026-10-26): completed.**
+[evaluation/moby_series_checks.py](evaluation/moby_series_checks.py) (no model, code
+`006286d`, 28 s, 1.2 GB peak memory) on all 14,401 frames of `moby_z100.h5`:
+[series_checks.json](results/dce_moby_series_checks_20261026_z100/series_checks.json),
+[tissue_curves.png](results/dce_moby_series_checks_20261026_z100/tissue_curves.png),
+[time_resolution.png](results/dce_moby_series_checks_20261026_z100/time_resolution.png),
+[same_phase_svd.png](results/dce_moby_series_checks_20261026_z100/same_phase_svd.png) and
+`tissue_curves.csv`. [tests/test_moby_series_checks.py](tests/test_moby_series_checks.py)
+(4 tests) passes; 134 tests pass.
+
+- *Breathing periodicity.* Before injection, frames of the same respiratory phase are
+  identical (10 s apart). Phase p and p + 50 differ by a median of 0.10%
+  (||f(p) - f(p + 50)|| / ||f(p)||; consecutive phases differ by 13.3%), but 19 of 150
+  pairs differ by more than 1% and 12 by more than 5%, up to 33% (phases 31, 36, 81, 86,
+  132, 137, ...: fast breathing transitions). Phases 0, 50, 100, 150 are identical, so
+  the branch-GIF reasoning above, which used them, stands.
+- *Tissue kinetics* (partial-volume weighted mean with each frame's phase indicator;
+  timing from the mean over each 50-frame breath). Liver is absent at z = 100.
+
+  | Tissue | Pre-injection | Peak (time) | Rise 10-90% | Breathing modulation, RMS / enhancement range |
+  |---|---:|---:|---:|---:|
+  | artery | 0.121 | 0.154 (42.7 s) | 23.0 s | 32% |
+  | tumor | 0.0078 | 0.044 (97.7 s) | 52.7 s | 2.0% |
+  | tumor core | 0.0010 | 0.039 (102.7 s) | 54.0 s | 0.9% |
+  | whole image | 0.0030 | 0.0048 (45.3 s) | 25.4 s | 0.6% |
+
+  The kinetics are slow: the fastest rise (artery) takes 23 s, about nine breaths.
+  The modulation is what remains after the mask follows the motion; for the artery it
+  is large (pre-injection peak-to-peak 128% of its enhancement range). Its cause is not
+  established (partial volume of a thin vessel, or out-of-plane motion).
+- *Time resolution* (least-squares piecewise-linear fit on N equal cells over the 720 s,
+  error relative to the enhancement range). The breath-mean trend needs few cells:
+  N = 72 (10 s per cell) gives at most 0.45% (artery), N = 288 (2.5 s, one cell per
+  breath) at most 0.09%. Every-frame curves keep the modulation error (artery 32%, tumor
+  2.0%) up to N = 288 and only begin to follow breathing from N = 576 (1.25 s). By
+  construction the trend is linear between breath means, so its error drop beyond
+  N = 576 says nothing about faster kinetics.
+- *Rank of the contrast change* (uncentered SVD of the 72-73 frames of respiratory
+  phases 0, 10, 20, 30, 40; the five agree within 0.4 points): rank 2 leaves 13.5-13.7%
+  of the change from the first frame unexplained (image RRMSE 4.1-4.3%), rank 3 leaves
+  0.8% (RRMSE 0.25%), rank 4 0.36% (0.11%).
+
+Recommendations from these checks (to confirm with the user; nothing changed):
+- Rank R = 3: it is the smallest rank that explains the contrast change at fixed
+  geometry (0.8% unexplained versus 13.6% at R = 2). It is a lower bound for the NF,
+  whose intensity also has to carry what the motion branch does not.
+- Intensity time grid: finest level of at most 288 cells over the series (2.5 s). This
+  resolves the kinetics to 0.1% of their range and cannot follow the 2.5 s breathing,
+  which then has to go to the motion branch or remain as error (for the artery about
+  32% of its enhancement range). Choosing finer cells would let the intensity branch
+  take breathing again.
 
 Still open:
 - Time range: the user leans to all 14,401 frames (alternative: -36 to about 100 s).
-- Intensity time resolution. If its finest cell is too coarse to follow the 2.5 s
-  breathing, breathing must go to the motion branch or remain as error; the artery
-  first pass may need finer cells. A data-only check of the tissue mean curves over
-  the series would set this.
+- Rank and intensity time resolution: the recommendations above.
 - Step budget and batch size, after CUDA verification and a throughput measurement.
 - Vista environment: the GH200 nodes are aarch64, so torch with CUDA for aarch64 is
   needed (the `$WORK/envs/moby` venv has only h5py and numpy); the `gh` queue time limit
