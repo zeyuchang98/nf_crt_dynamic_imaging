@@ -259,7 +259,7 @@ def main(argv=None):
     fig, ax = plt.subplots(figsize=(10, 0.5 + 0.38 * len(cells)), layout="constrained")
     ax.axis("off")
     rendered = ax.table(cellText=cells, colLabels=["Method", "Parameters", "RRMSE", "PSNR (dB)", "SSIM", "Rank choice"],
-                        loc="center", cellLoc="center")
+                        loc="center", cellLoc="center", colWidths=[0.11, 0.12, 0.15, 0.15, 0.15, 0.32])
     rendered.auto_set_font_size(False)
     rendered.set_fontsize(9)
     rendered.scale(1, 1.4)
