@@ -20,10 +20,12 @@ at the end of this file.
 - **Branches:** the learned motion matches the size and direction of the small in-plane
   outline motion (about 1.5 px) and halves the outline mismatch; the intensity branch
   still carries organ-edge changes, possibly from out-of-plane motion.
-- **Code:** `device` option (cpu, cuda, mps; CUDA not verified), `held_out_split`
+- **Code:** `device` option (cpu, cuda, mps; CUDA verified on Vista 2026-10-26), `held_out_split`
   (midpoints, alternate_validation_test, none), plateau schedule, SS(r) baseline,
-  embedding figures, branch GIFs. 130 tests pass with the `.venv-hash-sweep` environment
-  (Python 3.11, torch 2.14.0, numpy 1.26.4, h5py 3.16.0).
+  embedding figures, branch GIFs, whole-series data checks, time-chunked SSIM. 136 tests
+  pass (Python 3.11, torch 2.14.0, numpy 1.26.4, h5py 3.16.0) in the second machine's
+  `.venv-hash-sweep`, this machine's `nf-crt` conda environment and Vista's
+  `$WORK/envs/nf-crt`.
 - **Local only on the second machine (not on GitHub):** `model.pt` of the DCE-MOBY runs
   (33 files, 116 MB) and `predictions.npz` (14 files, 454 MB). Re-scoring, branch GIFs
   and the embedding figures need `model.pt`.
@@ -32,9 +34,10 @@ at the end of this file.
   recorded as an idea only. Data-only checks done: the contrast change has rank 3,
   the kinetics are slow (fastest rise 23 s) and breathing repeats only approximately
   every 50 frames. Adopted: R = 3 and an intensity time grid of at most 288 cells, on
-  all 14,401 frames. A draft run design (config, code changes, Vista steps) awaits
-  approval. See the last section.
-- **Open, to decide with the user:** verifying CUDA on Vista; more spatial compression
+  all 14,401 frames. Time-chunked SSIM is implemented and the GPU works on Vista
+  (`$WORK/envs/nf-crt`); the rest of the draft run design awaits approval. The source
+  data include `motion_vectors.h5`. See the last section.
+- **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
 
@@ -1530,9 +1533,9 @@ Adopted from these checks (user, 2026-10-26):
 - Vista steps: environment (aarch64 torch with CUDA) and data hash check; CUDA check on
   the e01 window (400 steps, CPU versus CUDA); throughput at batch 16k/65k/262k; seed 0
   main run with in-process evaluation; SS(r) on a CPU node; seeds 1-2 if seed 0 is sound.
-- To confirm on Vista: GH200 host memory, `gh`/`gg` queue time limits, and whether the
-  source data's `motion_vectors.h5` (listed in its README: displacement vectors per
-  respiratory phase) exists, which would allow motion evaluation for these data.
+- Confirmed on Vista (GPU test below): 212 GB host memory, 2-day `gh`/`gg` limits, and
+  the source data's `motion_vectors.h5` (displacement vectors per respiratory phase,
+  per its README) exists.
 
 **Time-chunked SSIM (2026-10-26): implemented, approved by the user.** skimage's SSIM
 holds 16 float64 arrays of the input's size (traced with tracemalloc: exactly 16.0 at
@@ -1555,8 +1558,31 @@ single call. Validated:
   About 8 s per 1,000 frames on this machine. macOS RSS readings understate these
   values (compressed memory), so tracemalloc is used.
 
+**Vista GPU test (2026-10-26): completed, CUDA verified.** The user asked for a simple
+check that the GPU can be used; nothing else was run.
+- Environment: load `gcc/15.1.0` and then `python3/3.11.8` as two separate
+  `module load` calls (on one line python3 did not load). Venv `$WORK/envs/nf-crt`
+  (5.6 GB) with torch 2.14.0+cu130, numpy 1.26.4, h5py 3.16.0, scipy 1.13.1,
+  scikit-image 0.26.0, matplotlib 3.9.4, the local versions except the CUDA build. The
+  venv's python needs the module loaded (libpython). Code: a clone of `motion-static`
+  at `$WORK/nf_crt_dynamic_imaging` (commit `4123848`); 136 tests pass on the login
+  node. `$WORK/moby_slice/moby_z100.h5` has the local file's sha256.
+- Test: e01's window setting (protocol A, R = 2, batch 16,384, seed 0) for 400 steps
+  with `device` cuda on a `gh-dev` node (job 1102585, `srun`, allocation ASC25089;
+  NVIDIA GH200 120GB, 97,871 MiB GPU memory, driver 590.48.01). The step-1 batch MSE
+  equals the local CPU run (3.98318e-4); afterwards the runs drift as on MPS:
+  all-frame RRMSE 24.21% versus 23.76% on the CPU, SSIM 0.99161 versus 0.99177.
+  Training took 14.4 s versus 61.3 s on this machine's CPU (one thread). Outputs stay in
+  `$WORK/gpu_test/cuda_400`; nothing was committed from the test.
+- Vista facts: the GH200 node has 212 GB host memory, so the estimated 45 GB training
+  and 50-70 GB in-process evaluation fit and per-block coordinates are not needed.
+  Queue limits: `gh` and `gg` 2 days, `gh-dev` 2 h, `gb` 12 h; resume is needed only for
+  runs over 48 h. ASC25089 has 14,947 SUs (expires 2027-10-31).
+- The source folder `/work/03453/villa13/vista/proj/moby-data` does contain
+  `motion_vectors.h5` (16.5 GB, readable), `phantom_anatomy_0.h5` and `moby_mesh.h5`.
+  True motion may therefore exist for these data; the files were not opened.
+
 Still open:
-- Approval of the rest of the draft above; step budget after the throughput measurement.
-- Vista environment: the GH200 nodes are aarch64, so torch with CUDA for aarch64 is
-  needed (the `$WORK/envs/moby` venv has only h5py and numpy); the `gh` queue time limit
-  decides whether resume is needed first.
+- Approval of the rest of the draft above (input config, Slurm scripts later); step
+  budget after a throughput measurement.
+- Whether to use `motion_vectors.h5` for motion evaluation (a separate decision).
