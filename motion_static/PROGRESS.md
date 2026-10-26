@@ -31,9 +31,9 @@ at the end of this file.
   model change, rank from a data-only check; a breathing-phase motion input (M2) is
   recorded as an idea only. Data-only checks done: the contrast change has rank 3,
   the kinetics are slow (fastest rise 23 s) and breathing repeats only approximately
-  every 50 frames. Recommended (not yet confirmed): R = 3 and an intensity time grid of
-  at most 288 cells. Still open: time range (the user leans to all 14,401 frames), step
-  budget. See the last section.
+  every 50 frames. Adopted: R = 3 and an intensity time grid of at most 288 cells, on
+  all 14,401 frames. A draft run design (config, code changes, Vista steps) awaits
+  approval. See the last section.
 - **Open, to decide with the user:** verifying CUDA on Vista; more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -1495,20 +1495,45 @@ a physical assumption and a model change.
   of the change from the first frame unexplained (image RRMSE 4.1-4.3%), rank 3 leaves
   0.8% (RRMSE 0.25%), rank 4 0.36% (0.11%).
 
-Recommendations from these checks (to confirm with the user; nothing changed):
-- Rank R = 3: it is the smallest rank that explains the contrast change at fixed
-  geometry (0.8% unexplained versus 13.6% at R = 2). It is a lower bound for the NF,
-  whose intensity also has to carry what the motion branch does not.
+Adopted from these checks (user, 2026-10-26):
+- Rank R = 3: the smallest rank that explains the contrast change at fixed geometry
+  (0.8% unexplained versus 13.6% at R = 2). It is a lower bound for the NF, whose
+  intensity also has to carry what the motion branch does not.
 - Intensity time grid: finest level of at most 288 cells over the series (2.5 s). This
   resolves the kinetics to 0.1% of their range and cannot follow the 2.5 s breathing,
   which then has to go to the motion branch or remain as error (for the artery about
-  32% of its enhancement range). Choosing finer cells would let the intensity branch
-  take breathing again.
+  32% of its enhancement range).
+
+**Draft run design (2026-10-26): awaiting the user's approval; nothing implemented.**
+- Input: all 14,401 frames (`first_frame` 0, `cycles` 288, `frames_per_cycle` 50),
+  protocol A, R = 3, seed 0, `device` cuda, reference time t0 = -36 s (frame 0).
+- Changed from e01: motion time hash 384-1536 cells (same cells per breath as e01:
+  1.33-5.33) with table 2^17 so every level stays dense; intensity time grid 3-288 cells;
+  batch 65,536 (S4: a larger batch at the same sample count tied or helped); steps set
+  after a throughput measurement (e01's density, 21 samples per point, would be about
+  288k steps at this batch).
+- Unchanged from e01: intensity hash 8-512 (2^19), motion space 2-8, rates 0.01/0.001,
+  widths 64/32, image MSE only, cosine schedule, monitoring on fixed training samples.
+- Model size 1,308,330 parameters (motion 542,720, intensity spatial 757,630), close to
+  SS(17) with 1,290,385 on this series (75,905 per rank).
+- Memory: training as coded should peak at an estimated 45 GB host memory (float64
+  coordinate grid and its meshgrid copies; not measured) and 10.6 GB on the GPU. The unchanged image evaluation needs about 85 GB for 14,401
+  frames (measured 2.2 GB at 250 and 6.5 GB at 1,000 frames, linear), so it is to run as
+  a separate step on a Grace-Grace CPU node.
+- Code changes proposed: an opt-in deferred evaluation (training saves `model.pt` and
+  stops; a separate command scores it with the unchanged image report); Slurm scripts
+  and the input config under `experiments/`; resume from a checkpoint only if the step
+  budget exceeds the queue time limit. SS(r) needs no change (`--protocol embedding
+  --max-rank 60`).
+- Vista steps: environment (aarch64 torch with CUDA) and data hash check; CUDA check on
+  the e01 window (400 steps, CPU versus CUDA); throughput at batch 16k/65k/262k; seed 0
+  main run, then its evaluation and SS(r) on a CPU node; seeds 1-2 if seed 0 is sound.
+- To confirm on Vista: GH200 host memory, `gh`/`gg` queue time limits, and whether the
+  source data's `motion_vectors.h5` (listed in its README: displacement vectors per
+  respiratory phase) exists, which would allow motion evaluation for these data.
 
 Still open:
-- Time range: the user leans to all 14,401 frames (alternative: -36 to about 100 s).
-- Rank and intensity time resolution: the recommendations above.
-- Step budget and batch size, after CUDA verification and a throughput measurement.
+- Approval of the draft above; step budget after the throughput measurement.
 - Vista environment: the GH200 nodes are aarch64, so torch with CUDA for aarch64 is
   needed (the `$WORK/envs/moby` venv has only h5py and numpy); the `gh` queue time limit
   decides whether resume is needed first.
