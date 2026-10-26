@@ -260,7 +260,11 @@ agreement before use. No pipeline implementation or saved result is claimed.
   array with time treated as another windowed dimension. Spatial `per_frame_ssim`
   is saved separately. Current settings are window size 7, uniform weights,
   sample covariance, `K1=0.01`, and `K2=0.03`. Windows do not extend outside the
-  evaluated full array or ROI. A too-short axis returns `null`.
+  evaluated full array or ROI. A too-short axis returns `null`. Arrays above 2^24
+  voxels (approved 2026-10-26, for the whole DCE-MOBY series) are scored in time
+  chunks with 3-frame halos; this is the same whole-array value up to floating-point
+  rounding (relative difference 1.8e-15 on 1,000 DCE-MOBY frames) and is noted in
+  `settings.ssim.computation`. Smaller arrays use the single whole-array call unchanged.
 - **Block SSIM:** only spatial 7-by-7 windows entirely inside the selected mask
   are valid. Overall SSIM averages valid centers across all frames; it is not
   necessarily an equal-weight frame average. Do not mix it with midpoint SSIM.

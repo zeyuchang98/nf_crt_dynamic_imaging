@@ -3,10 +3,12 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 from skimage.metrics import structural_similarity
 
+from motion_static.evaluation import metrics
 from motion_static.evaluation.metrics import error_metrics, evaluate_sequence, save_metrics
 
 
@@ -42,6 +44,33 @@ class MetricTests(unittest.TestCase):
         expected = structural_similarity(truth.astype(float), prediction, data_range=1, win_size=7)
         self.assertAlmostEqual(result["ssim"], expected)
         self.assertLess(result["ssim"], 0)
+
+    def test_time_chunked_ssim_equals_whole_array_ssim(self):
+        rng = np.random.default_rng(4)
+        settings = dict(data_range=1, win_size=7, gaussian_weights=False, use_sample_covariance=True,
+                        K1=0.01, K2=0.03, channel_axis=None)
+        for shape in ((12, 10, 41), (9, 8, 7, 23)):  # 2D+t and 3D+t
+            truth = rng.random(shape)
+            prediction = truth + 0.2 * rng.standard_normal(shape)
+            expected = structural_similarity(truth, prediction, **settings)
+            frame = truth.size // shape[-1]
+            # Chunks of 1 kept frame, uneven chunks with a short last one, and a single chunk.
+            for chunk_voxels in (7 * frame, 13 * frame, 40 * frame, truth.size - 1):
+                chunked = metrics._ssim(truth, prediction, 1, 7, chunk_voxels=chunk_voxels)
+                self.assertAlmostEqual(chunked, expected, delta=1e-13 * abs(expected), msg=(shape, chunk_voxels))
+            # At or below the threshold the whole-array call is used, bit for bit.
+            self.assertEqual(metrics._ssim(truth, prediction, 1, 7, chunk_voxels=truth.size), expected)
+
+    def test_large_sequences_record_the_chunked_ssim(self):
+        truth = np.random.default_rng(5).random((10, 10, 30))
+        prediction = truth + 0.05
+        whole = evaluate_sequence(truth, prediction, data_range=1)
+        self.assertNotIn("computation", whole["settings"]["ssim"])
+        with patch.object(metrics, "SSIM_CHUNK_VOXELS", 900):
+            chunked = evaluate_sequence(truth, prediction, data_range=1)
+        self.assertIn("time chunks", chunked["settings"]["ssim"]["computation"])
+        self.assertAlmostEqual(chunked["ssim"], whole["ssim"], delta=1e-13)
+        self.assertEqual(chunked["per_frame_ssim"], whole["per_frame_ssim"])
 
     def test_roi_excludes_outside_errors_and_preserves_neighborhoods(self):
         truth = np.ones((15, 15, 9))

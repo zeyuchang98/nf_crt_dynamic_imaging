@@ -53,14 +53,48 @@ def _check_range(data_range):
         raise ValueError("data_range must be finite and positive")
 
 
-def _ssim(truth, prediction, data_range, win_size):
+# skimage keeps about 16 float64 arrays of the input's size for one SSIM call (local
+# means, moments, the SSIM map), so space-time arrays above this many voxels are
+# scored in time chunks instead (about 2 GB per chunk at 2**24 voxels).
+SSIM_CHUNK_VOXELS = 2 ** 24
+
+
+def _ssim(truth, prediction, data_range, win_size, chunk_voxels=None):
     # Do not silently change the window between sequences or pad short axes.
     if min(truth.shape) < win_size:
         return None
-    return float(structural_similarity(
-        truth, prediction, data_range=data_range, win_size=win_size,
-        gaussian_weights=False, use_sample_covariance=True,
-        K1=0.01, K2=0.03, channel_axis=None))
+    settings = dict(data_range=data_range, win_size=win_size, gaussian_weights=False,
+                    use_sample_covariance=True, K1=0.01, K2=0.03, channel_axis=None)
+    chunk_voxels = SSIM_CHUNK_VOXELS if chunk_voxels is None else chunk_voxels
+    if truth.ndim < 3 or truth.size <= chunk_voxels:
+        return float(structural_similarity(truth, prediction, **settings))
+    return _time_chunked_ssim(truth, prediction, settings, chunk_voxels)
+
+
+def _time_chunked_ssim(truth, prediction, settings, chunk_voxels):
+    """Whole-array SSIM computed over chunks of the last (time) axis.
+
+    skimage averages the local SSIM map over every window inside the array: the map
+    cropped by pad = (win_size - 1) / 2 on all sides. The map at frame k depends on
+    frames k - pad .. k + pad only, so the kept frames [start, stop) of a chunk are
+    computed from frames [start - pad, stop + pad), where chunk-edge reflection
+    cannot reach them. Summing the kept map over all chunks gives the whole-array
+    mean, equal up to floating-point rounding (skimage's running-sum filter and the
+    order of summation differ).
+    """
+    pad = (settings["win_size"] - 1) // 2
+    frames = truth.shape[-1]
+    kept_per_chunk = max(1, chunk_voxels // (truth.size // frames) - 2 * pad)
+    spatial = (slice(pad, -pad),) * (truth.ndim - 1)
+    total, count = 0., 0
+    for start in range(pad, frames - pad, kept_per_chunk):
+        stop = min(start + kept_per_chunk, frames - pad)
+        _, local = structural_similarity(truth[..., start - pad:stop + pad],
+                                         prediction[..., start - pad:stop + pad], full=True, **settings)
+        kept = local[spatial + (slice(pad, pad + stop - start),)]
+        total += float(kept.sum(dtype=np.float64))
+        count += kept.size
+    return total / count
 
 
 def _image_metrics(truth, prediction, data_range, win_size):
@@ -123,6 +157,10 @@ def evaluate_sequence(truth, prediction, *, data_range, time_axis=-1,
                  "skimage_version": skimage.__version__},
         "roi": None,
     }
+    if truth.size > SSIM_CHUNK_VOXELS:
+        result["settings"]["ssim"]["computation"] = (
+            f"arrays above {SSIM_CHUNK_VOXELS} voxels are scored in time chunks with "
+            f"{(ssim_win_size - 1) // 2}-frame halos; equal to the whole-array value up to rounding")
     if roi is not None:
         if len(roi) != truth.ndim - 1:
             raise ValueError("roi must contain one slice per spatial dimension")

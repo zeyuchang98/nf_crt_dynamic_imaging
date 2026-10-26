@@ -1517,23 +1517,46 @@ Adopted from these checks (user, 2026-10-26):
 - Model size 1,308,330 parameters (motion 542,720, intensity spatial 757,630), close to
   SS(17) with 1,290,385 on this series (75,905 per rank).
 - Memory: training as coded should peak at an estimated 45 GB host memory (float64
-  coordinate grid and its meshgrid copies; not measured) and 10.6 GB on the GPU. The unchanged image evaluation needs about 85 GB for 14,401
-  frames (measured 2.2 GB at 250 and 6.5 GB at 1,000 frames, linear), so it is to run as
-  a separate step on a Grace-Grace CPU node.
-- Code changes proposed: an opt-in deferred evaluation (training saves `model.pt` and
-  stops; a separate command scores it with the unchanged image report); Slurm scripts
-  and the input config under `experiments/`; resume from a checkpoint only if the step
-  budget exceeds the queue time limit. SS(r) needs no change (`--protocol embedding
-  --max-rank 60`).
+  coordinate grid and its meshgrid copies; not measured) and 10.6 GB on the GPU. The
+  whole-array SSIM would need about 114 GB for 14,401 frames (16 float64 copies of the
+  volume, traced), so it is now computed in time chunks (below). With that, in-process
+  evaluation is estimated at 50-70 GB host memory, dominated by the float64 coordinate
+  grids of training and prediction (estimate, not measured).
+- Code changes: chunked SSIM (done, below); Slurm scripts and the input config under
+  `experiments/`; resume from a checkpoint only if the step budget exceeds the queue
+  time limit; coordinates computed per frame block only if the host memory is too small.
+  The deferred evaluation proposed first is no longer needed. SS(r) needs no change
+  (`--protocol embedding --max-rank 60`, on a CPU node).
 - Vista steps: environment (aarch64 torch with CUDA) and data hash check; CUDA check on
   the e01 window (400 steps, CPU versus CUDA); throughput at batch 16k/65k/262k; seed 0
-  main run, then its evaluation and SS(r) on a CPU node; seeds 1-2 if seed 0 is sound.
+  main run with in-process evaluation; SS(r) on a CPU node; seeds 1-2 if seed 0 is sound.
 - To confirm on Vista: GH200 host memory, `gh`/`gg` queue time limits, and whether the
   source data's `motion_vectors.h5` (listed in its README: displacement vectors per
   respiratory phase) exists, which would allow motion evaluation for these data.
 
+**Time-chunked SSIM (2026-10-26): implemented, approved by the user.** skimage's SSIM
+holds 16 float64 arrays of the input's size (traced with tracemalloc: exactly 16.0 at
+500 and 1,000 frames of 248 x 248). [evaluation/metrics.py](evaluation/metrics.py)
+`_ssim` now scores space-time arrays above 2^24 voxels in chunks of the last (time)
+axis: each chunk's kept frames are computed with 3-frame halos and only the interior of
+the SSIM map is summed, which is the whole-array mean up to rounding. Arrays at or
+below 2^24 voxels (every earlier run: the DCE-MOBY window is 9.3 M) use the unchanged
+single call. Validated:
+- Two new tests in [tests/test_metrics.py](tests/test_metrics.py): 2D+t and 3D+t random
+  arrays at four chunk sizes agree with the whole-array value to 1e-13 relative; below
+  the threshold the result is bit-identical; `settings.ssim.computation` is written only
+  when chunks are used. 136 tests pass.
+- Real data: 1,000 DCE-MOBY frames (prediction = next frame) give whole-array
+  0.998404721799573 and chunked 0.998404721799575 (relative difference 1.8e-15).
+- Re-scoring `dce_moby_20261022_8k_j5_z100` from its `model.pt` reproduces the image
+  section of its `metrics.json` exactly.
+- Memory (tracemalloc, above the float32 inputs): 2.37 GB at 500 and 2.99 GB at 1,000
+  frames, about 1.2 MB per frame, so about 20 GB at 14,401 frames instead of 114 GB.
+  About 8 s per 1,000 frames on this machine. macOS RSS readings understate these
+  values (compressed memory), so tracemalloc is used.
+
 Still open:
-- Approval of the draft above; step budget after the throughput measurement.
+- Approval of the rest of the draft above; step budget after the throughput measurement.
 - Vista environment: the GH200 nodes are aarch64, so torch with CUDA for aarch64 is
   needed (the `$WORK/envs/moby` venv has only h5py and numpy); the `gh` queue time limit
   decides whether resume is needed first.
