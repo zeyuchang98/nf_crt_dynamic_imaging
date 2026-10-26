@@ -1,6 +1,36 @@
 # Motion and Intensity Separation: Current Progress
 
-Last updated: 2026-10-22.
+Last updated: 2026-10-26.
+
+## Current status (2026-10-26)
+
+Summary for continuing on another machine; details and links are in the dated sections
+at the end of this file.
+
+- **Data in use:** DCE-MOBY z = 100 slice, window frames 1250-1400 (26.5-34.0 s, three
+  breaths, 248 x 248), file `~/Data/dce-moby/moby_z100.h5` (sha256 `89958d21...59da`; the
+  Vista copy is in `$WORK/moby_slice/`).
+- **Best setting (held-out protocol B):** J5 structure with intensity hash 8-512 (table
+  2^19), batch 16,384, rates 0.01/0.001 and the plateau schedule: 11.96% +- 0.28
+  test-frame RRMSE, PSNR 51.73 dB, SSIM 0.9985 (776,062 parameters, 3.1 MB checkpoint).
+  Cosine 12k steps gives 12.18% +- 0.32 at a third of the time.
+- **SS(r) comparison:** on the held-out test frames the NF is slightly better than every
+  SS(r) (floor 12.12%, frame interpolation). Under the embedding protocol A (all frames
+  fitted and scored) SS(r) is more parameter-efficient: SS(13) 5.18% versus NF 8.86%.
+- **Branches:** the learned motion matches the size and direction of the small in-plane
+  outline motion (about 1.5 px) and halves the outline mismatch; the intensity branch
+  still carries organ-edge changes, possibly from out-of-plane motion.
+- **Code:** `device` option (cpu, cuda, mps; CUDA not verified), `held_out_split`
+  (midpoints, alternate_validation_test, none), plateau schedule, SS(r) baseline,
+  embedding figures, branch GIFs. 130 tests pass with the `.venv-hash-sweep` environment
+  (Python 3.11, torch 2.14.0, numpy 1.26.4, h5py 3.16.0).
+- **Local only on the second machine (not on GitHub):** `model.pt` of the DCE-MOBY runs
+  (33 files, 116 MB) and `predictions.npz` (14 files, 454 MB). Re-scoring, branch GIFs
+  and the embedding figures need `model.pt`.
+- **Open, to decide with the user:** design of full-frame or longer-window runs on Vista
+  (time range, held-out split, motion time modelling, rank); verifying CUDA on Vista;
+  more spatial compression for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF
+  budget under protocol A; POUnet as a later baseline.
 
 ## Goal and current baseline
 
