@@ -144,6 +144,15 @@ sbatch -p gh-dev -t 02:00:00 motion_static/experiments/vista/train.sbatch motion
 Extra arguments go to `run.py` (for example `--steps`). The job log, with the peak host
 memory, and a per-minute GPU record are moved into the run folder.
 
+[vista/evaluate.sbatch](vista/evaluate.sbatch) runs one evaluation module on a CPU node,
+for example the SS(r) baseline of the whole series:
+
+```bash
+sbatch -p gg -t 12:00:00 motion_static/experiments/vista/evaluate.sbatch motion_static.evaluation.moby_svd_baseline RUN --out NEW --protocol embedding --max-rank 60
+```
+
+Its log (code commit, core count, peak host memory) stays in `motion_static/results/`.
+
 ## Output and later visualization
 
 Normal runs save `config.json`, `metrics.json`, `loss.csv`, `loss.png`, `model.pt`,
