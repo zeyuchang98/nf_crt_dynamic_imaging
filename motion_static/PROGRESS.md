@@ -1,8 +1,8 @@
 # Motion and Intensity Separation: Current Progress
 
-Last updated: 2026-10-26.
+Last updated: 2026-10-27.
 
-## Current status (2026-10-26)
+## Current status (2026-10-27)
 
 Summary for continuing on another machine; details and links are in the dated sections
 at the end of this file.
@@ -35,8 +35,11 @@ at the end of this file.
   the kinetics are slow (fastest rise 23 s) and breathing repeats only approximately
   every 50 frames. Adopted: R = 3 and an intensity time grid of at most 288 cells, on
   all 14,401 frames. Time-chunked SSIM is implemented and the GPU works on Vista
-  (`$WORK/envs/nf-crt`); the rest of the draft run design awaits approval. The source
-  data include `motion_vectors.h5`. See the last section.
+  (`$WORK/envs/nf-crt`). A 10k-step trial of the draft design (job 1102639, 18 min on
+  one GH200) gave 10.61% all-frame RRMSE, 54.4 ms per step at batch 65,536 and a
+  67.7 GB host-memory peak; the per-frame error depends strongly on the breathing
+  phase. The formal step budget awaits approval. The source data include
+  `motion_vectors.h5`. See the last section.
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -1425,7 +1428,7 @@ Figures and tables: [A](results/dce_moby_embedding_20261025_A_all_frames/table.m
   which was tuned on the held-out protocol with half as many fitted frames (protocol A
   has no validation frames for the plateau schedule). Single window and slice.
 
-## Full-series fit on Vista (2026-10-26): planning; data-only checks done, no training
+## Full-series fit on Vista (2026-10-26/27): data checks and a 10k-step trial done
 
 Agreed so far (user, 2026-10-26):
 - Protocol A (embedding, `held_out_split: "none"`): every frame is fitted and scored.
@@ -1507,7 +1510,8 @@ Adopted from these checks (user, 2026-10-26):
   which then has to go to the motion branch or remain as error (for the artery about
   32% of its enhancement range).
 
-**Draft run design (2026-10-26): awaiting the user's approval; nothing implemented.**
+**Draft run design (2026-10-26): input config and job script added (commit `9352257`),
+tested by the 10k-step trial below; the formal step budget awaits approval.**
 - Input: all 14,401 frames (`first_frame` 0, `cycles` 288, `frames_per_cycle` 50),
   protocol A, R = 3, seed 0, `device` cuda, reference time t0 = -36 s (frame 0).
 - Changed from e01: motion time hash 384-1536 cells (same cells per breath as e01:
@@ -1582,7 +1586,43 @@ check that the GPU can be used; nothing else was run.
   `motion_vectors.h5` (16.5 GB, readable), `phantom_anatomy_0.h5` and `moby_mesh.h5`.
   True motion may therefore exist for these data; the files were not opened.
 
+**10k-step trial on the full series (2026-10-26): completed.** Agreed with the user as a
+short job to measure throughput and memory before the formal run; no other change.
+- Input [experiments/dce_moby_full_series.json](experiments/dce_moby_full_series.json)
+  (the draft design above with 10,000 cosine steps) and the job script
+  [experiments/vista/train.sbatch](experiments/vista/train.sbatch), both commit
+  `9352257`, which the run's `config.json` records. Job 1102639, `sbatch -p gh-dev -t
+  02:00:00`, one node, allocation ASC25089. It started at 18:27:35, the same evening,
+  far earlier than Slurm's estimate, and ended after 18 min 04 s with exit code 0
+  (about 0.3 SU).
+- Records: [dce_moby_full_20261026_10k_f00_ih512_b64k_r3_s0](results/dce_moby_full_20261026_10k_f00_ih512_b64k_r3_s0/)
+  (`config.json`, `metrics.json`, `loss.csv`, `loss.png`, `run.log`,
+  `monitor_samples.npz`, `source.zip`, the Slurm log and `gpu-1102639.csv`; checksums
+  match Vista's). `model.pt` (5.3 MB) stays on Vista in the same folder.
+- Throughput: training took 549 s, 54.4 ms per step at batch 65,536 (1.2 M samples/s);
+  the 10k steps drew 655 M samples, 0.74 per point. The GPU ran at 97% utilization
+  with 14,940 MiB in use (nvidia-smi, includes PyTorch's cache) of 97,871 MiB.
+  Evaluation of all 14,401 frames took about 8 min (GPU 25%, then idle during SSIM).
+- Host memory peak 67.7 GB (`/usr/bin/time -v` maximum RSS), within the 50-70 GB
+  estimate and a third of the node's 212 GB. Per-block coordinates are not needed.
+- Fit (protocol A, all frames): RRMSE 10.61%, PSNR 54.67 dB, SSIM 0.99913 (time-chunked);
+  activity-curve RRMSE 0.27%. The fixed-sample training MSE fell from 2.65e-4 (step 1) to
+  3.34e-6 and was still falling when the cosine schedule reached zero.
+- Per-frame RRMSE: median 10.04% (10th-90th percentile 5.45-14.15%, 99th 20.37%). It
+  does not grow over the series: the median is 9.9-10.6% in every interval from
+  pre-injection to 684 s. It depends strongly on the breathing phase: the median over
+  frames of one phase (frame index mod 50) ranges from 3.53% (phase 23) to 16.52%
+  (phase 49). The worst frames are the first ones: 55.4% at frame 0 (t = -36 s, the
+  motion reference frame) and 38-55% for frames 0-4, against 15.6% at frame 50.
+- Not comparable with e01 (8.64% on the 151-frame window): different frames, rank and
+  budget. SS(r) on the full series has not been computed. Whether the phase-dependent
+  error comes from the step budget, the motion branch or the time resolution is not
+  established.
+- Projection, not measured: e01's sampling density (21 samples per point) would be
+  about 288k steps, 4.4 h of training at this speed plus 8 min of evaluation, about
+  4.5 SU on `gh`, well inside its 48 h limit.
+
 Still open:
-- Approval of the rest of the draft above (input config, Slurm scripts later); step
-  budget after a throughput measurement.
+- Formal run: step budget (and whether to keep the cosine schedule), seeds, queue `gh`.
+- SS(r) on the full series as the baseline (on a CPU node).
 - Whether to use `motion_vectors.h5` for motion evaluation (a separate decision).
