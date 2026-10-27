@@ -1646,8 +1646,9 @@ the embedding figures in the format of Lozenski et al. 2022 against SS(r) on the
   all 885.7 M points at about 0.3 M points/s); about 7 SU in all.
 - New job script [experiments/vista/evaluate.sbatch](experiments/vista/evaluate.sbatch)
   runs one evaluation module on a CPU node. TACC jobs start with `OMP_NUM_THREADS=1`, so
-  the first SS(r) submission (1104730) ran its SVD on one core; it was cancelled after
-  1 min and resubmitted with every core. With 144 threads the SVD took under 10 min.
+  the first SS(r) submission (1104730) started with one BLAS thread; it was cancelled
+  after 1 min, while still loading data, and resubmitted with every core. With 144
+  threads, loading, the SVD and the first two ranks took under 13 min.
   The script now gives numpy's BLAS every core and torch 16 threads: CPU inference in
   batches of 8,192 points peaks at about 8 threads (laptop: 0.17, 0.30, 0.33 and 0.28 M
   points/s at 1, 4, 8 and 10 threads).
