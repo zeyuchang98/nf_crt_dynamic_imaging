@@ -22,6 +22,15 @@ class MobyBranchGifTests(unittest.TestCase):
         np.testing.assert_array_equal(truth[0, 0], [0, 1, 2, 3, 4])
         self.assertEqual(labels.tolist(), ["training", "validation", "training", "test", "training"])
 
+    def test_frame_ranges_start_at_the_reference_frame(self):
+        select = moby_branch_gifs.selected_frames
+        np.testing.assert_array_equal(select([], 4), [0, 1, 2, 3])
+        np.testing.assert_array_equal(select(["0:10:5", "12:14"], 14), [0, 5, 12, 13])
+        np.testing.assert_array_equal(select(["0:14401:50"], 14401), np.arange(0, 14401, 50))
+        for ranges in (["1:5"], ["0:5", "3:8"], ["0:15"], ["0:5:0"], ["0"], ["5:2"]):
+            with self.assertRaises(ValueError, msg=ranges):
+                select(ranges, 14)
+
     def test_tiles_show_y_upward(self):
         panel = np.zeros((3, 2))
         panel[0, 1] = 1  # lowest y, highest x
@@ -51,6 +60,22 @@ class MobyBranchGifTests(unittest.TestCase):
             # The motion anchor makes the first frame's change exactly zero for every view.
             for values in summary["relative_change_from_first_frame"].values():
                 self.assertEqual(values[0], 0.)
+
+            # A frame subset shows the same frames and changes, with window frame captions.
+            moby_branch_gifs.main([str(run), "--scale", "1", "--threads", "1",
+                                   "--frames", "0:5:4", "8:13:4", "--name", "subset"])
+            subset = json.loads((run / "visuals" / "subset_branch_gifs.json").read_text())
+            self.assertEqual(subset["window_frames"], [0, 4, 8, 12])
+            self.assertEqual(subset["frame_ranges"], ["0:5:4", "8:13:4"])
+            np.testing.assert_allclose(subset["times"], np.array(summary["times"])[[0, 4, 8, 12]])
+            for view, values in subset["relative_change_from_first_frame"].items():
+                full = np.array(summary["relative_change_from_first_frame"][view])[[0, 4, 8, 12]]
+                np.testing.assert_allclose(values, full, rtol=1e-5, atol=1e-7)
+            for name in subset["gifs"]:
+                with Image.open(run / "visuals" / f"subset_{name}.gif") as gif:
+                    self.assertEqual(gif.n_frames, 4)
+            with self.assertRaises(SystemExit):
+                moby_branch_gifs.main([str(run), "--frames", "2:6", "--name", "late"])
 
 
 if __name__ == "__main__":

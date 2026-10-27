@@ -19,10 +19,12 @@ module load python3/3.11.8
 set -eo pipefail
 
 # TACC sets OMP_NUM_THREADS=1 in jobs, which limits numpy's BLAS (the SVD) and torch to one
-# core; give them every core of the allocated node instead.
-export OMP_NUM_THREADS=$SLURM_CPUS_ON_NODE
+# core. BLAS gets every core of the node; torch inference in batches of 8,192 points stops
+# scaling at a few threads (8 fastest and 10 slower on a 10-core laptop), so it gets 16.
+export OPENBLAS_NUM_THREADS=$SLURM_CPUS_ON_NODE
+export OMP_NUM_THREADS=16
 
 module_name=$1
 shift
-echo "code commit: $(git rev-parse HEAD); threads: $OMP_NUM_THREADS"
+echo "code commit: $(git rev-parse HEAD); BLAS threads: $OPENBLAS_NUM_THREADS; torch threads: $OMP_NUM_THREADS"
 PYTHONDONTWRITEBYTECODE=1 /usr/bin/time -v "$WORK/envs/nf-crt/bin/python" -m "$module_name" "$@"

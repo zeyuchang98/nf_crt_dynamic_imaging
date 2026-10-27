@@ -1,9 +1,10 @@
 # Reusable experiment template
 
-`template.json` is the only maintained experiment input. Copy it to a scratch
+`template.json` is the reusable experiment input. Copy it to a scratch
 location, edit explicit settings, and run the shared trainer. Generated sweep
-configurations do not belong in this directory. Every run saves its resolved
-configuration in its own output folder.
+configurations do not belong in this directory; the only other input is the agreed
+whole-series DCE-MOBY configuration, with its Vista job scripts in `vista/` (see
+"Vista (TACC) runs"). Every run saves its resolved configuration in its own output folder.
 
 ## Data and model settings
 
@@ -151,8 +152,8 @@ for example the SS(r) baseline of the whole series:
 sbatch -p gg -t 12:00:00 motion_static/experiments/vista/evaluate.sbatch motion_static.evaluation.moby_svd_baseline RUN --out NEW --protocol embedding --max-rank 60
 ```
 
-Its log (code commit, thread count, peak host memory) stays in `motion_static/results/`. It sets
-`OMP_NUM_THREADS` to the node's cores, since TACC jobs start with 1.
+Its log (code commit, thread counts, peak host memory) stays in `motion_static/results/`. It sets
+numpy's BLAS threads to the node's cores and torch's to 16, since TACC jobs start with 1.
 
 ## Output and later visualization
 

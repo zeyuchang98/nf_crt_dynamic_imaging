@@ -15,7 +15,12 @@ and the motion view only with breathing. Images use raw p0 units (normalized val
 times the run's intensity scale) on fixed display ranges; displays never enter metrics.
 `branch_gifs.json` also stores, per frame, ||V(t) - V(t0)|| / ||V(t0)|| for each view.
 
+Long series can show a subset: `--frames` takes window frame ranges START:STOP[:STEP]
+(stop excluded) and `--name` prefixes the outputs. The subset must start at window frame 0,
+the motion reference frame t0, from which every change is measured.
+
 python -m motion_static.evaluation.moby_branch_gifs motion_static/results/RUN
+python -m motion_static.evaluation.moby_branch_gifs RUN --frames 0:14401:50 --name phase0
 """
 import argparse
 import json
@@ -45,6 +50,29 @@ def window_frames(data):
     truth = np.concatenate([data[name]["truth"] for name in names], axis=-1)[..., order]
     labels = np.concatenate([[name] * len(data[name]["t"]) for name in names])[order]
     return truth, times[order], labels
+
+
+def selected_frames(ranges, count):
+    """Window frame indices from START:STOP[:STEP] ranges (stop excluded); all frames if none.
+
+    The selection must begin at window frame 0, the motion reference frame t0: the
+    intensity-change panel and the relative changes are measured from the first shown frame.
+    """
+    if not ranges:
+        return np.arange(count)
+    indices = []
+    for text in ranges:
+        parts = [int(part) for part in text.split(":")]
+        if len(parts) not in (2, 3):
+            raise ValueError(f"Frame range {text!r} is not START:STOP[:STEP]")
+        start, stop, step = parts + [1] * (3 - len(parts))
+        if not (0 <= start < stop <= count and step >= 1):
+            raise ValueError(f"Frame range {text!r} is outside 0..{count} or has a step below 1")
+        indices.extend(range(start, stop, step))
+    indices = np.array(indices)
+    if indices[0] != 0 or np.any(np.diff(indices) <= 0):
+        raise ValueError("Frame ranges must start at window frame 0 and increase without overlap")
+    return indices
 
 
 @torch.no_grad()
@@ -120,6 +148,9 @@ def main(argv=None):
                         help="intensity-change range -max..max, raw p0 units")
     parser.add_argument("--scale", type=int, default=2, help="integer pixel upscaling")
     parser.add_argument("--threads", type=int, default=4, help="CPU threads for inference")
+    parser.add_argument("--frames", nargs="*", default=[], metavar="START:STOP[:STEP]",
+                        help="window frame ranges to show, starting at frame 0 (default: every frame)")
+    parser.add_argument("--name", default="window", help="output prefix, e.g. phase0 for a frame subset")
     args = parser.parse_args(argv)
 
     config = json.loads((args.run / "config.json").read_text())
@@ -133,6 +164,11 @@ def main(argv=None):
 
     data, _ = prepare_data(config)
     truth, times, labels = window_frames(data)
+    try:
+        picks = selected_frames(args.frames, len(times))
+    except ValueError as error:
+        parser.error(str(error))
+    truth, times, labels = truth[..., picks], times[picks], labels[picks]
     x, y = data["training"]["x"], data["training"]["y"]
     reference_time = float(model.motion.reference_time)
     image, intensity, motion_only, displacement = branch_fields(model, x, y, times, reference_time)
@@ -143,7 +179,7 @@ def main(argv=None):
 
     out = args.run / "visuals"
     out.mkdir(exist_ok=True)
-    captions = [f"t={t:.2f} s | {label} frame | window frame {k}" for k, (t, label) in enumerate(zip(times, labels))]
+    captions = [f"t={t:.2f} s | {label} frame | window frame {k}" for k, t, label in zip(picks, times, labels)]
     gray = (None, 0, args.display_max)
     views = {
         "image": ([(truth, *gray, "Truth"), (image, *gray, "Prediction"),
@@ -162,17 +198,20 @@ def main(argv=None):
                    intensity_scale_value=scale, display_range=[0, args.display_max],
                    error_range=[0, args.error_max], change_range=[-args.change_max, args.change_max],
                    displacement_range_mm=[0, magnitude_max], displacement_max_mm=float(magnitude.max()),
-                   model_step=checkpoint["step"], times=times.tolist(), splits=labels.tolist(),
+                   model_step=checkpoint["step"], frame_ranges=args.frames or "all window frames",
+                   window_frames=picks.tolist(), times=times.tolist(), splits=labels.tolist(),
                    relative_change_from_first_frame=dict(
                        truth=relative_change(truth), prediction=relative_change(image),
                        intensity=relative_change(intensity), motion_only=relative_change(motion_only)),
                    gifs={})
     for name, (panels, title) in views.items():
-        path = out / f"window_{name}.gif"
+        path = out / f"{args.name}_{name}.gif"
         save_view(path, panels, captions, title, args.scale)
         summary["gifs"][name] = dict(file=path.name, megabytes=round(path.stat().st_size / 2**20, 2))
         print(f"wrote {path} ({summary['gifs'][name]['megabytes']} MB)")
-    (out / "branch_gifs.json").write_text(json.dumps(summary, indent=2) + "\n")
+    # The default name keeps the earlier record's file name.
+    record = "branch_gifs.json" if args.name == "window" else f"{args.name}_branch_gifs.json"
+    (out / record).write_text(json.dumps(summary, indent=2) + "\n")
 
 
 if __name__ == "__main__":
