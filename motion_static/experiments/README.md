@@ -151,7 +151,8 @@ for example the SS(r) baseline of the whole series:
 sbatch -p gg -t 12:00:00 motion_static/experiments/vista/evaluate.sbatch motion_static.evaluation.moby_svd_baseline RUN --out NEW --protocol embedding --max-rank 60
 ```
 
-Its log (code commit, core count, peak host memory) stays in `motion_static/results/`.
+Its log (code commit, thread count, peak host memory) stays in `motion_static/results/`. It sets
+`OMP_NUM_THREADS` to the node's cores, since TACC jobs start with 1.
 
 ## Output and later visualization
 
