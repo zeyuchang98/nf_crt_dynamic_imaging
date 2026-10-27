@@ -22,10 +22,10 @@ at the end of this file.
   still carries organ-edge changes, possibly from out-of-plane motion.
 - **Code:** `device` option (cpu, cuda, mps; CUDA verified on Vista 2026-10-26), `held_out_split`
   (midpoints, alternate_validation_test, none), plateau schedule, SS(r) baseline,
-  embedding figures, branch GIFs, whole-series data checks, time-chunked SSIM. 136 tests
-  pass (Python 3.11, torch 2.14.0, numpy 1.26.4, h5py 3.16.0) in the second machine's
-  `.venv-hash-sweep`, this machine's `nf-crt` conda environment and Vista's
-  `$WORK/envs/nf-crt`.
+  embedding figures, branch GIFs (with frame subsets), whole-series data checks,
+  time-chunked SSIM, Vista job scripts. 137 tests pass in this machine's `nf-crt` conda
+  environment (Python 3.11, torch 2.14.0, numpy 1.26.4, h5py 3.16.0); 136 passed earlier
+  in the second machine's `.venv-hash-sweep` and Vista's `$WORK/envs/nf-crt`.
 - **Local only on the second machine (not on GitHub):** `model.pt` of the DCE-MOBY runs
   (33 files, 116 MB) and `predictions.npz` (14 files, 454 MB). Re-scoring, branch GIFs
   and the embedding figures need `model.pt`.
@@ -38,8 +38,9 @@ at the end of this file.
   (`$WORK/envs/nf-crt`). A 10k-step trial of the draft design (job 1102639, 18 min on
   one GH200) gave 10.61% all-frame RRMSE, 54.4 ms per step at batch 65,536 and a
   67.7 GB host-memory peak; the per-frame error depends strongly on the breathing
-  phase. The formal step budget awaits approval. The source data include
-  `motion_vectors.h5`. See the last section.
+  phase. The formal run (288k steps, job 1104729), SS(r) on the full series (1104733),
+  branch GIFs and the embedding figures (1104764-1104766, after them) are submitted.
+  The source data include `motion_vectors.h5`. See the last section.
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -1622,7 +1623,55 @@ short job to measure throughput and memory before the formal run; no other chang
   about 288k steps, 4.4 h of training at this speed plus 8 min of evaluation, about
   4.5 SU on `gh`, well inside its 48 h limit.
 
+**Formal run, SS(r), GIFs and embedding figures (2026-10-27): submitted, not finished.**
+Approved by the user: e01's sampling density, about 288k steps at batch 65,536, cosine
+schedule, seed 0, on `gh`; GIFs of (A) one frame per breath at respiratory phase 0 and
+(B) three-breath segments at the start, the artery peak, the tumor peak and the end;
+the embedding figures in the format of Lozenski et al. 2022 against SS(r) on the full series.
+- Vista's `summary.csv` held the trial's row, byte-identical to the pushed commit; it
+  was restored and the clone pulled (commit `b630abe` at submission, `5e52615` later;
+  neither changes training or scoring code).
+- Jobs (allocation ASC25089; each later job starts only after its inputs succeed):
+
+  | Job | Queue, limit | What | Output in `results/` |
+  |---|---|---|---|
+  | 1104729 | `gh`, 8 h | `train.sbatch dce_moby_full_series.json --steps 288000` (21.3 samples per point; e01's density is 286,113 steps) | `dce_moby_full_20261027_288k_f01_ih512_b64k_r3_s0` |
+  | 1104733 | `gg`, 12 h | `moby_svd_baseline` on the trial run's data settings, `--protocol embedding --max-rank 60`, trial marked | `dce_moby_svd_20261027_z100_full_embedding` |
+  | 1104764 | `gg`, 1 h, after 1104729 | branch GIFs A: `--frames 0:14401:50 --name phase0` (289 frames) | the run's `visuals/phase0_*` |
+  | 1104765 | `gg`, 1 h, after 1104729 | branch GIFs B: `--frames 0:151 1500:1651 2600:2751 14250:14401 --name segments` (604 frames) | the run's `visuals/segments_*` |
+  | 1104766 | `gg`, 6 h, after both | `moby_embedding_figures` with the formal run | `dce_moby_embedding_20261027_full_A_all_frames` |
+
+  Estimates, not measured: training 4.4 h plus 8 min evaluation; SS(r) 4-6 h (about
+  5 min of scoring per rank); embedding figures 1-2 h (SVD again and a CPU prediction of
+  all 885.7 M points at about 0.3 M points/s); about 7 SU in all.
+- New job script [experiments/vista/evaluate.sbatch](experiments/vista/evaluate.sbatch)
+  runs one evaluation module on a CPU node. TACC jobs start with `OMP_NUM_THREADS=1`, so
+  the first SS(r) submission (1104730) ran its SVD on one core; it was cancelled after
+  1 min and resubmitted with every core. With 144 threads the SVD took under 10 min.
+  The script now gives numpy's BLAS every core and torch 16 threads: CPU inference in
+  batches of 8,192 points peaks at about 8 threads (laptop: 0.17, 0.30, 0.33 and 0.28 M
+  points/s at 1, 4, 8 and 10 threads).
+- [evaluation/moby_branch_gifs.py](evaluation/moby_branch_gifs.py): `--frames`
+  (window frame ranges START:STOP[:STEP], which must start at frame 0, the motion
+  reference frame from which every change is measured) and `--name` (output prefix;
+  the default keeps `window_*.gif` and `branch_gifs.json`). Captions give window frame
+  indices; the record adds `frame_ranges` and `window_frames`. Without `--frames` the GIFs
+  and stills are byte-identical to the previous code on a tiny run. Two tests added
+  ([tests/test_moby_branch_gifs.py](tests/test_moby_branch_gifs.py)); 137 tests pass.
+- Fixed a test failure left by commit `9352257`: the experiments layout test allowed
+  only `README.md` and `template.json`. It now allows the agreed
+  `dce_moby_full_series.json` and `vista/`, and the experiments README says so.
+- Preview with the 10k-step trial model, made on this machine (scratch copy of the run
+  with the local data path, same sha256; not committed). A: 2.5 min, 6.1 GB, GIFs of
+  6.7, 3.5 and 20.6 MB; B: 5 min, 37.3 MB for the largest GIF. What it shows for the trial:
+  at the phase-0 frames, where the true geometry repeats, the learned displacement is
+  still up to 0.19 mm and the motion-only view differs from t0 by a median 52%. The
+  predicted image's change from frame 0 (median 67%) is twice the truth's (32%), because
+  frame 0 itself fits worst (55% RRMSE). The intensity-change panel saturates at the
+  tumor, whose enhancement (about 0.036 raw) exceeds the default display range of
+  +-0.01; the formal GIFs keep the default ranges.
+
 Still open:
-- Formal run: step budget (and whether to keep the cosine schedule), seeds, queue `gh`.
-- SS(r) on the full series as the baseline (on a CPU node).
+- Results of the jobs above; seeds 1-2 if seed 0 is sound.
+- Whether to widen the GIFs' intensity-change display range for the whole series.
 - Whether to use `motion_vectors.h5` for motion evaluation (a separate decision).
