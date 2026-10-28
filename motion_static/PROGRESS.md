@@ -1,8 +1,8 @@
 # Motion and Intensity Separation: Current Progress
 
-Last updated: 2026-10-27.
+Last updated: 2026-10-28.
 
-## Current status (2026-10-27)
+## Current status (2026-10-28)
 
 Summary for continuing on another machine; details and links are in the dated sections
 at the end of this file.
@@ -38,8 +38,10 @@ at the end of this file.
   (`$WORK/envs/nf-crt`). A 10k-step trial of the draft design (job 1102639, 18 min on
   one GH200) gave 10.61% all-frame RRMSE, 54.4 ms per step at batch 65,536 and a
   67.7 GB host-memory peak; the per-frame error depends strongly on the breathing
-  phase. The formal run (288k steps, job 1104729), SS(r) on the full series (1104733),
-  branch GIFs and the embedding figures (1104764-1104766, after them) are submitted.
+  phase. SS(r) on the full series (job 1104733) is done: 4.82% RRMSE at r = 17, the
+  rank closest to the NF's parameter count; the trial lies between SS(6) and SS(7).
+  The formal run (288k steps, job 1104729) was still queued on 2026-10-28, with the
+  branch GIFs and the embedding figures (1104764-1104766) waiting for it.
   The source data include `motion_vectors.h5`. See the last section.
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
@@ -1429,7 +1431,7 @@ Figures and tables: [A](results/dce_moby_embedding_20261025_A_all_frames/table.m
   which was tuned on the held-out protocol with half as many fitted frames (protocol A
   has no validation frames for the plateau schedule). Single window and slice.
 
-## Full-series fit on Vista (2026-10-26/27): data checks and a 10k-step trial done
+## Full-series fit on Vista (2026-10-26/28): data checks, a 10k-step trial and SS(r) done
 
 Agreed so far (user, 2026-10-26):
 - Protocol A (embedding, `held_out_split: "none"`): every frame is fitted and scored.
@@ -1623,7 +1625,7 @@ short job to measure throughput and memory before the formal run; no other chang
   about 288k steps, 4.4 h of training at this speed plus 8 min of evaluation, about
   4.5 SU on `gh`, well inside its 48 h limit.
 
-**Formal run, SS(r), GIFs and embedding figures (2026-10-27): submitted, not finished.**
+**Formal run, SS(r), GIFs and embedding figures (2026-10-27): submitted; SS(r) done, training still queued.**
 Approved by the user: e01's sampling density, about 288k steps at batch 65,536, cosine
 schedule, seed 0, on `gh`; GIFs of (A) one frame per breath at respiratory phase 0 and
 (B) three-breath segments at the start, the artery peak, the tumor peak and the end;
@@ -1671,8 +1673,45 @@ the embedding figures in the format of Lozenski et al. 2022 against SS(r) on the
   frame 0 itself fits worst (55% RRMSE). The intensity-change panel saturates at the
   tumor, whose enhancement (about 0.036 raw) exceeds the default display range of
   +-0.01; the formal GIFs keep the default ranges.
+  A further preview of window frames 0-150 (`--frames 0:151`, every frame of the first
+  three breaths) shows the breathing, which phase-0 frames cannot show. In-plane motion
+  is small (learned |d| at most 0.20 mm, 1.3 px). From the trial's `metrics.json`: the
+  truth changes from frame 0 by up to 79% within a breath, while the median per-frame
+  RRMSE at each of the 50 breathing phases is 3.5-16.5%, so the prediction follows the
+  breathing.
+
+**SS(r) on the full series (job 1104733): completed 2026-10-27.**
+[results/dce_moby_svd_20261027_z100_full_embedding/](results/dce_moby_svd_20261027_z100_full_embedding/)
+holds `svd_baseline.json`, `svd_ranks.csv`, `rrmse_vs_parameters.png` and the job log
+`slurm-1104733.log` (checksums match Vista's).
+- 3 h 39 min on one `gg` node (about 1.2 SU; about 3.5 min of scoring per rank), peak
+  host memory 40.0 GB, code `b630abe` with 144 threads (from the job log).
+  `svd_baseline.json` records `code_commit` `5e52615`, because the module reads the
+  commit when it writes the record and the clone was pulled during the run;
+  `b630abe..5e52615` changes only the branch GIFs, tests, READMEs and
+  `evaluate.sbatch`, not SS(r) or scoring. The record is left as written.
+- Embedding protocol, all 14,401 frames fitted and scored; r(61,504 + 14,401) parameters:
+
+  | r | Parameters | RRMSE | PSNR (dB) | SSIM |
+  |---:|---:|---:|---:|---:|
+  | 1 | 75,905 | 37.72% | 43.65 | 0.9837 |
+  | 3 | 227,715 | 18.01% | 50.07 | 0.9969 |
+  | 6 | 455,430 | 10.93% | 54.41 | 0.9988 |
+  | 7 | 531,335 | 9.94% | 55.23 | 0.9989 |
+  | 10 | 759,050 | 7.45% | 57.74 | 0.9995 |
+  | 17 | 1,290,385 | 4.82% | 61.52 | 0.9997 |
+  | 18 | 1,366,290 | 4.59% | 61.95 | 0.9997 |
+  | 30 | 2,277,150 | 2.41% | 67.54 | 0.9999 |
+  | 60 | 4,554,300 | 0.55% | 80.40 | 1.0000 |
+
+- The NF has 1,308,330 parameters, between SS(17) and SS(18). The 10k-step trial
+  (10.61%) matches SS(6)-SS(7), which use 35-41% of its parameters. The formal run is
+  the comparison to make; the trial is marked in the figure only for reference.
+- Queue: at 2026-10-28 10:12 CDT the training job 1104729 had been pending for 19.5 h
+  (reason Priority; 605 jobs pending on `gh`, 136 of them with higher priority, 572 of
+  576 nodes allocated). Slurm gave no start estimate.
 
 Still open:
-- Results of the jobs above; seeds 1-2 if seed 0 is sound.
+- Results of the remaining jobs; seeds 1-2 if seed 0 is sound.
 - Whether to widen the GIFs' intensity-change display range for the whole series.
 - Whether to use `motion_vectors.h5` for motion evaluation (a separate decision).
