@@ -46,7 +46,7 @@ at the end of this file.
   The formal run (288k steps, job 1104729, 5.1 h of training) gave 4.10% all-frame
   RRMSE, PSNR 62.92 dB, SSIM 0.99977. Frame 0, the motion reference t0, still fits
   worst (54%), and the learned motion never returns to t0's geometry. Branch GIFs B
-  and the embedding figures are done; GIF A (job 1104764) timed out without output.
+  and the embedding figures are done; GIF A timed out without output and was resubmitted (1109328).
   The source data include `motion_vectors.h5`. See the last section.
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
@@ -1755,13 +1755,13 @@ summary row is byte-identical to the one the run wrote on Vista.
   that frame 0, the only frame with zero motion, carries 1/14,401 of the loss.
 - GIF A (job 1104764) timed out at 1 h with no output, on node i617-052, after 4 s of
   CPU time, 0.3 GB of memory and 14.7 MB read: it stalled at startup, not in rendering
-  (cause not diagnosed). Not resubmitted yet.
-- Vista's clone has the run's `summary.csv` row as an uncommitted change (now identical
-  to the pushed file); it must be restored, with the user's approval, before the next
-  pull there.
+  (cause not diagnosed). Resubmitted on 2026-10-29 as job 1109328 with the same command
+  (`gg`, 1 h, excluding that node); queued at the time of writing.
+- With the user's approval, Vista's `summary.csv` (identical to the pushed file) was
+  restored and the clone pulled to `d18f5d2`; the copied records there were unchanged.
 
 Still open:
-- GIF A: resubmit (needs the Vista clone pulled) or render elsewhere.
+- GIF A (job 1109328): copy back and record when done.
 - Whether t0's separate state (frame 0 at 54%) needs a change; a model decision.
 - Seeds 1-2 if seed 0 is sound.
 - Whether to widen the GIFs' intensity-change display range for the whole series.
