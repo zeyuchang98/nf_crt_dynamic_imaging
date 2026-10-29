@@ -1,0 +1,98 @@
+{
+  "protocol": "embedding",
+  "scored_split": "training",
+  "scored_label": "all_window_frames",
+  "scored_frames": 14401,
+  "svd_results": "motion_static/results/dce_moby_svd_20261027_z100_full_embedding",
+  "nf_runs": [
+    "dce_moby_full_20261027_288k_f01_ih512_b64k_r3_s0"
+  ],
+  "nf_label": "NF (ours)",
+  "ranks": {
+    "17": "closest parameter count",
+    "21": "first to reach the NF SSIM; first to reach the NF RRMSE"
+  },
+  "frame_rule": "scored frames nearest to and farthest from window frame 0 (norm of the difference)",
+  "frames": [
+    {
+      "index": 0,
+      "time": -36.0
+    },
+    {
+      "index": 1672,
+      "time": 47.599998474121094
+    }
+  ],
+  "point_rule": "tumor centroid at window frame 0; body pixel with the largest temporal std of the scored truth",
+  "points": [
+    {
+      "name": "Point 1: tumor centroid",
+      "iy": 195,
+      "ix": 121
+    },
+    {
+      "name": "Point 2: largest temporal std",
+      "iy": 162,
+      "ix": 60
+    }
+  ],
+  "decomposition_times": [
+    -36.0,
+    108.0,
+    252.0,
+    396.0,
+    540.0,
+    684.0
+  ],
+  "display": {
+    "image": [
+      0,
+      0.05
+    ],
+    "change": [
+      -0.01,
+      0.01
+    ]
+  },
+  "code_commit": "5e526151895cfe4277ecc7e666a35ec7505ed46c",
+  "table": [
+    {
+      "method": "SS(17)",
+      "parameters": 1290385,
+      "rrmse": 0.048206811146761584,
+      "psnr_db": 61.51851386160422,
+      "ssim": 0.9997088892373039,
+      "note": "closest parameter count"
+    },
+    {
+      "method": "SS(21)",
+      "parameters": 1594005,
+      "rrmse": 0.03907799347113963,
+      "psnr_db": 63.34203682360907,
+      "ssim": 0.9997830729441798,
+      "note": "first to reach the NF SSIM; first to reach the NF RRMSE"
+    },
+    {
+      "method": "NF (ours)",
+      "parameters": 1308330,
+      "rrmse": 0.04104510385285654,
+      "psnr_db": 62.91545476637162,
+      "ssim": 0.9997712960178938,
+      "note": "mean of 1 runs"
+    }
+  ],
+  "nf_runs_scores": [
+    {
+      "run": "dce_moby_full_20261027_288k_f01_ih512_b64k_r3_s0",
+      "parameters": 1308330,
+      "rrmse": 0.04104510385285654,
+      "psnr_db": 62.91545476637162,
+      "ssim": 0.9997712960178938
+    }
+  ],
+  "nf_spread": {
+    "rrmse": null,
+    "psnr_db": null,
+    "ssim": null
+  }
+}

@@ -1,0 +1,35 @@
+
+Lmod is automatically replacing "nvidia/24.7" with "gcc/15.1.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) openmpi/5.0.5
+
+The following have been reloaded with a version change:
+  1) nvpl/24.7 => nvpl/26.9
+
+code commit: 5e526151895cfe4277ecc7e666a35ec7505ed46c; BLAS threads: 144; torch threads: 16
+wrote motion_static/results/dce_moby_embedding_20261027_full_A_all_frames
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.evaluation.moby_embedding_figures --svd motion_static/results/dce_moby_svd_20261027_z100_full_embedding --nf-runs motion_static/results/dce_moby_full_20261027_288k_f01_ih512_b64k_r3_s0 --out motion_static/results/dce_moby_embedding_20261027_full_A_all_frames"
+	User time (seconds): 20467.64
+	System time (seconds): 496.40
+	Percent of CPU this job got: 2144%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 16:17.56
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 67426688
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 3813
+	Minor (reclaiming a frame) page faults: 15319833
+	Voluntary context switches: 5917370
+	Involuntary context switches: 33404
+	Swaps: 0
+	File system inputs: 4295160
+	File system outputs: 3072
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 65536
+	Exit status: 0

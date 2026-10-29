@@ -1,8 +1,8 @@
 # Motion and Intensity Separation: Current Progress
 
-Last updated: 2026-10-28.
+Last updated: 2026-10-29.
 
-## Current status (2026-10-28)
+## Current status (2026-10-29)
 
 Summary for continuing on another machine; details and links are in the dated sections
 at the end of this file.
@@ -16,7 +16,10 @@ at the end of this file.
   Cosine 12k steps gives 12.18% +- 0.32 at a third of the time.
 - **SS(r) comparison:** on the held-out test frames the NF is slightly better than every
   SS(r) (floor 12.12%, frame interpolation). Under the embedding protocol A (all frames
-  fitted and scored) SS(r) is more parameter-efficient: SS(13) 5.18% versus NF 8.86%.
+  fitted and scored) SS(r) is more parameter-efficient on that window: SS(13) 5.18%
+  versus NF 8.86%. On the whole series (14,401 frames, protocol A) the NF is more
+  efficient: 4.10% with 1.31 M parameters versus SS(17) 4.82% at the same size; it lies between SS(20)
+  and SS(21) (single seed).
 - **Branches:** the learned motion matches the size and direction of the small in-plane
   outline motion (about 1.5 px) and halves the outline mismatch; the intensity branch
   still carries organ-edge changes, possibly from out-of-plane motion.
@@ -29,7 +32,7 @@ at the end of this file.
 - **Local only on the second machine (not on GitHub):** `model.pt` of the DCE-MOBY runs
   (33 files, 116 MB) and `predictions.npz` (14 files, 454 MB). Re-scoring, branch GIFs
   and the embedding figures need `model.pt`.
-- **Full-series run on Vista (planning, 2026-10-26):** agreed so far: protocol A, no
+- **Full-series run on Vista (2026-10-26/29):** agreed: protocol A, no
   model change, rank from a data-only check; a breathing-phase motion input (M2) is
   recorded as an idea only. Data-only checks done: the contrast change has rank 3,
   the kinetics are slow (fastest rise 23 s) and breathing repeats only approximately
@@ -40,8 +43,10 @@ at the end of this file.
   67.7 GB host-memory peak; the per-frame error depends strongly on the breathing
   phase. SS(r) on the full series (job 1104733) is done: 4.82% RRMSE at r = 17, the
   rank closest to the NF's parameter count; the trial lies between SS(6) and SS(7).
-  The formal run (288k steps, job 1104729) was still queued on 2026-10-28, with the
-  branch GIFs and the embedding figures (1104764-1104766) waiting for it.
+  The formal run (288k steps, job 1104729, 5.1 h of training) gave 4.10% all-frame
+  RRMSE, PSNR 62.92 dB, SSIM 0.99977. Frame 0, the motion reference t0, still fits
+  worst (54%), and the learned motion never returns to t0's geometry. Branch GIFs B
+  and the embedding figures are done; GIF A (job 1104764) timed out without output.
   The source data include `motion_vectors.h5`. See the last section.
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
@@ -1431,7 +1436,7 @@ Figures and tables: [A](results/dce_moby_embedding_20261025_A_all_frames/table.m
   which was tuned on the held-out protocol with half as many fitted frames (protocol A
   has no validation frames for the plateau schedule). Single window and slice.
 
-## Full-series fit on Vista (2026-10-26/28): data checks, a 10k-step trial and SS(r) done
+## Full-series fit on Vista (2026-10-26/29): data checks, a 10k-step trial, SS(r) and the formal run done
 
 Agreed so far (user, 2026-10-26):
 - Protocol A (embedding, `held_out_split: "none"`): every frame is fitted and scored.
@@ -1625,7 +1630,7 @@ short job to measure throughput and memory before the formal run; no other chang
   about 288k steps, 4.4 h of training at this speed plus 8 min of evaluation, about
   4.5 SU on `gh`, well inside its 48 h limit.
 
-**Formal run, SS(r), GIFs and embedding figures (2026-10-27): submitted; SS(r) done, training still queued.**
+**Formal run, SS(r), GIFs and embedding figures (2026-10-27): submitted; all done except GIF A (results below).**
 Approved by the user: e01's sampling density, about 288k steps at batch 65,536, cosine
 schedule, seed 0, on `gh`; GIFs of (A) one frame per breath at respiratory phase 0 and
 (B) three-breath segments at the start, the artery peak, the tumor peak and the end;
@@ -1711,7 +1716,53 @@ holds `svd_baseline.json`, `svd_ranks.csv`, `rrmse_vs_parameters.png` and the jo
   (reason Priority; 605 jobs pending on `gh`, 136 of them with higher priority, 572 of
   576 nodes allocated). Slurm gave no start estimate.
 
+**Formal run and its evaluation jobs (2026-10-28/29): completed except GIF A.**
+Records copied from Vista with matching checksums (`model.pt` stays on Vista); the
+summary row is byte-identical to the one the run wrote on Vista.
+- Training, [results/dce_moby_full_20261027_288k_f01_ih512_b64k_r3_s0/](results/dce_moby_full_20261027_288k_f01_ih512_b64k_r3_s0/):
+  job 1104729 started 2026-10-28 19:19 after 28.6 h in the queue and ran 5 h 23 min
+  (about 5.4 SU). Training took 18,456 s, 64.1 ms per step (the trial had 54.9 ms; the
+  cause was not checked); 14.9 GB GPU memory at 97% utilization, 67.6 GB peak host
+  memory. The fixed-sample training MSE fell to 6.19e-7 and flattened only as the
+  cosine rate reached zero.
+- All 14,401 frames: RRMSE 4.10%, PSNR 62.92 dB, SSIM 0.99977 (ROI: 4.10%, 60.26 dB,
+  0.99958). Per-frame RRMSE: median 3.23%, 95th percentile 6.39%, maximum 54.25% at
+  frame 0. The median per breathing phase is 1.6-7.2%; the median per 72 s block is
+  3.2-3.5% over the whole series.
+- Embedding figures and table (job 1104766, 16.5 min, 49.9 GB),
+  [results/dce_moby_embedding_20261027_full_A_all_frames/](results/dce_moby_embedding_20261027_full_A_all_frames/):
+
+  | Method | Parameters | RRMSE | PSNR (dB) | SSIM | Rank choice |
+  |---|---:|---:|---:|---:|---|
+  | SS(17) | 1,290,385 | 4.82% | 61.52 | 0.99971 | closest parameter count |
+  | SS(21) | 1,594,005 | 3.91% | 63.34 | 0.99980 | first to reach the NF's RRMSE and SSIM |
+  | NF | 1,308,330 | 4.10% | 62.92 | 0.99977 | one run, seed 0 |
+
+  SS(r) needs r = 21 (22% more parameters) to match the NF; SS(20) (4.13%) does not.
+  `fig_frames.png` shows frame 0 (the rule picks the frame nearest to frame 0, itself),
+  which is the NF's worst frame. At the tumor centroid the activity curves agree; the
+  second point (largest temporal std, an edge pixel that switches with every breath)
+  becomes a filled band over 14,401 frames and cannot be read. The intensity-change row
+  of `fig_nf_decomposition.png` saturates at the tumor at the +-0.01 range.
+- Branch GIFs B (job 1104765, 10.8 min, 5.1 GB) in the run's `visuals/segments_*`
+  (15.0, 1.8 and 37.1 MB), log `visuals/slurm-1104765.log`. Learned |d| is at most
+  0.27 mm. As in the trial, t0 is a separate state of both branches: at frames 50, 100
+  and 150, whose true geometry equals frame 0, the prediction differs from frame 0 by
+  62% and the motion-only view by 58%, and the motion-only change never falls below
+  16.5% in any segment. Intensity at fixed coordinates changes from t0 by 4.7% at
+  frame 5 and 8.5% at frame 22, before the contrast arrives (about t = 0 s), then stays
+  flat over the first segment (about 1% in the trial). Not tested why; a possibility is
+  that frame 0, the only frame with zero motion, carries 1/14,401 of the loss.
+- GIF A (job 1104764) timed out at 1 h with no output, on node i617-052, after 4 s of
+  CPU time, 0.3 GB of memory and 14.7 MB read: it stalled at startup, not in rendering
+  (cause not diagnosed). Not resubmitted yet.
+- Vista's clone has the run's `summary.csv` row as an uncommitted change (now identical
+  to the pushed file); it must be restored, with the user's approval, before the next
+  pull there.
+
 Still open:
-- Results of the remaining jobs; seeds 1-2 if seed 0 is sound.
+- GIF A: resubmit (needs the Vista clone pulled) or render elsewhere.
+- Whether t0's separate state (frame 0 at 54%) needs a change; a model decision.
+- Seeds 1-2 if seed 0 is sound.
 - Whether to widen the GIFs' intensity-change display range for the whole series.
 - Whether to use `motion_vectors.h5` for motion evaluation (a separate decision).
