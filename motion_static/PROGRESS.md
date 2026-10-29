@@ -1763,6 +1763,6 @@ summary row is byte-identical to the one the run wrote on Vista.
 Still open:
 - GIF A (job 1109328): copy back and record when done.
 - Whether t0's separate state (frame 0 at 54%) needs a change; a model decision.
-- Seeds 1-2 if seed 0 is sound.
+- Seeds: decided by the user (2026-10-29) that one seed (0) is enough for the full series; no seeds 1-2.
 - Whether to widen the GIFs' intensity-change display range for the whole series.
 - Whether to use `motion_vectors.h5` for motion evaluation (a separate decision).
