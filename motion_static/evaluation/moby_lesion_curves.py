@@ -16,7 +16,8 @@ Embedding protocol only: every window frame is fitted and scored. SS(r) uses the
 singular vectors of the (pixels x frames) matrix, computed from its frame Gram matrix to
 keep memory low; their RRMSE and singular values are checked against the saved SS(r)
 results before use. Writes lesion_curves.json (definition, checks, scores),
-lesion_curves.npz (curves in raw p0 units) and lesion_curves.png.
+lesion_curves.npz (curves in raw p0 units, all scored frames) and lesion_curves.png (the
+10-90% rise of the whole lesion, the first three breaths and three breaths at the peak).
 
 python -m motion_static.evaluation.moby_lesion_curves --svd SVD_DIR --nf-runs RUN --ranks 17 21 --out NEW
 `--data-file` reads a local copy of the slice file, which must have the recorded sha256.
@@ -123,13 +124,30 @@ def scores(curves, times):
     return report
 
 
+def rise_window(curve, times, breath):
+    """Frames of the 10-90% rise of a curve's breath means, from the pre-injection mean to the peak.
+
+    Breath means remove the within-breath variation; the window covers whole breaths.
+    """
+    count = (len(curve) - 1) // breath
+    means = curve[:count * breath].reshape(count, breath).mean(axis=1)
+    base = curve[times < 0].mean() if np.any(times < 0) else means[0]
+    first = int(np.argmax(means >= base + 0.1 * (means.max() - base)))
+    last = int(np.argmax(means >= base + 0.9 * (means.max() - base)))
+    return first * breath, (last + 1) * breath + 1
+
+
 def plot(out, curves, times, report, breath):
-    """Each region: all scored frames, the first three breaths and three breaths at the truth peak."""
+    """Each region: the 10-90% rise of the whole lesion, the first three breaths and three breaths at the peak.
+
+    The whole series is too long to show the breathing variation; its curves are in the npz.
+    """
     plt = pyplot(out)
     span = 3 * breath + 1
     peak = int(np.argmax(curves["whole lesion"][TRUTH]))
     late = max(0, min(len(times) - span, peak - span // 2))
-    windows = [(slice(None), f"all {len(times):,} frames"),
+    first, last = rise_window(curves["whole lesion"][TRUTH], times, breath)
+    windows = [(slice(first, last), f"10-90% rise of the whole lesion, frames {first}-{min(last, len(times)) - 1}"),
                (slice(0, span), f"frames 0-{min(span, len(times)) - 1}"),
                (slice(late, late + span), f"frames {late}-{min(late + span, len(times)) - 1}, around the peak")]
     methods = [name for name in curves["whole lesion"] if name != TRUTH]

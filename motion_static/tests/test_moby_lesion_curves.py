@@ -73,6 +73,15 @@ class LesionCurveTests(unittest.TestCase):
         np.testing.assert_allclose(sigma, np.linalg.svd(frames.astype(np.float64), compute_uv=False)[:4], rtol=1e-10)
         self.assertAlmostEqual(energy, float(np.sum(frames.astype(np.float64) ** 2)), places=8)
 
+    def test_rise_window_spans_whole_breaths_from_10_to_90_percent(self):
+        breath = 4
+        times = np.arange(41) - 8.0  # two pre-injection breaths
+        means = np.array([0, 0, 0, 1, 3, 5, 7, 9, 10, 10])  # breath means; rise from 0 to 10
+        within = np.append(np.tile([0.3, -0.3, 0.1, -0.1], 10), 0.0)  # zero mean in every breath
+        curve = np.append(np.repeat(means, breath), 10.0) + within
+        # 10% (1) is first reached in breath 3, 90% (9) in breath 7: frames 12 to 32 inclusive.
+        self.assertEqual(moby_lesion_curves.rise_window(curve, times, breath), (12, 33))
+
     def test_curves_equal_weighted_means_of_truth_ss_and_nf_images(self):
         run = self.run_model("embedding", "none")
         svd = self.root / "svd"
