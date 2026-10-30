@@ -1735,7 +1735,7 @@ summary row is byte-identical to the one the run wrote on Vista.
   | Method | Parameters | RRMSE | PSNR (dB) | SSIM | Rank choice |
   |---|---:|---:|---:|---:|---|
   | SS(17) | 1,290,385 | 4.82% | 61.52 | 0.99971 | closest parameter count |
-  | SS(21) | 1,594,005 | 3.91% | 63.34 | 0.99980 | first to reach the NF's RRMSE and SSIM |
+  | SS(21) | 1,594,005 | 3.91% | 63.34 | 0.99978 | first to reach the NF's RRMSE and SSIM |
   | NF | 1,308,330 | 4.10% | 62.92 | 0.99977 | one run, seed 0 |
 
   SS(r) needs r = 21 (22% more parameters) to match the NF; SS(20) (4.13%) does not.
