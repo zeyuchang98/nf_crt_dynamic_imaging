@@ -168,7 +168,7 @@ def plot(out, curves, times, report, breath):
                 ax.set_xlabel("Time (s)")
             if column == 0:
                 ax.set_ylabel(f"{region}: mean raw p0")
-                ax.legend(frameon=False, fontsize=8, loc="upper right")
+                ax.legend(frameon=False, fontsize=8, loc="upper left")  # the rise leaves this corner empty
     fig.suptitle("Lesion activity curves: partial-volume weighted mean over each frame's own phase mask", fontsize=12)
     fig.savefig(out / "lesion_curves.png", dpi=150)
     plt.close(fig)
