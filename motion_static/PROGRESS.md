@@ -19,14 +19,15 @@ at the end of this file.
   fitted and scored) SS(r) is more parameter-efficient on that window: SS(13) 5.18%
   versus NF 8.86%. On the whole series (14,401 frames, protocol A) the NF is more
   efficient: 4.10% with 1.31 M parameters versus SS(17) 4.82% at the same size; it lies between SS(20)
-  and SS(21) (single seed).
+  and SS(21) (single seed). Lesion activity curve RRMSE (Lozenski et al. 2024's LAC,
+  2026-10-30): whole lesion NF 0.41% versus SS(17) 1.10% and SS(21) 1.07%.
 - **Branches:** the learned motion matches the size and direction of the small in-plane
   outline motion (about 1.5 px) and halves the outline mismatch; the intensity branch
   still carries organ-edge changes, possibly from out-of-plane motion.
 - **Code:** `device` option (cpu, cuda, mps; CUDA verified on Vista 2026-10-26), `held_out_split`
   (midpoints, alternate_validation_test, none), plateau schedule, SS(r) baseline,
   embedding figures, branch GIFs (with frame subsets), whole-series data checks,
-  time-chunked SSIM, Vista job scripts. 137 tests pass in this machine's `nf-crt` conda
+  time-chunked SSIM, Vista job scripts, lesion activity curves. 139 tests pass in this machine's `nf-crt` conda
   environment (Python 3.11, torch 2.14.0, numpy 1.26.4, h5py 3.16.0); 136 passed earlier
   in the second machine's `.venv-hash-sweep` and Vista's `$WORK/envs/nf-crt`.
 - **Local only on the second machine (not on GitHub):** `model.pt` of the DCE-MOBY runs
@@ -1775,6 +1776,37 @@ summary row is byte-identical to the one the run wrote on Vista.
   0.08-0.10 throughout, about the size of its step right after t0 (8.4% at frame 50).
 - With the user's approval, Vista's `summary.csv` (identical to the pushed file) was
   restored and the clone pulled to `d18f5d2`; the copied records there were unchanged.
+
+**Lesion activity curves of the formal run (2026-10-30): completed.** Approved by the user:
+the LAC of Lozenski et al. 2024 (ProxNF, Table II), whose embedding study compares one
+parameter-matched SS(r) with the NF by whole-image and lesion-ROI RRMSE/SSIM and the LAC
+RRMSE. Definition in [METRICS.md](METRICS.md) Section 3.6 (agreed with the user): partial-volume
+weighted mean with each frame's own respiratory-phase mask, for the whole lesion
+(`tumor` + `tumor_core`), the shell (`tumor`) and the core (`tumor_core`).
+- Code `cf2314a`: [evaluation/moby_lesion_curves.py](evaluation/moby_lesion_curves.py) and
+  [tests/test_moby_lesion_curves.py](tests/test_moby_lesion_curves.py) (2 tests: Gram-matrix
+  SS factors equal the full SVD; truth, SS(r) and NF curves equal weighted means of the full
+  images on an asymmetric lesion; four rejections). 139 tests pass.
+- Run on this machine (3.4 min, 5.3 GB) with the formal run's `model.pt` (sha256 equal to
+  Vista's) and `--data-file ~/Data/dce-moby/moby_z100.h5` (recorded sha256):
+  [results/dce_moby_lesion_curves_20261030_full_A/](results/dce_moby_lesion_curves_20261030_full_A/).
+  The rebuilt SS(17) and SS(21) reproduce the saved RRMSE (difference below 1e-12) and
+  singular values (2e-13). An earlier scratch computation of the same definition agrees
+  to 1e-7.
+
+  | Region | SS(17) | SS(21) | NF | Pre-injection mean: truth / SS(17) / NF |
+  |---|---:|---:|---:|---:|
+  | whole lesion | 1.10% | 1.07% | 0.41% | 0.00553 / 0.00623 / 0.00563 |
+  | shell | 1.54% | 1.50% | 0.61% | 0.00782 / 0.00873 / 0.00779 |
+  | core | 0.74% | 0.69% | 0.63% | 0.00102 / 0.00135 / 0.00139 |
+
+- In `lesion_curves.png`: before the injection SS(r) lies 12-13% above the whole-lesion
+  and shell curves, while the NF follows them except right after frame 0 (t0's separate
+  state). Within each breath the lesion mean still varies, as the mask follows the
+  motion; at the peak the NF follows this variation and SS(r) falls short on the high
+  plateaus. On the core all three are close and slightly above the truth.
+- For context only (different phantom, frame rate and lesion): ProxNF's 2D embedding
+  reports LAC RRMSE 2.82% for SS(12) and 2.91% for its NF at 430 K parameters.
 
 Still open:
 - Whether t0's separate state (frame 0 at 54%) needs a change; a model decision.

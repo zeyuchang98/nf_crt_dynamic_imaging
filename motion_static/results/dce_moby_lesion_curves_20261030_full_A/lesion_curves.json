@@ -1,0 +1,93 @@
+{
+  "definition": "LAC(t) = sum_r w(r, phase(t)) f(r, t) / sum_r w(r, phase(t)); w = partial volume of the region at the frame's own respiratory phase; LAC RRMSE = ||LAC - LAC_truth||_2 / ||LAC_truth||_2",
+  "regions": {
+    "whole lesion": "tumor + tumor_core",
+    "shell": "tumor",
+    "core": "tumor_core"
+  },
+  "units": "raw p0 (normalized values times intensity_scale_value)",
+  "protocol": "embedding",
+  "scored_frames": 14401,
+  "pre_injection": "frames with t < 0 (time 0 is the injection)",
+  "data": {
+    "file": "/Users/zeyuchang/Data/dce-moby/moby_z100.h5",
+    "first_frame": 0,
+    "cycles": 288,
+    "frames_per_cycle": 50,
+    "intensity_scale": "global_maximum",
+    "intensity_scale_value": 0.4503569006919861,
+    "z_index": 100,
+    "spacing_mm": 0.15000000000000002,
+    "sha256": "89958d215bf241eb14e2ecfdf83f313bbfea3a8a06da16e5f6ccca974d1359da"
+  },
+  "svd_results": "motion_static/results/dce_moby_svd_20261027_z100_full_embedding",
+  "nf_runs": {
+    "NF (ours)": "motion_static/results/dce_moby_full_20261027_288k_f01_ih512_b64k_r3_s0"
+  },
+  "ranks": [
+    17,
+    21
+  ],
+  "ss_check": {
+    "max_relative_difference_singular_values": 2.229799197219506e-13,
+    "SS(17)": {
+      "rrmse_rebuilt": 0.048206811146714726,
+      "rrmse_saved": 0.048206811146761584
+    },
+    "SS(21)": {
+      "rrmse_rebuilt": 0.03907799347108212,
+      "rrmse_saved": 0.03907799347113963
+    }
+  },
+  "code_commit": "cf2314a1bff168c6c62e04389776635ad5e9340a",
+  "scores": {
+    "whole lesion": {
+      "truth_maximum": 0.04421149406532641,
+      "truth_pre_injection_mean": 0.005527635697849779,
+      "SS(17)": {
+        "lac_rrmse": 0.010951686154074155,
+        "pre_injection_mean": 0.00623432918687839
+      },
+      "SS(21)": {
+        "lac_rrmse": 0.01067500771706337,
+        "pre_injection_mean": 0.006240469308684411
+      },
+      "NF (ours)": {
+        "lac_rrmse": 0.004099814484128236,
+        "pre_injection_mean": 0.005632888182438006
+      }
+    },
+    "shell": {
+      "truth_maximum": 0.04757152810218527,
+      "truth_pre_injection_mean": 0.007823165121752873,
+      "SS(17)": {
+        "lac_rrmse": 0.015415459717945409,
+        "pre_injection_mean": 0.00872759160553403
+      },
+      "SS(21)": {
+        "lac_rrmse": 0.014987003294301176,
+        "pre_injection_mean": 0.008739711275447266
+      },
+      "NF (ours)": {
+        "lac_rrmse": 0.00608197474414289,
+        "pre_injection_mean": 0.007794733813400607
+      }
+    },
+    "core": {
+      "truth_maximum": 0.039538013816289796,
+      "truth_pre_injection_mean": 0.001023118228242836,
+      "SS(17)": {
+        "lac_rrmse": 0.0073556264404417366,
+        "pre_injection_mean": 0.0013469075028616224
+      },
+      "SS(21)": {
+        "lac_rrmse": 0.0068980737735560215,
+        "pre_injection_mean": 0.001341335456282622
+      },
+      "NF (ours)": {
+        "lac_rrmse": 0.006319115299827921,
+        "pre_injection_mean": 0.001389500921302477
+      }
+    }
+  }
+}
