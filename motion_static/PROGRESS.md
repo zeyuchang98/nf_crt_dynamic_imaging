@@ -1334,6 +1334,10 @@ verified before injection, so the truth changes there by contrast only):
 - Not established: how much of the breathing change an in-plane displacement can
   represent at all. The z = 100 slice has out-of-plane motion (tumor area per phase
   245-284 pixels), so part of it must appear as intensity change in a 2D model.
+  *Correction (2026-10-30):* "tumor" in this section is the `tumor` indicator, which is
+  the lesion's outer shell; `tumor_core` is its centre. The two are complementary partial
+  volumes (their sum is at most 1), so the whole lesion is their sum. Per phase the
+  partial-volume area is 244-284 pixels for the shell and 382-415 for the whole lesion.
   Visual and ad hoc diagnostics only; no branch metric is defined for these data.
 
 ## Semiseparable SS(r) baseline on the DCE-MOBY window (2026-10-25): completed
@@ -1492,6 +1496,9 @@ a physical assumption and a model change.
   | tumor | 0.0078 | 0.044 (97.7 s) | 52.7 s | 2.0% |
   | tumor core | 0.0010 | 0.039 (102.7 s) | 54.0 s | 0.9% |
   | whole image | 0.0030 | 0.0048 (45.3 s) | 25.4 s | 0.6% |
+
+  *Correction (2026-10-30):* the `tumor` row is the lesion's outer shell, not the whole
+  lesion; `tumor_core` is its centre, and the whole lesion is the sum of the two indicators.
 
   The kinetics are slow: the fastest rise (artery) takes 23 s, about nine breaths.
   The modulation is what remains after the mask follows the motion; for the artery it
