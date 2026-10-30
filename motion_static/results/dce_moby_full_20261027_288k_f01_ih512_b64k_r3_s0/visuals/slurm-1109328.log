@@ -1,0 +1,37 @@
+
+Lmod is automatically replacing "nvidia/24.7" with "gcc/15.1.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) openmpi/5.0.5
+
+The following have been reloaded with a version change:
+  1) nvpl/24.7 => nvpl/26.9
+
+code commit: d18f5d25c4bd2126a0906abaf957417126f950b0; BLAS threads: 144; torch threads: 16
+wrote motion_static/results/dce_moby_full_20261027_288k_f01_ih512_b64k_r3_s0/visuals/phase0_image.gif (4.68 MB)
+wrote motion_static/results/dce_moby_full_20261027_288k_f01_ih512_b64k_r3_s0/visuals/phase0_intensity.gif (2.93 MB)
+wrote motion_static/results/dce_moby_full_20261027_288k_f01_ih512_b64k_r3_s0/visuals/phase0_motion.gif (18.84 MB)
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.evaluation.moby_branch_gifs motion_static/results/dce_moby_full_20261027_288k_f01_ih512_b64k_r3_s0 --frames 0:14401:50 --name phase0 --threads 16"
+	User time (seconds): 732.34
+	System time (seconds): 8.05
+	Percent of CPU this job got: 581%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:07.26
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 11035328
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 3643
+	Minor (reclaiming a frame) page faults: 705485
+	Voluntary context switches: 572624
+	Involuntary context switches: 2260
+	Swaps: 0
+	File system inputs: 4189160
+	File system outputs: 55936
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 65536
+	Exit status: 0

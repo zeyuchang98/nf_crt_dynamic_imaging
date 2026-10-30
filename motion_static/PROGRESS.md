@@ -1,8 +1,8 @@
 # Motion and Intensity Separation: Current Progress
 
-Last updated: 2026-10-29.
+Last updated: 2026-10-30.
 
-## Current status (2026-10-29)
+## Current status (2026-10-30)
 
 Summary for continuing on another machine; details and links are in the dated sections
 at the end of this file.
@@ -45,8 +45,8 @@ at the end of this file.
   rank closest to the NF's parameter count; the trial lies between SS(6) and SS(7).
   The formal run (288k steps, job 1104729, 5.1 h of training) gave 4.10% all-frame
   RRMSE, PSNR 62.92 dB, SSIM 0.99977. Frame 0, the motion reference t0, still fits
-  worst (54%), and the learned motion never returns to t0's geometry. Branch GIFs B
-  and the embedding figures are done; GIF A timed out without output and was resubmitted (1109328).
+  worst (54%), and the learned motion never returns to t0's geometry. Branch GIFs A
+  and B and the embedding figures are done (GIF A on its second submission, 1109328).
   The source data include `motion_vectors.h5`. See the last section.
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
@@ -1630,7 +1630,7 @@ short job to measure throughput and memory before the formal run; no other chang
   about 288k steps, 4.4 h of training at this speed plus 8 min of evaluation, about
   4.5 SU on `gh`, well inside its 48 h limit.
 
-**Formal run, SS(r), GIFs and embedding figures (2026-10-27): submitted; all done except GIF A (results below).**
+**Formal run, SS(r), GIFs and embedding figures (2026-10-27): submitted; all done (results below).**
 Approved by the user: e01's sampling density, about 288k steps at batch 65,536, cosine
 schedule, seed 0, on `gh`; GIFs of (A) one frame per breath at respiratory phase 0 and
 (B) three-breath segments at the start, the artery peak, the tumor peak and the end;
@@ -1716,7 +1716,7 @@ holds `svd_baseline.json`, `svd_ranks.csv`, `rrmse_vs_parameters.png` and the jo
   (reason Priority; 605 jobs pending on `gh`, 136 of them with higher priority, 572 of
   576 nodes allocated). Slurm gave no start estimate.
 
-**Formal run and its evaluation jobs (2026-10-28/29): completed except GIF A.**
+**Formal run and its evaluation jobs (2026-10-28/30): completed.**
 Records copied from Vista with matching checksums (`model.pt` stays on Vista); the
 summary row is byte-identical to the one the run wrote on Vista.
 - Training, [results/dce_moby_full_20261027_288k_f01_ih512_b64k_r3_s0/](results/dce_moby_full_20261027_288k_f01_ih512_b64k_r3_s0/):
@@ -1756,12 +1756,20 @@ summary row is byte-identical to the one the run wrote on Vista.
 - GIF A (job 1104764) timed out at 1 h with no output, on node i617-052, after 4 s of
   CPU time, 0.3 GB of memory and 14.7 MB read: it stalled at startup, not in rendering
   (cause not diagnosed). Resubmitted on 2026-10-29 as job 1109328 with the same command
-  (`gg`, 1 h, excluding that node); queued at the time of writing.
+  (`gg`, 1 h, excluding that node; code `d18f5d2`, no change to the GIF code since
+  `5e52615`): completed in 2 min 17 s on i614-023 after 2.4 h in the queue, 11.0 GB peak.
+  Outputs in the run's `visuals/phase0_*` (GIFs of 4.7, 2.9 and 18.8 MB), log
+  `visuals/slurm-1109328.log`; checksums match Vista's.
+- GIF A at the 289 phase-0 frames, where the true geometry equals t0's: learned |d| is
+  at most 0.23 mm. The motion-only view differs from t0 by 57.5-58.6% at every one of
+  them over the 720 s, so the motion at phase 0 is a constant offset from t0 that does
+  not drift with the contrast. The intensity at fixed coordinates follows the truth's
+  change from frame 0 (median 41% versus the truth's 32%) and exceeds it by about
+  0.08-0.10 throughout, about the size of its step right after t0 (8.4% at frame 50).
 - With the user's approval, Vista's `summary.csv` (identical to the pushed file) was
   restored and the clone pulled to `d18f5d2`; the copied records there were unchanged.
 
 Still open:
-- GIF A (job 1109328): copy back and record when done.
 - Whether t0's separate state (frame 0 at 54%) needs a change; a model decision.
 - Seeds: decided by the user (2026-10-29) that one seed (0) is enough for the full series; no seeds 1-2.
 - Whether to widen the GIFs' intensity-change display range for the whole series.
