@@ -39,7 +39,7 @@
       "rrmse_saved": 0.03907799347113963
     }
   },
-  "code_commit": "cf2314a1bff168c6c62e04389776635ad5e9340a",
+  "code_commit": "ccf0b6bbc6a00064961c1833cad010d49e7b564f",
   "scores": {
     "whole lesion": {
       "truth_maximum": 0.04421149406532641,

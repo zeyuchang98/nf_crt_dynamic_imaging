@@ -1786,7 +1786,12 @@ weighted mean with each frame's own respiratory-phase mask, for the whole lesion
 - Code `cf2314a`: [evaluation/moby_lesion_curves.py](evaluation/moby_lesion_curves.py) and
   [tests/test_moby_lesion_curves.py](tests/test_moby_lesion_curves.py) (2 tests: Gram-matrix
   SS factors equal the full SVD; truth, SS(r) and NF curves equal weighted means of the full
-  images on an asymmetric lesion; four rejections). 139 tests pass.
+  images on an asymmetric lesion; four rejections). 139 tests pass. On the user's request
+  the figure's first column shows the 10-90% rise of the whole lesion's breath-mean curve
+  (16.5-71.5 s) instead of all 14,401 frames, which were unreadable, and the legend moved
+  clear of it (`6fc5b53`, `ccf0b6b`, one more test; 140 tests pass). The outputs were
+  regenerated at `ccf0b6b`: the curves are bitwise identical, only the figure and the
+  recorded commit changed.
 - Run on this machine (3.4 min, 5.3 GB) with the formal run's `model.pt` (sha256 equal to
   Vista's) and `--data-file ~/Data/dce-moby/moby_z100.h5` (recorded sha256):
   [results/dce_moby_lesion_curves_20261030_full_A/](results/dce_moby_lesion_curves_20261030_full_A/).
