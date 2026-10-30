@@ -229,6 +229,25 @@ project diagnostic, not a metric reported by Tian et al. The definition above do
 not specify changing spatial selections or missing times; those require a separate
 agreement before use. No pipeline implementation or saved result is claimed.
 
+### 3.6 Lesion activity curve RRMSE (DCE-MOBY, embedding protocol)
+
+Adopted on 2026-10-30, following the LAC of Lozenski et al. 2024 (Table II). For a
+region with partial volume $w(r,p)\in[0,1]$ at respiratory phase $p$, taken from the
+slice file's indicators at each frame's own phase $p(t)$,
+
+$$
+\operatorname{LAC}_f(t)=\frac{\sum_r w(r,p(t))\,f(r,t)}{\sum_r w(r,p(t))},\qquad
+\operatorname{LAC\ RRMSE}=\frac{\|\operatorname{LAC}_{\hat f}-\operatorname{LAC}_{f}\|_2}{\|\operatorname{LAC}_{f}\|_2},
+$$
+
+over all scored frames. The mask follows the breathing motion, and boundary pixels count
+by their partial volume. Three regions: the whole lesion (`tumor` + `tumor_core`), its
+shell (`tumor`) and its core (`tumor_core`); the two indicators are complementary partial
+volumes of the lesion. The pre-injection mean uses the frames with $t<0$ (time 0 is the
+injection). Curves are reported in raw p0 units; the RRMSE does not depend on the scale.
+This is not the `activity_curve` of `metrics.json`, which averages over the rectangular
+ROI. Defined for the embedding protocol only.
+
 ## 4. Existing evaluation conventions to preserve
 
 - **Temporal domain:** midpoint experiments separately evaluate training-grid
@@ -301,6 +320,7 @@ version, not adoption of the proposed standardized metric protocol.
 | Motion diagnostics with per-axis pixel spacing | [branch_metrics.py](evaluation/branch_metrics.py): `motion_statistics()` | Branch-diagnostic summaries; component and endpoint RMSE in pixels |
 | Selected-block errors and spatial-window SSIM | [masked_metrics.py](evaluation/masked_metrics.py): `evaluate_masked_sequence()` | Block-run reports, using their distinct mask protocol |
 | Fixed-point and region-mean temporal curve errors | [metrics.py](evaluation/metrics.py): `evaluate_sequence()` | `point_curves`, `activity_curve`, including curve `rrmse` |
+| DCE-MOBY lesion activity curves and LAC RRMSE (Section 3.6) | [moby_lesion_curves.py](evaluation/moby_lesion_curves.py): `curves_for()`, `scores()` | Separate output folder: `lesion_curves.json` (`scores`, `ss_check`), `lesion_curves.npz`, `lesion_curves.png` |
 
 `motion_scores()` uses one scalar pixel spacing and is currently used on isotropic
 toy grids. The separate branch diagnostic supports `(dx,dy)` spacing. Neither

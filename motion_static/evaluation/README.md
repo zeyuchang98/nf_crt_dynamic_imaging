@@ -82,6 +82,11 @@ SS(r) against saved neural-field runs of the same protocol. `moby_branch_gifs` a
 a run's image, fixed-coordinate intensity and motion-only views; for long series,
 `--frames` selects window frame ranges starting at frame 0 (e.g. `0:14401:50`, one frame
 per breath) and `--name` prefixes the files.
+`moby_lesion_curves` computes the lesion activity curves and their RRMSE (definition in
+[METRICS.md](../METRICS.md) Section 3.6) for the whole lesion, its shell and its core, for
+the truth, chosen SS(r) ranks and embedding-protocol runs; it rebuilds SS(r) from the
+frame Gram matrix and checks it against the saved SS(r) results. `--data-file` reads a
+local copy of the slice file with the recorded sha256.
 `moby_series_checks` is data only (no model): tissue mean curves over a whole slice
 series, the time-grid resolution they need, the breathing periodicity, and the SVD of
 frames of one respiratory phase (the rank of the intensity change without motion).
