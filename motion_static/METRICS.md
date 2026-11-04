@@ -270,7 +270,7 @@ $$
 where $|\cdot|$ is the length of the three-component difference and $h$ the smallest
 grid spacing ($h=0.15$ mm, so $\tau=1.5\times10^{-4}$ mm). The tolerance only absorbs
 rounding in the stored vectors: phases that repeat t0's configuration differ from it by
-about $10^{-5}$ mm, the next closest by about $5\times10^{-3}$ mm (z = 100 slice). The
+about $10^{-5}$ mm, the next closest by $6.5\times10^{-3}$ mm (z = 100 slice). The
 source's $u$ is zero at phase 0, which is $t_0$'s phase in the current runs.
 
 **Score.** At $t\in T_{\mathrm{ref}}$, the intensity branch is queried at fixed reference
@@ -295,7 +295,7 @@ Frames outside $T_{\mathrm{ref}}$ are neither scored nor interpolated.
   reproduces. The model must put that change into $\hat J$, which can raise the score
   even when the in-plane separation is right. This does not occur in 3D.
 - Which frames qualify depends on $G$. For the z = 100 slice, phases 0, 50, 100 and 150
-  are expected to qualify (289 of 14,401 frames, every 2.5 s). In 3D, phase 50 differs
+  qualify (289 of 14,401 frames, every 2.5 s). In 3D, phase 50 differs
   from phase 0 elsewhere in the body by up to 0.64 mm, so a volume may give only the 73
   phase-0 frames (every 10 s).
 

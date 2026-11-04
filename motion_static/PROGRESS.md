@@ -49,7 +49,9 @@ at the end of this file.
   worst (54%), and the learned motion never returns to t0's geometry. Branch GIFs A
   and B and the embedding figures are done (GIF A on its second submission, 1109328).
   The source data's `motion_vectors.h5` holds 3D displacements from respiratory phase 0
-  on the full-body grid (inspected 2026-11-04; see the last section).
+  on the full-body grid (inspected 2026-11-04; see the last section). Scored against the
+  289 frames in t0's configuration (METRICS.md Section 3.7), the formal run's intensity
+  branch has 53.4% RRMSE: it is not in t0's geometry.
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -1902,7 +1904,36 @@ source's sha256 is `74620e72...3192`. Verified locally:
 - The next closest phases (39, 89, 139, 189) have up to 5.3e-3 mm (0.036 px) and a
   2.9e-4 relative image difference; phase 25 differs by 78%.
 
-Open (user): compare the displacement exactly (73 frames, every 10 s) or within a
-tolerance, e.g. 1e-3 of the voxel spacing (1.5e-4 mm), which admits phases 50, 100, 150
-(289 frames, every 2.5 s) and lies 16 times above their deviation and 35 times below
-phase 39's. METRICS.md Section 3.7 is updated after this choice.
+Decided by the user (2026-11-04): a tolerance of 1e-3 grid spacings (1.5e-4 mm) on the
+length of the displacement difference, instead of exact equality (which gives 73 frames).
+
+**Reference intensity of the formal run (2026-11-04): completed.**
+[evaluation/moby_reference_intensity.py](evaluation/moby_reference_intensity.py)
+implements METRICS.md Section 3.7; its core functions take 2D or 3D grids (one phase of
+the displacement is read at a time). `spatial_ssim()` in
+[evaluation/metrics.py](evaluation/metrics.py) exposes the existing SSIM settings for one
+frame. [tests/test_moby_reference_intensity.py](tests/test_moby_reference_intensity.py)
+(3 tests) checks the vector-length deviation on a 3D HDF5 grid and the frame choice, the
+pooled and per-frame scores against direct computation (error_metrics and skimage SSIM,
+on 3D frames), and the command on a tiny embedding run whose t0 is not at phase 0, with
+four rejections. 145 tests pass.
+
+Run locally (code `fd30541`, 7.5 GB peak, about 1 min):
+[results/dce_moby_reference_intensity_20261104_full_A/](results/dce_moby_reference_intensity_20261104_full_A/reference_intensity.json).
+- Frames: phases 0, 50, 100, 150 qualify, 289 frames from -36 to 684 s every 2.5 s.
+  Deviation lengths: 9.15e-6 to 9.42e-6 mm for phases 50, 100, 150; the next closest
+  phases (89, 139, 189) 6.52e-3 mm. The tolerance lies 16 times above the first and 43
+  times below the second.
+- Scores of the intensity branch J^: RRMSE 53.43% on the full grid and the ROI, PSNR
+  40.31 dB (full) / 37.65 dB (ROI), mean frame SSIM 0.9727 (full) / 0.9505 (ROI). The
+  per-frame RRMSE is 52-55% at every frame: 55.0% before the injection, 54.1% during the
+  rise (16.5-71.5 s), 52.2% at 71.5-200 s, 53.6% after 200 s, the same for all four
+  phases. Frame 0 (54.25%) is the image error at t0, where the motion is zero by
+  construction.
+- So the intensity branch is not in t0's configuration at any reference frame, while
+  the image fits these frames (2.0% at frames 5000 and 10000). This is the earlier
+  observation that the learned motion never returns to t0's geometry, now measured.
+- Scratch check (not saved, not a metric): at frames 5000 and 10000, J^ is closest to
+  the observed frames of phases 184 and 10 of the same breath (17% RRMSE) and 53-56% from
+  most other phases. J^ lies near a configuration between breaths, not t0's, and matches
+  no observed frame closely.
