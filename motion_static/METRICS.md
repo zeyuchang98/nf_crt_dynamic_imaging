@@ -248,6 +248,56 @@ injection). Curves are reported in raw p0 units; the RRMSE does not depend on th
 This is not the `activity_curve` of `metrics.json`, which averages over the rectangular
 ROI. Defined for the embedding protocol only.
 
+### 3.7 Reference intensity on DCE-MOBY: reference-configuration frames
+
+Agreed on 2026-11-04 (frame rule below); not yet implemented. Written for any spatial
+dimension: $G$ is the scored grid, the pixels of a 2D slice or the voxels of a 3D volume.
+
+The phantom has no reference-intensity file, but the reference intensity is observed
+whenever the body is in its configuration at the reference time $t_0$: the true
+displacement is then the same as at $t_0$, so the observed frame is the reference
+intensity, $J(q,t)=I(q,t)$.
+
+**Frames.** Let $u(r,p)$ be the true displacement of respiratory phase $p$, all three
+components (from `motion_vectors.h5`; layout and direction in PROGRESS.md, 2026-11-04),
+and $p(t)$ the phase of frame $t$. The reference-configuration frames are
+
+$$
+T_{\mathrm{ref}}=\{\,t\ \text{scored}:\ u(r,p(t))=u(r,p(t_0))\ \text{for every}\ r\in G\,\},
+$$
+
+compared exactly in the stored values. The source's $u$ is zero at phase 0, which is
+$t_0$'s phase in the current runs, so the condition reads $u(r,p(t))=0$ on $G$.
+
+**Score.** At $t\in T_{\mathrm{ref}}$, the intensity branch is queried at fixed reference
+coordinates (no motion) and compared with the observed frame: $\hat J(q,t)$ versus
+$I(q,t)$ for $q\in G$, $t\in T_{\mathrm{ref}}$.
+
+- RRMSE and PSNR (Sections 3.1 and 3.2), pooled over all selected samples.
+- SSIM: the mean over $T_{\mathrm{ref}}$ of each frame's spatial SSIM (the equal-weight
+  summary of Section 3.3, with the window settings of Section 4), because the frames of
+  $T_{\mathrm{ref}}$ are not consecutive.
+- On the full grid and on the run's image ROI, with the run's image normalization and
+  data range.
+
+Frames outside $T_{\mathrm{ref}}$ are neither scored nor interpolated.
+
+**Reading the score.**
+
+- A low score needs both a correct $\hat J$ and a learned motion that returns to $t_0$'s
+  geometry at $T_{\mathrm{ref}}$. Where it does not, $\hat J$ is the observed frame
+  warped by that motion, and the score rises.
+- In 2D, through-plane motion changes the slice content in a way no in-plane warp
+  reproduces. The model must put that change into $\hat J$, which can raise the score
+  even when the in-plane separation is right. This does not occur in 3D.
+- Which frames qualify depends on $G$. For the z = 100 slice, phases 0, 50, 100 and 150
+  are expected to qualify (289 of 14,401 frames, every 2.5 s). In 3D, phase 50 differs
+  from phase 0 elsewhere in the body by up to 0.64 mm, so a volume may give only the 73
+  phase-0 frames (every 10 s).
+
+The displacement of the scored planes, in p0's layout, comes from
+[phantoms/moby_motion_slice.py](phantoms/moby_motion_slice.py).
+
 ## 4. Existing evaluation conventions to preserve
 
 - **Temporal domain:** midpoint experiments separately evaluate training-grid

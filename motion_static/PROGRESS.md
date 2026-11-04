@@ -1869,3 +1869,16 @@ truth would be φ(x) = X(x) - x ≈ -u(x) (x and y components). Through-plane mo
 changes the slice content in a way no in-plane warp explains, so a comparison with the
 2D φ is incomplete. Whether and how to use the field for evaluation is the user's
 decision; nothing was implemented.
+
+**Reference intensity against reference-configuration frames (2026-11-04): defined,
+displacement extraction running.** The user chose to score the intensity branch only at
+the frames whose true displacement on the scored grid equals t0's (rule A, METRICS.md
+Section 3.7; 2D for now, written to be reused in 3D), with spatial SSIM per frame and the
+full grid and ROI. The metric itself is not implemented yet.
+[phantoms/moby_motion_slice.py](phantoms/moby_motion_slice.py) copies the displacement at
+chosen p0 planes into p0's layout: `displacement` (x, y, z, 3, phase) in mm with
+components (ux, uy, uz), the `interpolated` flag, the z offset (175, from p0's `fov`) and
+the source's sha256; it rejects a nonzero phase 0.
+[tests/test_moby_motion_slice.py](tests/test_moby_motion_slice.py) (2 tests: layout,
+component order and planes on a synthetic source; rejections) passes; 142 tests pass.
+Computation on Vista runs as Slurm jobs, not on the login node (user, 2026-11-04).
