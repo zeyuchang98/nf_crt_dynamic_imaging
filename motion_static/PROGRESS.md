@@ -1031,6 +1031,8 @@ Observed in the slice (verified numerically):
   pixels change between phases. *Correction (2026-10-26):* the repetition is exact for
   these phases but only approximate in general; 19 of 150 phase pairs p, p + 50 differ
   by more than 1%, up to 33% (see the full-series data checks at the end).
+  *Correction (2026-11-04):* phases 50, 100 and 150 equal phase 0 to about 1e-6
+  relative, not bitwise (last section).
 - In-plane motion is small: the tumor centroid moves by one pixel (0.15 mm) in x.
 - The z = 100 plane contains no liver (its indicator is zero); tumor and artery are
   present.
@@ -1882,3 +1884,25 @@ the source's sha256; it rejects a nonzero phase 0.
 [tests/test_moby_motion_slice.py](tests/test_moby_motion_slice.py) (2 tests: layout,
 component order and planes on a synthetic source; rejections) passes; 142 tests pass.
 Computation on Vista runs as Slurm jobs, not on the login node (user, 2026-11-04).
+
+**Displacement extraction for z_index 100 (2026-11-04): completed.** Slurm job 1121656
+(`gg`, `evaluate.sbatch`, code `8cb8b1e`, 5 min, 0.65 GB peak) wrote
+`~/Data/dce-moby/moby_z100_motion.h5` (43 MB, sha256 `38d57e80...f269`, equal to the
+Vista copy in `$WORK/moby_slice/`; job log `motion_slice.1121656.log` next to it). The
+source's sha256 is `74620e72...3192`. Verified locally:
+- Phase 0 is zero; phase 25 in the ROI matches the inspection above (in-plane up to
+  3.95 px, |uz| up to 5.64 voxels).
+- Only phase 0 has exactly zero displacement on the slice, so rule A as written in
+  METRICS.md Section 3.7 gives the 73 phase-0 frames, not the expected 289.
+- Phases 50, 100 and 150 differ from zero by at most 9.15e-6 mm (6e-5 px; 129 to 566 of
+  184,512 values). Their indicators equal phase 0's exactly, and their pre-injection
+  frames differ from frame 0 by 0.8e-6 to 1.4e-6 relative. Frame 200 (phase 0, 10 s
+  later) equals frame 0 bitwise, so the pre-injection intensity is constant and these
+  differences come from the configuration.
+- The next closest phases (39, 89, 139, 189) have up to 5.3e-3 mm (0.036 px) and a
+  2.9e-4 relative image difference; phase 25 differs by 78%.
+
+Open (user): compare the displacement exactly (73 frames, every 10 s) or within a
+tolerance, e.g. 1e-3 of the voxel spacing (1.5e-4 mm), which admits phases 50, 100, 150
+(289 frames, every 2.5 s) and lies 16 times above their deviation and 35 times below
+phase 39's. METRICS.md Section 3.7 is updated after this choice.
