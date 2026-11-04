@@ -1,6 +1,6 @@
 # Motion and Intensity Separation: Current Progress
 
-Last updated: 2026-10-30.
+Last updated: 2026-11-04.
 
 ## Current status (2026-10-30)
 
@@ -48,7 +48,8 @@ at the end of this file.
   RRMSE, PSNR 62.92 dB, SSIM 0.99977. Frame 0, the motion reference t0, still fits
   worst (54%), and the learned motion never returns to t0's geometry. Branch GIFs A
   and B and the embedding figures are done (GIF A on its second submission, 1109328).
-  The source data include `motion_vectors.h5`. See the last section.
+  The source data's `motion_vectors.h5` holds 3D displacements from respiratory phase 0
+  on the full-body grid (inspected 2026-11-04; see the last section).
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -1600,7 +1601,8 @@ check that the GPU can be used; nothing else was run.
   runs over 48 h. ASC25089 has 14,947 SUs (expires 2027-10-31).
 - The source folder `/work/03453/villa13/vista/proj/moby-data` does contain
   `motion_vectors.h5` (16.5 GB, readable), `phantom_anatomy_0.h5` and `moby_mesh.h5`.
-  True motion may therefore exist for these data; the files were not opened.
+  True motion may therefore exist for these data; the files were not opened. *Update
+  (2026-11-04):* `motion_vectors.h5` was inspected; see the last section.
 
 **10k-step trial on the full series (2026-10-26): completed.** Agreed with the user as a
 short job to measure throughput and memory before the formal run; no other change.
@@ -1817,4 +1819,53 @@ Still open:
 - Whether t0's separate state (frame 0 at 54%) needs a change; a model decision.
 - Seeds: decided by the user (2026-10-29) that one seed (0) is enough for the full series; no seeds 1-2.
 - Whether to widen the GIFs' intensity-change display range for the whole series.
-- Whether to use `motion_vectors.h5` for motion evaluation (a separate decision).
+- Whether to use `motion_vectors.h5` for motion evaluation (a separate decision; its
+  layout and convention are in the next section).
+
+## `motion_vectors.h5` of the DCE-MOBY source data (2026-11-04): inspected, read only
+
+The user asked whether the phantom has motion ground truth. The file was read on a Vista
+login node with h5py (interactive commands, no script saved); nothing was copied or
+written. Verified:
+- `/work/03453/villa13/vista/proj/moby-data/motion_vectors.h5` (16.5 GB), created
+  2025-11-10 from MOBY's text output `moby_vec_frame1_to_frame{}.txt`. Datasets:
+  `motion` (248, 248, 725, 3, 200) float32, attributes `dt` 0.05, `spacing` 0.15 mm,
+  `units` mm; `interpolated` (248, 248, 725, 200) int8; one lzf chunk per phase.
+- Grid and layout: the full-body grid of `phantom_anatomy_0.h5` (248, 248, 725), stored
+  with x and y swapped relative to p0 and the indicators. The phase-0 liver indicator
+  matches anatomy label 29 with Dice 0.93 after the swap at z offset 175
+  (26.25 mm / 0.15 mm), 0.45 without it. So p0's `z_index` 100 is motion z index 275.
+  The motion array has the anatomy's layout, with component k along its own axis k: in
+  p0's (x, y, z) layout ux = component 1, uy = component 0, uz = component 2.
+- Reference: u = 0 everywhere at phase 0. At z index 275 inside the run's ROI, u is also
+  0 at phases 50, 100 and 150, and phases 25, 75, 125, 175 are equal (the four identical
+  breaths of the slice). Elsewhere phase 50 differs from phase 0 by up to 0.64 mm.
+- Direction: u(X) moves the phase-0 position X to its phase-p position, as the source
+  file name says. Warping the phase-0 indicators (all four tissues, linear
+  interpolation) by I_p(x) = I_0(X(x)) with X + u(X) = x leaves 28% of the no-warp
+  difference at phase 25 (one step x - u(x): 29%; 33% at phase 12). The opposite sign
+  gives 124-136%, the other layouts and component orders 53-101%, a flipped x or z sign
+  over 120%. The y component hardly changes the indicators (y sign flipped 31%, y = 0
+  29%), so its sign is not separately confirmed.
+- By tissue (one step, phase 25): liver 14%, lesion 60%, artery 72% of the no-warp
+  difference. The lesion's 3D indicator centroid moves (2.70, -0.59, 3.73) voxels at
+  phase 25; the mean u over the phase-0 lesion is (2.39, -0.82, 2.44). The signs agree,
+  but the z shift is 1.5 times larger, so the lesion's motion in the indicators follows
+  this field only approximately.
+- `interpolated`: -1 at 99.3% of voxels outside the anatomy and at 5.3% of body voxels in
+  the p0 crop (u = 0 there; 2.8% of body pixels of the ROI at z = 100); 0 at 31% and 1 at
+  64% of body voxels. The values are not documented; 0 and 1 are probably direct and
+  interpolated vectors (an assumption).
+- At z = 100, phase 25 (the largest of the checked phases): in-plane |u| up to 3.95 px
+  (0.59 mm) in the ROI and |uz| up to 5.64 voxels (0.85 mm); on the lesion, mean in-plane
+  |u| 2.78 px and mean uz +2.88 voxels. Through-plane motion is as large as in-plane
+  motion. The lesion's cross-section centroid moves (1.02, 0.15) px while its mean
+  in-plane u is (2.58, -0.68) px, because the slice cuts the lesion at another height: the earlier "the tumor
+  centroid moves by one pixel" is the cross-section's apparent motion, not the in-plane
+  tissue displacement.
+
+In the model's convention Î(r,t) = J(r + φ(r,t), t) with t0 at phase 0, the in-plane
+truth would be φ(x) = X(x) - x ≈ -u(x) (x and y components). Through-plane motion
+changes the slice content in a way no in-plane warp explains, so a comparison with the
+2D φ is incomplete. Whether and how to use the field for evaluation is the user's
+decision; nothing was implemented.
