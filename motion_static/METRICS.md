@@ -250,8 +250,8 @@ ROI. Defined for the embedding protocol only.
 
 ### 3.7 Reference intensity on DCE-MOBY: reference-configuration frames
 
-Agreed on 2026-11-04 (frame rule below); not yet implemented. Written for any spatial
-dimension: $G$ is the scored grid, the pixels of a 2D slice or the voxels of a 3D volume.
+Agreed on 2026-11-04, including the tolerance. Written for any spatial dimension: $G$ is
+the scored grid, the pixels of a 2D slice or the voxels of a 3D volume.
 
 The phantom has no reference-intensity file, but the reference intensity is observed
 whenever the body is in its configuration at the reference time $t_0$: the true
@@ -263,11 +263,15 @@ components (from `motion_vectors.h5`; layout and direction in PROGRESS.md, 2026-
 and $p(t)$ the phase of frame $t$. The reference-configuration frames are
 
 $$
-T_{\mathrm{ref}}=\{\,t\ \text{scored}:\ u(r,p(t))=u(r,p(t_0))\ \text{for every}\ r\in G\,\},
+T_{\mathrm{ref}}=\Bigl\{\,t\ \text{scored}:\ \max_{r\in G}\bigl|u(r,p(t))-u(r,p(t_0))\bigr|\le\tau\,\Bigr\},
+\qquad \tau=10^{-3}\,h,
 $$
 
-compared exactly in the stored values. The source's $u$ is zero at phase 0, which is
-$t_0$'s phase in the current runs, so the condition reads $u(r,p(t))=0$ on $G$.
+where $|\cdot|$ is the length of the three-component difference and $h$ the smallest
+grid spacing ($h=0.15$ mm, so $\tau=1.5\times10^{-4}$ mm). The tolerance only absorbs
+rounding in the stored vectors: phases that repeat t0's configuration differ from it by
+about $10^{-5}$ mm, the next closest by about $5\times10^{-3}$ mm (z = 100 slice). The
+source's $u$ is zero at phase 0, which is $t_0$'s phase in the current runs.
 
 **Score.** At $t\in T_{\mathrm{ref}}$, the intensity branch is queried at fixed reference
 coordinates (no motion) and compared with the observed frame: $\hat J(q,t)$ versus
@@ -371,6 +375,7 @@ version, not adoption of the proposed standardized metric protocol.
 | Selected-block errors and spatial-window SSIM | [masked_metrics.py](evaluation/masked_metrics.py): `evaluate_masked_sequence()` | Block-run reports, using their distinct mask protocol |
 | Fixed-point and region-mean temporal curve errors | [metrics.py](evaluation/metrics.py): `evaluate_sequence()` | `point_curves`, `activity_curve`, including curve `rrmse` |
 | DCE-MOBY lesion activity curves and LAC RRMSE (Section 3.6) | [moby_lesion_curves.py](evaluation/moby_lesion_curves.py): `curves_for()`, `scores()` | Separate output folder: `lesion_curves.json` (`scores`, `ss_check`), `lesion_curves.npz`, `lesion_curves.png` |
+| DCE-MOBY reference intensity at reference-configuration frames (Section 3.7) | [moby_reference_intensity.py](evaluation/moby_reference_intensity.py): `configuration_deviation()`, `reference_frames()`, `reference_intensity_scores()` | Separate output folder: `reference_intensity.json` (`qualifying_phases`, `frames`, `scores.RUN.{full_grid,roi}`; `rrmse`, `psnr_db`, `ssim_mean_of_frames`, per-frame lists) |
 
 `motion_scores()` uses one scalar pixel spacing and is currently used on isotropic
 toy grids. The separate branch diagnostic supports `(dx,dy)` spacing. Neither

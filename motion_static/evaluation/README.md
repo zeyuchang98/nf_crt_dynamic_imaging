@@ -87,6 +87,10 @@ per breath) and `--name` prefixes the files.
 the truth, chosen SS(r) ranks and embedding-protocol runs; it rebuilds SS(r) from the
 frame Gram matrix and checks it against the saved SS(r) results. `--data-file` reads a
 local copy of the slice file with the recorded sha256.
+`moby_reference_intensity` scores the intensity branch of embedding-protocol runs at the
+frames where the true displacement (from `phantoms.moby_motion_slice`) is within 1e-3
+grid spacings of t0's configuration ([METRICS.md](../METRICS.md) Section 3.7); its core
+functions take 2D or 3D grids.
 `moby_series_checks` is data only (no model): tissue mean curves over a whole slice
 series, the time-grid resolution they need, the breathing periodicity, and the SVD of
 frames of one respiratory phase (the rank of the intensity change without motion).

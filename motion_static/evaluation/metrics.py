@@ -71,6 +71,13 @@ def _ssim(truth, prediction, data_range, win_size, chunk_voxels=None):
     return _time_chunked_ssim(truth, prediction, settings, chunk_voxels)
 
 
+def spatial_ssim(truth, prediction, *, data_range, win_size=7):
+    """SSIM of one frame (a 2D image or a 3D volume) with the settings above; None if too small."""
+    truth, prediction = _pair(truth, prediction)
+    _check_range(data_range)
+    return _ssim(truth, prediction, data_range, win_size)
+
+
 def _time_chunked_ssim(truth, prediction, settings, chunk_voxels):
     """Whole-array SSIM computed over chunks of the last (time) axis.
 
