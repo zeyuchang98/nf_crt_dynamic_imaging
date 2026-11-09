@@ -121,6 +121,13 @@ python -m motion_static.run --dry-run
 python -m unittest discover -s motion_static/tests -v
 ```
 
+3D renders of box runs use PyVista, an optional dependency that training, evaluation
+and the tests do not import (local environment: PyVista 0.49.2 with VTK 9.7.2):
+
+```bash
+pip install pyvista
+```
+
 After selecting the parameters and training budget:
 
 ```bash

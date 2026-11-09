@@ -2010,3 +2010,12 @@ Next steps, each to be agreed: extract the full-series box on Vista (about 15 GB
 short `gh-dev` trial for GPU speed and memory; then fix the step budget, hash sizes and
 the motion's spatial resolution (e01's 2-8 cells per axis are about four times finer in
 mm on the 9.6 mm box than on the 37.2 mm slice) before the formal run.
+
+**3D visualization (2026-11-09): trying PyVista.** Suggested by the user's advisor and
+approved by the user: PyVista 0.49.2 (VTK 9.7.2) installed by pip into the local `nf-crt`
+environment only; numpy, torch and matplotlib versions are unchanged and 153 tests pass.
+Offscreen rendering works. Scratch renders of the small test (not saved; layout to be
+agreed before a module is written): maximum-intensity volume renders of truth, NF and
+|NF - truth| at four frames (plain opacity hid the interior behind the body surface), the
+true lesion shell and core surfaces with an xy and a yz slice of truth and NF intensity,
+and a GIF of the truth and NF renders over the window.
