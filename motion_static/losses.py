@@ -5,7 +5,7 @@ import torch
 def compute_training_losses(model, coordinates, targets, config):
     """Return scalar tensors for one observed batch, retaining their gradients.
 
-    coordinates: (batch, 3) physical (x, y, t) coordinates.
+    coordinates: (batch, 3) physical (x, y, t) or (batch, 4) (x, y, z, t) coordinates.
     targets: (batch,) observed image intensities at those coordinates.
 
     Edit loss terms and their weighted sum here. Only ``total_loss`` is used for
@@ -24,7 +24,7 @@ def compute_training_losses(model, coordinates, targets, config):
             model,
             coordinates,
             delta=config["temporal_step"],
-            time_max=config["coordinate_bounds"][2][1],
+            time_max=config["coordinate_bounds"][-1][1],
         )
 
     total_loss = image_mse + temporal_weight * temporal_l2
@@ -44,11 +44,11 @@ def intensity_temporal_l2(model, xyt, delta, time_max):
     """
     with torch.no_grad():
         earlier = xyt.detach().clone()
-        earlier[:, :2] += model.motion(xyt)
+        earlier[:, :-1] += model.motion(xyt)
         # Use a backward pair near the final time, without querying past the data.
-        earlier[:, 2].clamp_(max=time_max - delta)
+        earlier[:, -1].clamp_(max=time_max - delta)
         later = earlier.clone()
-        later[:, 2] += delta
+        later[:, -1] += delta
 
     # Only time changes between these queries. Gradients update intensity only.
     rate = (model.intensity(later) - model.intensity(earlier)) / delta

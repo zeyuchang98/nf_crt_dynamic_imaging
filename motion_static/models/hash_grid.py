@@ -1,6 +1,7 @@
 """The grid encoder used by HashNeuralField.
 
-Each level stores trainable features on a 2D spatial or 3D space-time grid.
+Each level stores trainable features on a grid of 2 to 4 dimensions: 2D or 3D space,
+or (2D or 3D) space plus time.
 A query blends the surrounding vertices, then joins features from all levels.
 Small grids use direct indexing; large grids share entries through hashing.
 
@@ -15,6 +16,10 @@ import torch
 from torch import nn
 
 
+# Instant-NGP's spatial hash primes, one per coordinate axis (the first axis is not scaled).
+HASH_PRIMES = (1, 2654435761, 805459861, 3674653429)
+
+
 class HashGridEncoding(nn.Module):
     """Input: (N, dimensions) coordinates. Output: (N, levels * features).
 
@@ -26,8 +31,8 @@ class HashGridEncoding(nn.Module):
                  min_resolution=8, max_resolution=128, clamp_coordinates=True,
                  dimensions=3):
         super().__init__()
-        if dimensions not in (2, 3):
-            raise ValueError("Hash grids support two spatial or three space-time coordinates")
+        if dimensions not in (2, 3, 4):
+            raise ValueError("Hash grids support 2 to 4 coordinates")
         self.dimensions = dimensions
         self.output_dim = levels * features
         self.clamp_coordinates = clamp_coordinates
@@ -95,7 +100,7 @@ class HashGridEncoding(nn.Module):
         indices = self._table_indices(vertices)
         corner_features = self.table[indices]            # (N, L, K, features)
 
-        # 3. Bilinear/trilinear interpolation: multiply weights over coordinates.
+        # 3. Multilinear interpolation: multiply weights over coordinates.
         fraction = fraction[:, :, None, :]               # (N, L, 1, D)
         axis_weights = torch.where(self.corners.bool(), fraction, 1 - fraction)
         weights = axis_weights.prod(dim=-1)              # (N, L, K)
@@ -106,19 +111,18 @@ class HashGridEncoding(nn.Module):
 
     def _table_indices(self, vertices):
         """Map grid vertices to rows of the shared feature tensor."""
-        x, y = vertices[..., 0], vertices[..., 1]
         resolution = (self.resolutions[:, None].expand(-1, self.dimensions)
                       if self.resolutions.ndim == 1 else self.resolutions)
         sides = resolution + 1
-        side_x, side_y = sides[None, :, 0, None], sides[None, :, 1, None]
 
-        # Small grids fit in full. Large grids use a bounded XOR hash.
-        dense_index = x + side_x * y
-        hash_index = x ^ (y * 2654435761)
-        if self.dimensions == 3:
-            t = vertices[..., 2]
-            dense_index = x + side_x * (y + side_y * t)
-            hash_index = hash_index ^ (t * 805459861)
+        # Small grids fit in full: row-major index with the first axis fastest,
+        # x + side_x * (y + side_y * (...)). Large grids use a bounded XOR hash.
+        dense_index = vertices[..., -1]
+        for axis in range(self.dimensions - 2, -1, -1):
+            dense_index = vertices[..., axis] + sides[None, :, axis, None] * dense_index
+        hash_index = vertices[..., 0]
+        for axis in range(1, self.dimensions):
+            hash_index = hash_index ^ (vertices[..., axis] * HASH_PRIMES[axis])
         hash_index = hash_index.remainder(self.sizes[None, :, None])
         use_dense = self.dense[None, :, None]
 

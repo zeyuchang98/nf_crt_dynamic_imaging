@@ -24,12 +24,12 @@ class NestedHashNF(nn.Module):
             reference_time=reference_time, **encoding_kwargs)
 
     def forward(self, xyt):
-        # 1. Predict backward displacement (ux, uy), in coordinate units.
+        # 1. Predict backward displacement (ux, uy[, uz]), in coordinate units.
         displacement = self.motion(xyt)
 
-        # 2. Shift (x, y) by the displacement; keep t unchanged.
+        # 2. Shift the spatial coordinates by the displacement; keep t (last) unchanged.
         reference_xyt = xyt.clone()
-        reference_xyt[:, :2] += displacement
+        reference_xyt[:, :-1] += displacement
 
         # 3. Query the independent intensity field at (r + u, t).
         return self.intensity(reference_xyt)
@@ -43,21 +43,22 @@ class MotionHashNF(nn.Module):
         super().__init__()
         # Use the same time units as the input, not a normalized reference time.
         if reference_time is None:
-            reference_time = coordinate_bounds[2][0]
+            reference_time = coordinate_bounds[-1][0]
         self.register_buffer("reference_time", torch.tensor(float(reference_time)))
+        spatial_dimensions = len(coordinate_bounds) - 1
         self.field = HashNeuralField(
-            width=width, output_dim=2, coordinate_bounds=coordinate_bounds, **encoding_kwargs)
+            width=width, output_dim=spatial_dimensions, coordinate_bounds=coordinate_bounds, **encoding_kwargs)
 
-        # The two outputs are ux and uy. Start both at zero.
+        # The outputs are ux, uy (and uz in 3D). Start all at zero.
         nn.init.zeros_(self.field.mlp[-1].weight)
         nn.init.zeros_(self.field.mlp[-1].bias)
 
     def forward(self, xyt):
         # Compare the same spatial point at two times, using the same network.
         reference_xyt = xyt.clone()
-        reference_xyt[:, 2] = self.reference_time
+        reference_xyt[:, -1] = self.reference_time
         current = self.field(xyt)
         reference = self.field(reference_xyt)
 
-        # Anchor motion, then convert relative displacement to input (x, y) units.
-        return (current - reference) * self.field.normalizer.span[:2]
+        # Anchor motion, then convert relative displacement to input spatial units.
+        return (current - reference) * self.field.normalizer.span[:-1]

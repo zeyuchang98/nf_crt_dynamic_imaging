@@ -1937,3 +1937,48 @@ Run locally (code `fd30541`, 7.5 GB peak, about 1 min):
   the observed frames of phases 184 and 10 of the same breath (17% RRMSE) and 53-56% from
   most other phases. J^ lies near a configuration between breaths, not t0's, and matches
   no observed frame closely.
+
+## 3D embedding of a lesion box (2026-11-09): code ready, small test in progress
+
+Decided with the user: set the ground truth aside and try the embedding in 3D. The full
+3D series (248 x 248 x 200 voxels, 14,401 frames, 708 GB as float32) does not fit one
+GH200 node (about 96 GB GPU, 212 GB host memory) and would need streamed data and
+multi-GPU training. The user chose a 64^3 box around the lesion over the full series
+(15 GB): source voxels x 93-156, y 161-224, z 65-128, centered on the phase-0 lesion
+(x 108-142, y 175-210, z 80-114, from the local indicator files). First a small test to
+check the code, then a Vista trial for throughput and memory.
+
+Code (2D behavior unchanged):
+- [phantoms/moby_slice.py](phantoms/moby_slice.py) `extract_box` (`--box X0 Y0 Z0 NX NY
+  NZ`, optional `--frames FIRST STOP` of the time-sorted series): p0 (x, y, z, frame) and
+  every phase's indicators in the box, with the box's own `fov`; prints the lesion's
+  smallest margin to the box faces over all phases. The frame-time pass is shared with
+  the slice extraction (`frame_order`).
+- [phantoms/moby.py](phantoms/moby.py) reads box files: truth (y, x, z, t), axis z,
+  four coordinate bounds, `spatial_dimensions` 3 and `depth` in the run config.
+- Models: time is the last coordinate everywhere (`[:, :-1]` space, `[:, -1]` time);
+  the hash grid accepts 4 coordinates (dense row-major index and Instant-NGP's fourth
+  prime); the motion field outputs one component per spatial axis; the low-rank spatial
+  basis uses a 3D grid in 3D.
+- [phantoms/data.py](phantoms/data.py) `CoordinateGrid` computes training rows from flat
+  indices, so the (N, 4) coordinate array (60 GB for the full box series) is never
+  built; 2D runs still use the coordinate array. Evaluation predicts 3D grids in frame
+  blocks (`predict_entry`).
+- [run.py](run.py): 3D data support only `nested_low_rank_hash_nf` with
+  `held_out_split` none; resolution lists must have 3 (intensity) or 4 (motion) entries.
+
+Validated:
+- [tests/test_moby_3d.py](tests/test_moby_3d.py) (6 tests): CoordinateGrid rows equal
+  coordinate_grid rows in 2D and 3D; a dense 4D grid gives every vertex its own row; the
+  3D model has three motion components, zero motion at t0 and image = intensity at the
+  displaced point, with gradients to the motion; the box loader's layout and bounds; a
+  tiny 3D embedding run whose saved metrics equal those of a direct prediction; two
+  rejections. Two new tests in [tests/test_moby_slice.py](tests/test_moby_slice.py) (box
+  contents, sorted frame range, fov, rejections; lesion margins). 153 tests pass.
+- 2D regression: six tiny runs (toy nested low-rank with and without the temporal
+  penalty, toy nested hash, toy low-rank, dce_moby embedding and midpoints) give
+  bitwise identical weights, loss.csv and metrics.json before (`af1b2d6`) and after the
+  change, on the CPU.
+- Not checked: old toy runs can no longer be re-rendered by `evaluation.render` from this
+  checkout, which refuses any changed numerical source file by design; their saved
+  source.zip still reproduces them.

@@ -23,7 +23,7 @@ from .models.low_rank_intensity import LowRankIntensity
 from .models.oracle_branches import PHANTOM_REFERENCE_TIME, TrueMotion, TrueReferenceIntensity
 from .models.time_grid import TimeGridField
 from .phantoms import moby
-from .phantoms.data import DEFAULT_PHANTOM, DEFAULT_SAMPLING, coordinate_grid, make_pair, sample
+from .phantoms.data import DEFAULT_PHANTOM, DEFAULT_SAMPLING, CoordinateGrid, coordinate_grid, make_pair, sample
 from .splits import block_split
 from .evaluation.evaluate import evaluate, evaluate_image_only
 from .evaluation.block_evaluate import evaluate_blocks
@@ -204,7 +204,10 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None,
     else:
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["steps"])
     stopped_by = "step limit"
-    training_coordinates = torch.as_tensor(coordinates, dtype=torch.float32, device=device)
+    if isinstance(coordinates, CoordinateGrid):
+        training_coordinates = coordinates.to(device)  # rows computed per batch (3D grids)
+    else:
+        training_coordinates = torch.as_tensor(coordinates, dtype=torch.float32, device=device)
     observed_intensities = torch.as_tensor(intensities.reshape(-1), dtype=torch.float32, device=device)
     checkpoint_steps = set(config.get("checkpoint_steps", []))
     log_interval = config.get("log_interval", 500)
@@ -406,7 +409,7 @@ def parse_configuration(argv=None):
             parser.error("coordinate_bounds do not match the configured phantom domain")
     config["coordinate_bounds"] = bounds
     if nested and config.get("reference_time") is None:
-        config["reference_time"] = bounds[2][0]
+        config["reference_time"] = bounds[-1][0]  # time is the last coordinate
     if config["model"] == "low_rank_hash_nf":
         config.pop("motion_encoding", None)
         config.pop("reference_time", None)
@@ -420,7 +423,7 @@ def parse_configuration(argv=None):
     if args.temporal_step is not None and weight == 0:
         parser.error("--temporal-step requires positive temporal_weight")
     if weight > 0:
-        delta = config.get("temporal_step", float(np.diff(np.linspace(*bounds[2], config["frames"])).min()))
+        delta = config.get("temporal_step", float(np.diff(np.linspace(*bounds[-1], config["frames"])).min()))
         if not np.isfinite(delta) or not 0 < delta <= config["cycles"]:
             parser.error("temporal_step must be positive and no larger than the time span")
         config.update(temporal_weight=weight, temporal_step=delta,
@@ -495,6 +498,17 @@ def parse_configuration(argv=None):
         if weight > 0:
             parser.error("oracle_branch does not support the temporal penalty")
 
+    # 3D box data: so far only the embedding protocol with the nested low-rank model.
+    if config.get("spatial_dimensions", 2) == 3:
+        if config["model"] != "nested_low_rank_hash_nf" or held_out_split != "none":
+            parser.error("3D data support the nested_low_rank_hash_nf model with held_out_split none only")
+        for name in ("encoding", "motion_encoding"):
+            for key in ("min_resolution", "max_resolution"):
+                value = config.get(name, {}).get(key)
+                expected = 3 if name == "encoding" else 4  # space (x, y, z); space-time (x, y, z, t)
+                if isinstance(value, list) and len(value) != expected:
+                    parser.error(f"{name}.{key} needs {expected} entries for 3D data")
+
     # Blocks are a separate protocol, with their own grid divisibility constraint.
     if config["evaluation_split"] == "blocks":
         config.setdefault("block_split", dict(block_shape=[8, 8, 2], test_fraction=.2, seed=0))
@@ -546,7 +560,8 @@ def execute(config, out):
             # Save provenance before data/model construction so failures are traceable.
             config["code_provenance"] = snapshot_source(root, out)
             write_json(out / "config.json", config)
-            print(f"Phantom: {config['phantom']} | size: {config['size']}x{config['size']} | "
+            depth = f"x{config['depth']}" if "depth" in config else ""
+            print(f"Phantom: {config['phantom']} | size: {config['size']}x{config['size']}{depth} | "
                   f"cycles: {config['cycles']} | training frames: {config['frames']} | time: {config['time_bounds']}", flush=True)
             torch.set_num_threads(config["threads"])
             torch.manual_seed(config["seed"])
@@ -554,7 +569,11 @@ def execute(config, out):
             # Build observed and held-out pools; held-out samples go only to the monitor.
             data, split = prepare_data(config)
             training = data["training"]
-            coordinates = coordinate_grid(training["x"], training["y"], training["t"])
+            if "z" in training:
+                # 3D: the (N, 4) coordinate array would not fit in memory; rows are computed per batch.
+                coordinates = CoordinateGrid(training["x"], training["y"], training["t"], training["z"])
+            else:
+                coordinates = coordinate_grid(training["x"], training["y"], training["t"])
             intensities = training["truth"].reshape(-1)
             if split is None:
                 # Test frames, when present, are never shown to training or monitoring.

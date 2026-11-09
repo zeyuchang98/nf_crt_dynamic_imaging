@@ -78,7 +78,7 @@ def initialize_run_metadata(config):
         "reference_intensity_labels_used_for_training": False,
         "midpoint_labels_used_for_training": False,
         "joint_period": config.get("joint_period", 1.),
-        "time_bounds": config["coordinate_bounds"][2],
+        "time_bounds": config["coordinate_bounds"][-1],
         "intervals_per_cycle": (config["frames"] - 1) / config["cycles"],
         "monitoring": "Fixed uniform samples without replacement; image MSE; no validation gradients",
         "monitor_lr_convention": "Learning rates after scheduler step, for the next optimizer update",

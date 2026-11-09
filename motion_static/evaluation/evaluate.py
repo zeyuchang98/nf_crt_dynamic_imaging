@@ -1,11 +1,12 @@
 """Evaluate image fit and, separately, the two learned parts. No training here."""
+import math
 from pathlib import Path
 
 import numpy as np
 import torch
 
 from .metrics import evaluate_sequence, error_metrics, save_metrics
-from ..phantoms.data import coordinate_grid, get_phantom
+from ..phantoms.data import coordinate_grid, entry_coordinates, get_phantom
 
 
 def module_device(module):
@@ -21,6 +22,24 @@ def predict(function, coordinates):
     pieces = [function(torch.as_tensor(batch, dtype=torch.float32, device=device)).cpu().numpy()
               for batch in np.array_split(coordinates, max(1, int(np.ceil(len(coordinates) / 8192))))]
     return np.concatenate(pieces)
+
+
+# 3D grids are predicted a few frames at a time, about this many points per block.
+PREDICTION_BLOCK_POINTS = 2 ** 22
+
+
+def predict_entry(model, entry):
+    """The model on an entry's grid, shaped like entry["truth"]: (y, x, t) or (y, x, z, t)."""
+    shape = entry["truth"].shape
+    if "z" not in entry:
+        return predict(model, coordinate_grid(entry["x"], entry["y"], entry["t"])).reshape(shape)
+    prediction = np.empty(shape, dtype=np.float32)
+    block = max(1, PREDICTION_BLOCK_POINTS // math.prod(shape[:-1]))
+    for start in range(0, shape[-1], block):
+        frames = slice(start, min(start + block, shape[-1]))
+        prediction[..., frames] = predict(model, entry_coordinates(entry, frames)).reshape(
+            *shape[:-1], frames.stop - frames.start)
+    return prediction
 
 
 def bounding_roi(volumes):
@@ -199,8 +218,7 @@ def evaluate(model, data, config, out, training_seconds):
 def image_only_report(model, data, config, training_seconds):
     """Image metrics and predictions for every split of `data`, without writing files."""
     splits = image_splits(data)
-    predictions = {split: predict(model, coordinate_grid(entry["x"], entry["y"], entry["t"])).reshape(entry["truth"].shape)
-                   for split, entry in data.items()}
+    predictions = {split: predict_entry(model, entry) for split, entry in data.items()}
     image = scalar_report(None, "image", data, {s: d["truth"] for s, d in data.items()}, predictions, points={},
                           splits=splits)
     report = dict(schema_version=1, evaluation_split="midpoints",
@@ -228,6 +246,7 @@ def evaluate_image_only(model, data, config, out, training_seconds):
         np.savez_compressed(out / "predictions.npz",
             **{f"{split}_image": values for split, values in predictions.items()},
             x=data["training"]["x"], y=data["training"]["y"],
+            **({"z": data["training"]["z"]} if "z" in data["training"] else {}),
             **{f"{split}_t": entry["t"] for split, entry in data.items()})
     if "test" in data:
         selected = report["image"]["test_midpoints"]

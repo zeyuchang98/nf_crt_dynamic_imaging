@@ -1,4 +1,4 @@
-"""Extract one z slice of the DCE-MOBY p0 and indicator volumes into a single file.
+"""Extract one z slice, or a 3D box, of the DCE-MOBY p0 and indicator volumes into a single file.
 
 Source layout (see the dataset README): `p0/p0_XXXXX.h5` holds one respiratory
 phase, with `p0` shaped (x, y, z, frame) and `time` in seconds. Frames of
@@ -15,8 +15,12 @@ Output (one HDF5 file):
     indicator/resp_phase    (phase,)
 Axis order is kept as in the source; nothing is resampled or transposed.
 
+`--box X0 Y0 Z0 NX NY NZ` instead extracts a 3D box of every phase (see extract_box),
+optionally only a range of the time-sorted frames (`--frames FIRST STOP`).
+
 This file only needs numpy and h5py so it can run on its own on a cluster:
     python moby_slice.py --data-root /path/to/moby-data --z-index 100 --output out.h5
+    python moby_slice.py --data-root /path/to/moby-data --box 93 161 65 64 64 64 --output box.h5
 """
 import argparse
 import subprocess
@@ -69,14 +73,13 @@ def git_commit():
         return "unknown"
 
 
-def extract(data_root, z_index, output, phases=None, with_indicator=True, overwrite=False):
-    data_root, output = Path(data_root), Path(output)
-    if output.exists() and not overwrite:
-        raise FileExistsError(f"{output} exists; pass overwrite=True / --overwrite")
-    p0_files = find_phases(data_root / "p0", "p0", "p0", "resp_phase", phases)
+def frame_order(p0_files):
+    """Pass 1: read times and metadata only, to fix the global time order before
+    touching the large arrays.
 
-    # Pass 1: read times and metadata only, to fix the global time order before
-    # touching the large arrays.
+    Returns the frame times, phases and in-file indices (in file order), the time order,
+    the sorted slot of each source frame, and the geometry, wavelength and spatial shape.
+    """
     times, frame_phase, frame_index = [], [], []
     geometry = wavelength = shape = None
     for phase, path in p0_files.items():
@@ -93,14 +96,26 @@ def extract(data_root, z_index, output, phases=None, with_indicator=True, overwr
             times.append(t)
             frame_phase.append(np.full(len(t), phase))
             frame_index.append(np.arange(len(t)))
-    if not 0 <= z_index < shape[2]:
-        raise ValueError(f"z_index {z_index} outside [0, {shape[2]})")
     times = np.concatenate(times)
     order = np.argsort(times, kind="stable")
     if np.any(np.diff(times[order]) <= 0):
         raise ValueError("Frame times are not unique, so the interlaced order is ambiguous")
     position = np.empty_like(order)
     position[order] = np.arange(len(order))  # sorted position of each source frame
+    return dict(times=times, phase=np.concatenate(frame_phase), index=np.concatenate(frame_index),
+                order=order, position=position, geometry=geometry, wavelength=wavelength, shape=shape)
+
+
+def extract(data_root, z_index, output, phases=None, with_indicator=True, overwrite=False):
+    data_root, output = Path(data_root), Path(output)
+    if output.exists() and not overwrite:
+        raise FileExistsError(f"{output} exists; pass overwrite=True / --overwrite")
+    p0_files = find_phases(data_root / "p0", "p0", "p0", "resp_phase", phases)
+    frames = frame_order(p0_files)
+    times, order, position = frames["times"], frames["order"], frames["position"]
+    geometry, wavelength, shape = frames["geometry"], frames["wavelength"], frames["shape"]
+    if not 0 <= z_index < shape[2]:
+        raise ValueError(f"z_index {z_index} outside [0, {shape[2]})")
 
     # Pass 2: read only the requested z plane of every phase into its sorted slots.
     p0_slice = np.empty((shape[0], shape[1], len(times)), dtype=np.float32)
@@ -132,8 +147,8 @@ def extract(data_root, z_index, output, phases=None, with_indicator=True, overwr
         dataset.attrs["axes"] = "x, y, frame"
         f["time"] = times[order]
         f["time"].attrs["units"] = "s"
-        f["resp_phase"] = np.concatenate(frame_phase)[order]
-        f["frame_in_phase"] = np.concatenate(frame_index)[order]
+        f["resp_phase"] = frames["phase"][order]
+        f["frame_in_phase"] = frames["index"][order]
         if indicator is not None:
             group = f.create_group("indicator")
             for tissue, values in indicator.items():
@@ -151,17 +166,123 @@ def extract(data_root, z_index, output, phases=None, with_indicator=True, overwr
     return output
 
 
+def lesion_margins(lesion):
+    """Smallest distance, in voxels per axis, from the lesion (> 0 in any phase) to the box faces.
+
+    lesion: (x, y, z, phase) partial volumes. Returns (low faces, high faces) per axis.
+    """
+    inside = np.argwhere(np.any(lesion > 0, axis=-1))
+    if not len(inside):
+        raise ValueError("The box contains no lesion voxel")
+    return inside.min(axis=0), np.array(lesion.shape[:3]) - 1 - inside.max(axis=0)
+
+
+def extract_box(data_root, box_start, box_shape, output, frames=None, overwrite=False):
+    """Extract a 3D box of every phase's p0 and indicators, frames interlaced by time.
+
+    box_start, box_shape: (x, y, z) first voxel and size in the source volumes.
+    frames: optional (first, stop) range of the time-sorted series (stop excluded).
+    Output, in the source axis order:
+        p0              (x, y, z, frame) float32
+        time, resp_phase, frame_in_phase   (frame,)
+        indicator/<tissue>      (x, y, z, phase) float32, every phase
+        indicator/resp_phase    (phase,)
+    The attribute fov is the box's own extent, so voxel centers follow from fov and
+    spacing; box_start and source_fov locate the box in the source volumes.
+    """
+    data_root, output = Path(data_root), Path(output)
+    if output.exists() and not overwrite:
+        raise FileExistsError(f"{output} exists; pass overwrite=True / --overwrite")
+    p0_files = find_phases(data_root / "p0", "p0", "p0", "resp_phase", None)
+    order_info = frame_order(p0_files)
+    geometry, shape = order_info["geometry"], order_info["shape"]
+    start, size = np.asarray(box_start, int), np.asarray(box_shape, int)
+    if start.shape != (3,) or size.shape != (3,) or np.any(start < 0) or np.any(size < 1) \
+            or np.any(start + size > np.array(shape)):
+        raise ValueError(f"Box start {start.tolist()} and shape {size.tolist()} do not fit in {shape}")
+    box = tuple(slice(int(a), int(a + n)) for a, n in zip(start, size))
+    count = len(order_info["times"])
+    first, stop = (0, count) if frames is None else frames
+    if not 0 <= first < stop <= count:
+        raise ValueError(f"Frame range {first}:{stop} is outside 0:{count}")
+    order, position = order_info["order"], order_info["position"]
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with h5py.File(output, "w") as f:
+        p0_box = f.create_dataset("p0", (*size, stop - first), np.float32,
+                                  chunks=(*size, 1), compression="lzf")
+        p0_box.attrs["axes"] = "x, y, z, frame"
+        # Pass 2: each phase file, only the box and only the frames inside the range.
+        offset = 0
+        for done, (phase, path) in enumerate(p0_files.items(), 1):
+            with h5py.File(path, "r") as source:
+                frame_count = source["p0"].shape[3]
+                slots = position[offset:offset + frame_count]
+                local = np.flatnonzero((slots >= first) & (slots < stop))
+                if len(local):
+                    values = source["p0"][box + (local.tolist(),)]
+                    for k, frame in enumerate(local):
+                        p0_box[..., slots[frame] - first] = values[..., k]
+            offset += frame_count
+            if done % 20 == 0 or done == len(p0_files):
+                print(f"p0 {done}/{len(p0_files)} phases", flush=True)
+        selected = order[first:stop]
+        f["time"] = order_info["times"][selected]
+        f["time"].attrs["units"] = "s"
+        f["resp_phase"] = order_info["phase"][selected]
+        f["frame_in_phase"] = order_info["index"][selected]
+
+        indicator_files = find_phases(data_root / "indicator", "indicator", INDICATOR_TISSUES[0], "phase", p0_files)
+        group = f.create_group("indicator")
+        tissues = {tissue: np.empty((*size, len(indicator_files)), dtype=np.float32) for tissue in INDICATOR_TISSUES}
+        for k, (phase, path) in enumerate(indicator_files.items()):
+            with h5py.File(path, "r") as source:
+                for tissue in INDICATOR_TISSUES:
+                    volume = source[tissue]
+                    if volume.shape != shape:
+                        raise ValueError(f"{path}: {tissue} shape {volume.shape} differs from p0 {shape}")
+                    check_same(geometry, read_attributes(volume, SHARED_ATTRIBUTES), f"{path}:{tissue}")
+                    tissues[tissue][..., k] = volume[box]
+        for tissue, values in tissues.items():
+            group.create_dataset(tissue, data=values, compression="lzf").attrs["axes"] = "x, y, z, phase"
+        group["resp_phase"] = np.array(list(indicator_files))
+        low, high = lesion_margins(tissues["tumor"] + tissues["tumor_core"])
+        print(f"lesion margin to the box faces (voxels, x y z): low {low.tolist()}, high {high.tolist()}", flush=True)
+
+        source_fov, spacing = np.asarray(geometry["fov"], float), np.asarray(geometry["spacing"], float)
+        f.attrs["fov"] = np.stack([source_fov[:, 0] + start * spacing, source_fov[:, 0] + (start + size) * spacing], 1)
+        f.attrs["spacing"] = spacing
+        f.attrs["spacing_units"] = geometry["spacing_units"]
+        f.attrs["wavelength"] = order_info["wavelength"]
+        f.attrs.update(box_start=start, box_shape=size, source_fov=source_fov, source_shape=shape,
+                       frame_range=[first, stop], lesion_margin_low=low, lesion_margin_high=high,
+                       source_root=str(data_root.resolve()), code_commit=git_commit(), command=" ".join(sys.argv))
+    return output
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--data-root", required=True, help="folder containing p0/ and indicator/")
-    parser.add_argument("--z-index", type=int, required=True, help="z plane index in the source volumes")
+    where = parser.add_mutually_exclusive_group(required=True)
+    where.add_argument("--z-index", type=int, help="z plane index in the source volumes")
+    where.add_argument("--box", type=int, nargs=6, metavar=("X0", "Y0", "Z0", "NX", "NY", "NZ"),
+                       help="3D box: first voxel and size in the source volumes")
     parser.add_argument("--output", required=True)
-    parser.add_argument("--phases", type=int, nargs="+", help="respiratory phases to include (default: all)")
-    parser.add_argument("--no-indicator", action="store_true", help="skip the indicator maps")
+    parser.add_argument("--phases", type=int, nargs="+", help="respiratory phases to include (default: all; slices only)")
+    parser.add_argument("--frames", type=int, nargs=2, metavar=("FIRST", "STOP"),
+                        help="range of the time-sorted frames, stop excluded (boxes only; default: all)")
+    parser.add_argument("--no-indicator", action="store_true", help="skip the indicator maps (slices only)")
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
-    path = extract(args.data_root, args.z_index, args.output, args.phases,
-                   with_indicator=not args.no_indicator, overwrite=args.overwrite)
+    if args.box is not None:
+        if args.phases is not None or args.no_indicator:
+            parser.error("--phases and --no-indicator apply to slices only")
+        path = extract_box(args.data_root, args.box[:3], args.box[3:], args.output, args.frames, args.overwrite)
+    else:
+        if args.frames is not None:
+            parser.error("--frames applies to boxes only")
+        path = extract(args.data_root, args.z_index, args.output, args.phases,
+                       with_indicator=not args.no_indicator, overwrite=args.overwrite)
     print(f"wrote {path}")
 
 

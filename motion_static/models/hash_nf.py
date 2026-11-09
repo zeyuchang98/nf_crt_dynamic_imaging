@@ -1,4 +1,4 @@
-"""Hash NF: (x, y, t) -> hash features -> MLP -> intensity or displacement.
+"""Hash NF: (x, y, t) or (x, y, z, t) -> hash features -> MLP -> intensity or displacement.
 
 Read HashNeuralField.forward for the complete model.
 The grid lookup and interpolation are in hash_grid.py.
@@ -10,13 +10,14 @@ from .hash_grid import HashGridEncoding
 
 
 class HashNeuralField(nn.Module):
-    """Use output_dim=1 for intensity, or output_dim=2 for (ux, uy)."""
+    """Use output_dim=1 for intensity, or one output per spatial axis for displacement."""
 
     def __init__(self, width=64, output_dim=1, coordinate_bounds=DEFAULT_BOUNDS,
                  **encoding_kwargs):
         super().__init__()
         self.normalizer = CoordinateNormalizer(coordinate_bounds)
-        self.encoding = HashGridEncoding(**encoding_kwargs)
+        # One grid axis per input coordinate: space and time.
+        self.encoding = HashGridEncoding(dimensions=len(coordinate_bounds), **encoding_kwargs)
         self.mlp = nn.Sequential(
             nn.Linear(self.encoding.output_dim, width), nn.ReLU(),
             nn.Linear(width, width), nn.ReLU(),
@@ -31,6 +32,6 @@ class HashNeuralField(nn.Module):
         # 2. Look up and interpolate features from all grid levels.
         features = self.encoding(unit_xyt)
 
-        # 3. Decode features into intensity (N,) or displacement (N, 2).
+        # 3. Decode features into intensity (N,) or displacement (N, spatial axes).
         output = self.mlp(features)
         return output.squeeze(-1)

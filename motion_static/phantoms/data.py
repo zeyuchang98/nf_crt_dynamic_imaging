@@ -1,8 +1,11 @@
 """Generate either phantom with the same axes, labels, and train/midpoint split."""
 import argparse
+import copy
+import math
 from pathlib import Path
 
 import numpy as np
+import torch
 
 from . import simple, complex
 
@@ -18,10 +21,49 @@ def get_phantom(name):
     return {"simple": simple, "complex": complex}[name]
 
 
-def coordinate_grid(x, y, t):
-    """Flatten a (y,x,t) volume into rows of (x,y,t)."""
-    yy, xx, tt = np.meshgrid(y, x, t, indexing="ij")
-    return np.stack((xx, yy, tt), axis=-1).reshape(-1, 3)
+def coordinate_grid(x, y, t, z=None):
+    """Flatten a (y,x,t) volume into rows of (x,y,t), or a (y,x,z,t) volume into rows of (x,y,z,t)."""
+    if z is None:
+        yy, xx, tt = np.meshgrid(y, x, t, indexing="ij")
+        return np.stack((xx, yy, tt), axis=-1).reshape(-1, 3)
+    yy, xx, zz, tt = np.meshgrid(y, x, z, t, indexing="ij")
+    return np.stack((xx, yy, zz, tt), axis=-1).reshape(-1, 4)
+
+
+def entry_coordinates(entry, frames=slice(None)):
+    """coordinate_grid rows of a data entry (x, y, optional z, t), for the selected frames."""
+    return coordinate_grid(entry["x"], entry["y"], entry["t"][frames], entry.get("z"))
+
+
+class CoordinateGrid:
+    """The rows of coordinate_grid(x, y, t, z), computed from flat row indices on demand.
+
+    Only the axes are stored, so a large 3D space-time grid never exists as an (N, 4)
+    array. Rows follow coordinate_grid: volume axes (y, x[, z], t), the last fastest;
+    values are the float32 axis values, as torch.as_tensor(coordinate_grid(...), float32).
+    """
+
+    def __init__(self, x, y, t, z=None):
+        volume_axes = [y, x] + ([] if z is None else [z]) + [t]
+        self.axes = [torch.as_tensor(np.asarray(axis), dtype=torch.float32) for axis in volume_axes]
+        self.shape = tuple(len(axis) for axis in self.axes)
+
+    def __len__(self):
+        return math.prod(self.shape)
+
+    def to(self, device):
+        moved = copy.copy(self)
+        moved.axes = [axis.to(device) for axis in self.axes]
+        return moved
+
+    def __getitem__(self, indices):
+        remaining = torch.as_tensor(indices, dtype=torch.long, device=self.axes[0].device)
+        positions = [None] * len(self.shape)
+        for axis in reversed(range(len(self.shape))):  # unravel, last axis fastest
+            positions[axis] = remaining % self.shape[axis]
+            remaining = remaining // self.shape[axis]
+        values = [axis[position] for axis, position in zip(self.axes, positions)]
+        return torch.stack([values[1], values[0], *values[2:]], dim=-1)  # columns x, y[, z], t
 
 
 def sample(name, size, times, time_bounds=(-0.5, 0.5)):

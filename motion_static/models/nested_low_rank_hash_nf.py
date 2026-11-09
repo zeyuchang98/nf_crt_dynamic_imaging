@@ -1,4 +1,4 @@
-"""Image(r,t) = sum_k b_k(r + u(r,t)) a_k(t).
+"""Image(r,t) = sum_k b_k(r + u(r,t)) a_k(t), with r in 2D or 3D.
 
 The existing motion hash field supplies backward displacement in input units.
 The intensity module is independent of the image-supervised toy training code,
@@ -26,5 +26,5 @@ class NestedLowRankHashNF(nn.Module):
 
     def forward(self, xyt):
         reference_xyt = xyt.clone()
-        reference_xyt[:, :2] += self.motion(xyt)
+        reference_xyt[:, :-1] += self.motion(xyt)  # spatial axes; time is last
         return self.intensity(reference_xyt)

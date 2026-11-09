@@ -13,7 +13,7 @@ from .time_grid import TimeGridField
 
 
 class LowRankIntensity(nn.Module):
-    """Continuous (qx,qy,t) -> intensity; rank includes any static component."""
+    """Continuous (qx,qy[,qz],t) -> intensity; rank includes any static component."""
 
     def __init__(self, rank=3, width=64, temporal_width=32,
                  coordinate_bounds=DEFAULT_BOUNDS, temporal_encoding=None, **encoding_kwargs):
@@ -23,7 +23,8 @@ class LowRankIntensity(nn.Module):
         self.rank = rank
         self.normalizer = CoordinateNormalizer(coordinate_bounds)
         # Displaced spatial queries must retain gradients outside the image.
-        self.encoding = HashGridEncoding(dimensions=2, clamp_coordinates=False,
+        # The spatial grid has one axis per spatial coordinate (all but time).
+        self.encoding = HashGridEncoding(dimensions=self.normalizer.spatial_dimensions, clamp_coordinates=False,
                                          **encoding_kwargs)
         self.mlp = nn.Sequential(
             nn.Linear(self.encoding.output_dim, width), nn.ReLU(),
@@ -42,17 +43,17 @@ class LowRankIntensity(nn.Module):
             self.temporal = TimeGridField(rank, temporal_width, **temporal_encoding)
 
     def forward(self, xyt):
-        basis = self.spatial_basis(xyt[:, :2])
-        coefficients = self.temporal_coefficients(xyt[:, 2:])
+        basis = self.spatial_basis(xyt[:, :-1])
+        coefficients = self.temporal_coefficients(xyt[:, -1:])
         # A nonlinear decoder after this sum would remove the rank guarantee.
         return (basis * coefficients).sum(dim=-1)
 
     def spatial_basis(self, xy):
         """Return R spatial basis values at each physical reference coordinate."""
-        unit_xy = (xy - self.normalizer.lower[:2]) / self.normalizer.span[:2]
+        unit_xy = (xy - self.normalizer.lower[:-1]) / self.normalizer.span[:-1]
         return self.mlp(self.encoding(unit_xy))
 
     def temporal_coefficients(self, times):
         """Input times have shape (N,1), in the dataset's original time units."""
-        signed_t = 2 * (times - self.normalizer.center[2]) / self.normalizer.span[2]
+        signed_t = 2 * (times - self.normalizer.center[-1]) / self.normalizer.span[-1]
         return self.temporal(signed_t)
