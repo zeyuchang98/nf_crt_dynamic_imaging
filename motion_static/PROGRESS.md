@@ -1938,7 +1938,7 @@ Run locally (code `fd30541`, 7.5 GB peak, about 1 min):
   most other phases. J^ lies near a configuration between breaths, not t0's, and matches
   no observed frame closely.
 
-## 3D embedding of a lesion box (2026-11-09): code ready, small test in progress
+## 3D embedding of a lesion box (2026-11-09): code ready, small real-data test passed
 
 Decided with the user: set the ground truth aside and try the embedding in 3D. The full
 3D series (248 x 248 x 200 voxels, 14,401 frames, 708 GB as float32) does not fit one
@@ -1982,3 +1982,31 @@ Validated:
 - Not checked: old toy runs can no longer be re-rendered by `evaluation.render` from this
   checkout, which refuses any changed numerical source file by design; their saved
   source.zip still reproduces them.
+
+**Real-data test window (2026-11-09): completed.** Slurm job 1132080 (`gg`,
+`evaluate.sbatch`, code `9407737`, 2 min, 1.1 GB peak) extracted the 64^3 box for frames
+1250-1400 (e01's window, 26.5-34.0 s, 151 frames): `~/Data/dce-moby/moby_box64_f1250_1400.h5`
+(136 MB, sha256 `b958fa9f...f86b`, equal to the Vista copy in `$WORK/moby_box/`; job log
+`box64_f1250_1400.1132080.log` next to it). Over all 200 phases the lesion keeps at least
+(14, 13, 14) voxels to the low faces and (12, 14, 9) to the high faces (x, y, z).
+Verified locally (scratch script): the box's plane 35 (source z = 100) equals
+`moby_z100.h5` bitwise in all 151 frames: p0, times, phases and the four indicators.
+
+Small test run (local CPU, 8 threads, code `9407737`): e01's settings extended to 3D,
+R = 2, intensity hash 8-128 cells per axis (2^19), motion [2, 2, 2, 4] to [8, 8, 8, 16]
+cells (2^15), time grid 3-48; 2,000 steps at batch 16,384 (0.83 samples per point; e01
+used 21), 2.73 M parameters.
+[results/dce_moby_box64_20261109_2k_test_window_r2_s0/](results/dce_moby_box64_20261109_2k_test_window_r2_s0/metrics.json)
+- Training 323 s (0.16 s per step), 564 s with evaluation, 3.0 GB peak memory.
+- Fixed-sample training MSE 9.8e-4 to 3.2e-5. All-frame RRMSE 16.10%, PSNR 44.71 dB,
+  SSIM 0.9953; per-frame RRMSE median 14.8%, frame 0 (t0) 58.7%. The ROI is box rows
+  y 0-56 (the rows above are air), all x and z.
+- Slice figures (scratch, not saved): the xy plane at z = 100 and the xz plane through
+  the lesion are reproduced; errors sit at moving edges and are largest at frame 0.
+- This only shows that the 3D code runs end to end on real data. The run is far from
+  converged and not comparable with e01 (8.64% after 21 samples per point).
+
+Next steps, each to be agreed: extract the full-series box on Vista (about 15 GB); a
+short `gh-dev` trial for GPU speed and memory; then fix the step budget, hash sizes and
+the motion's spatial resolution (e01's 2-8 cells per axis are about four times finer in
+mm on the 9.6 mm box than on the 37.2 mm slice) before the formal run.
