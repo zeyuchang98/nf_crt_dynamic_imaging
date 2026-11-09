@@ -338,6 +338,14 @@ The displacement of the scored planes, in p0's layout, comes from
   chunks with 3-frame halos; this is the same whole-array value up to floating-point
   rounding (relative difference 1.8e-15 on 1,000 DCE-MOBY frames) and is noted in
   `settings.ssim.computation`. Smaller arrays use the single whole-array call unchanged.
+- **3D box runs (approved 2026-11-09):** the image metrics of 3D data are computed frame
+  block by frame block (`evaluate_sequence_in_blocks`): pooled errors from sums over the
+  blocks, per-frame scores unchanged, and the whole-array SSIM by the time-chunk scheme
+  above, so the prediction is never held whole and the extra memory does not grow with
+  the series (2.4 GiB for 64^3 voxels at 151 and at 600 frames, besides the data). The
+  definitions are those of `evaluate_sequence`; tests require agreement to 1e-12, and
+  the small 3D test run reproduces its saved metrics to 6e-15. Noted in
+  `settings.computation`. 2D runs use the unchanged whole-array code.
 - **Block SSIM:** only spatial 7-by-7 windows entirely inside the selected mask
   are valid. Overall SSIM averages valid centers across all frames; it is not
   necessarily an equal-weight frame average. Do not mix it with midpoint SSIM.
@@ -368,7 +376,7 @@ version, not adoption of the proposed standardized metric protocol.
 | Calculation | Implementation | Saved output / key |
 |---|---|---|
 | Scalar MSE, RMSE, RRMSE, PSNR | [metrics.py](evaluation/metrics.py): `error_metrics()` | `metrics.json`: `image`, `reference_intensity`, `motion_components.{ux,uy}`; `rrmse`, `psnr_db`, `mse`, `rmse` |
-| Sequence, frame, ROI, and SSIM evaluation | [metrics.py](evaluation/metrics.py): `evaluate_sequence()` | `{image,reference_intensity}.unseen_time_midpoints`, `roi`, `per_frame_ssim`, other `per_frame_*` |
+| Sequence, frame, ROI, and SSIM evaluation | [metrics.py](evaluation/metrics.py): `evaluate_sequence()`; for 3D data `evaluate_sequence_in_blocks()` via `streamed_image_report()` in [evaluate.py](evaluation/evaluate.py) | `{image,reference_intensity}.unseen_time_midpoints`, `roi`, `per_frame_ssim`, other `per_frame_*` |
 | Populate image/intensity/component reports | [evaluate.py](evaluation/evaluate.py): `scalar_report()`, `evaluate()` | One `metrics.json` containing all scalar and branch reports |
 | Mean EPE, endpoint RMSE, vector RRMSE | [evaluate.py](evaluation/evaluate.py): `motion_scores()` | `metrics.json`: `motion.midpoint.foreground` and `motion.midpoint.whole_fov`; `mean_endpoint_error_pixels`, `endpoint_rmse_pixels`, `vector_rrmse` |
 | Motion diagnostics with per-axis pixel spacing | [branch_metrics.py](evaluation/branch_metrics.py): `motion_statistics()` | Branch-diagnostic summaries; component and endpoint RMSE in pixels |

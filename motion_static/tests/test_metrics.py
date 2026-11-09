@@ -128,5 +128,59 @@ class MetricTests(unittest.TestCase):
             evaluate_sequence(truth, truth, data_range=1)
 
 
+def assert_reports_close(test, streamed, whole, path="report"):
+    """Same keys and values; floats to 1e-12 relative. The streamed note in settings is extra."""
+    if isinstance(whole, dict):
+        keys = set(streamed) - ({"computation"} if path.endswith("settings") else set())
+        test.assertEqual(keys, set(whole), path)
+        for key in whole:
+            assert_reports_close(test, streamed[key], whole[key], f"{path}.{key}")
+    elif isinstance(whole, list):
+        test.assertEqual(len(streamed), len(whole), path)
+        for k, (a, b) in enumerate(zip(streamed, whole)):
+            assert_reports_close(test, a, b, f"{path}[{k}]")
+    elif isinstance(whole, float):
+        test.assertTrue(np.isclose(streamed, whole, rtol=1e-12, atol=1e-15, equal_nan=True),
+                        f"{path}: {streamed} != {whole}")
+    else:
+        test.assertEqual(streamed, whole, path)
+
+
+class BlockEvaluationTests(unittest.TestCase):
+    def check(self, truth, prediction, roi, block_frames):
+        calls = []
+
+        def predict_frames(frames):
+            calls.append(frames)
+            return prediction[..., frames]
+
+        times = np.linspace(0, 1, truth.shape[-1])
+        streamed = metrics.evaluate_sequence_in_blocks(truth, predict_frames, data_range=1.0, times=times,
+                                                       roi=roi, block_frames=block_frames)
+        whole = evaluate_sequence(truth, prediction, data_range=1.0, times=times, roi=roi, points={})
+        assert_reports_close(self, streamed, whole)
+        self.assertIn("computation", streamed["settings"])
+        return calls
+
+    def test_blocks_reproduce_the_whole_array_evaluation_in_3d(self):
+        rng = np.random.default_rng(0)
+        truth = rng.random((9, 8, 10, 23))
+        prediction = truth + 0.05 * rng.normal(size=truth.shape)
+        roi = (slice(1, 9), slice(0, 7), slice(2, 10))
+        for block_frames in (1, 4, 23, 50):
+            with self.subTest(block_frames=block_frames):
+                calls = self.check(truth, prediction, roi, block_frames)
+                if block_frames < 23:  # each call covers one block and its 3-frame halos only
+                    self.assertTrue(all(c.stop - c.start <= block_frames + 6 for c in calls))
+
+    def test_blocks_reproduce_2d_sequences_and_short_axes(self):
+        rng = np.random.default_rng(1)
+        truth = rng.random((16, 12, 30))
+        self.check(truth, truth + 0.1 * rng.normal(size=truth.shape), (slice(2, 14), slice(1, 12)), 5)
+        short = rng.random((9, 8, 5, 12))  # z = 5 is shorter than the window: SSIM is null
+        streamed_calls = self.check(short, short * 0.9, None, 4)
+        self.assertEqual(len(streamed_calls), 3)
+
+
 if __name__ == "__main__":
     unittest.main()

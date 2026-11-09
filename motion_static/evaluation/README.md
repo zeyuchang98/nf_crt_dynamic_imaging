@@ -21,7 +21,9 @@ It retains the existing full-grid, ROI, per-frame and temporal-curve measurement
 | `intensity_rank` | Uncentered spatial-by-time singular values and rank tail, when applicable |
 
 Scalar computations remain in `metrics.py`; masked spatial-window SSIM remains in
-`masked_metrics.py`. Midpoint and block SSIM conventions are still distinct.
+`masked_metrics.py`. 3D (box) runs score the image frame block by frame block
+(`evaluate_sequence_in_blocks`, same report and definitions), so their evaluation memory
+does not grow with the number of frames. Midpoint and block SSIM conventions are still distinct.
 Raw predictions are never clipped before metrics. Turning off exports does not
 subsample evaluation times or use the monitoring subset as the evaluation set.
 

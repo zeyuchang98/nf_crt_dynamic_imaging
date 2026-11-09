@@ -2032,3 +2032,26 @@ and a tiny run's GIF has one frame per selected window frame, with a rejection f
 runs. 155 tests pass. For the small test run (all 151 frames, 4.2 min):
 [visuals/window_volume.gif](results/dce_moby_box64_20261109_2k_test_window_r2_s0/visuals/window_volume.gif)
 (7.4 MB) and its middle-frame still.
+
+**Streamed evaluation for 3D runs (2026-11-09): completed, approved by the user.** The
+in-process evaluation holds about 20 times the data size (2D formal run: 3.5 GB of data,
+67.7 GB peak; the 3D test window: 151 MiB, 3.3 GiB), which for the 64^3 full series
+(14 GiB) would be about 300 GB, above the 212 GB of a Vista node. Multiple GPUs would not
+help: the metrics are CPU numpy code on the host.
+[evaluation/metrics.py](evaluation/metrics.py) `evaluate_sequence_in_blocks` computes the
+report of `evaluate_sequence` frame block by frame block (64 frames for 64^3 voxels, with
+3-frame SSIM halos): sums of squared error and squared truth, per-frame scores, the
+time-chunked whole-array SSIM, ROI and activity curve; the prediction is requested per
+block and never held whole. [evaluation/evaluate.py](evaluation/evaluate.py) uses it for
+3D data (`streamed_image_report`); predictions of 3D runs are returned only when
+`output.predictions` is set. The settings, ROI and SSIM-settings code of
+`evaluate_sequence` moved into shared helpers without changing its output. Validated:
+- Two tests in [tests/test_metrics.py](tests/test_metrics.py): random 3D+t (block sizes 1,
+  4, 23 and 50 frames) and 2D+t sequences with ROIs, and a sequence with an axis shorter
+  than the window, give the same report as `evaluate_sequence` to 1e-12; each prediction
+  request covers one block and its halos. 157 tests pass; the six-run 2D regression is
+  bitwise unchanged.
+- The small 3D test run re-evaluated this way reproduces its saved metrics.json (whole
+  array) to 6.2e-15 relative; 272 s.
+- Memory (tracemalloc, synthetic 64^3 sequences): 2.43 GiB beyond the data at 151 and at
+  600 frames, so about 14 GiB + 2.4 GiB for the full series.

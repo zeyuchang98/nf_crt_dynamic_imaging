@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from .metrics import evaluate_sequence, error_metrics, save_metrics
+from .metrics import evaluate_sequence, evaluate_sequence_in_blocks, error_metrics, save_metrics
 from ..phantoms.data import coordinate_grid, entry_coordinates, get_phantom
 
 
@@ -215,12 +215,40 @@ def evaluate(model, data, config, out, training_seconds):
     return report
 
 
+def streamed_image_report(model, data, splits, data_range=1):
+    """3D grids: scalar_report's image metrics (no points), computed frame block by frame block.
+
+    The whole-array evaluation would hold about 20 times the data size in memory; here the
+    prediction is made per block and never held whole (metrics.evaluate_sequence_in_blocks).
+    """
+    roi = bounding_roi([entry["truth"] for entry in data.values()])
+    report = {}
+    for split, label in splits:
+        entry = data[split]
+
+        def predict_frames(frames, entry=entry):
+            return predict(model, entry_coordinates(entry, frames)).reshape(*entry["truth"].shape[:-1], -1)
+
+        report[label] = evaluate_sequence_in_blocks(entry["truth"], predict_frames, data_range=data_range,
+                                                    times=entry["t"], roi=roi)
+    return report
+
+
 def image_only_report(model, data, config, training_seconds):
-    """Image metrics and predictions for every split of `data`, without writing files."""
+    """Image metrics and predictions for every split of `data`, without writing files.
+
+    3D grids are scored frame block by frame block; their predictions are returned only
+    when output.predictions is set (otherwise None).
+    """
     splits = image_splits(data)
-    predictions = {split: predict_entry(model, entry) for split, entry in data.items()}
-    image = scalar_report(None, "image", data, {s: d["truth"] for s, d in data.items()}, predictions, points={},
-                          splits=splits)
+    if any("z" in entry for entry in data.values()):
+        image = streamed_image_report(model, data, splits)
+        predictions = ({split: predict_entry(model, entry) for split, entry in data.items()}
+                       if config.get("output", {}).get("predictions", False) else None)
+    else:
+        predictions = {split: predict_entry(model, entry) for split, entry in data.items()}
+        image = scalar_report(None, "image", data, {s: d["truth"] for s, d in data.items()}, predictions,
+                              points={}, splits=splits)
     report = dict(schema_version=1, evaluation_split="midpoints",
                   evaluation_scope="image only; no true motion or reference intensity",
                   parameters=sum(p.numel() for p in model.parameters()),
