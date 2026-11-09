@@ -2,8 +2,8 @@
 
 `template.json` is the reusable experiment input. Copy it to a scratch
 location, edit explicit settings, and run the shared trainer. Generated sweep
-configurations do not belong in this directory; the only other input is the agreed
-whole-series DCE-MOBY configuration, with its Vista job scripts in `vista/` (see
+configurations do not belong in this directory; the only other inputs are the agreed
+whole-series DCE-MOBY configurations (z = 100 slice and 64^3 lesion box), with their Vista job scripts in `vista/` (see
 "Vista (TACC) runs"). Every run saves its resolved configuration in its own output folder.
 
 ## Data and model settings
@@ -141,6 +141,11 @@ torch with CUDA); see `PROGRESS.md` for its setup. From the repository root on V
 ```bash
 sbatch -p gh-dev -t 02:00:00 motion_static/experiments/vista/train.sbatch motion_static/experiments/dce_moby_full_series.json NAME
 ```
+
+[dce_moby_box64_full_series.json](dce_moby_box64_full_series.json) is the same design for
+the 3D 64^3 lesion box (`moby_slice.py --box 93 161 65 64 64 64`): intensity hash 8-128
+cells per axis, motion 2-8 cells per spatial axis and 384-1536 in time, 10,000 steps for
+the throughput trial; the formal step budget and hash settings are still to be agreed.
 
 Extra arguments go to `run.py` (for example `--steps`). The job log, with the peak host
 memory, and a per-minute GPU record are moved into the run folder.
