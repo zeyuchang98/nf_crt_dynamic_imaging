@@ -91,6 +91,9 @@ local copy of the slice file with the recorded sha256.
 frames where the true displacement (from `phantoms.moby_motion_slice`) is within 1e-3
 grid spacings of t0's configuration ([METRICS.md](../METRICS.md) Section 3.7); its core
 functions take 2D or 3D grids.
+`moby_box_gif` draws the GIF of a 3D box run: truth (left) and NF (right) as
+maximum-intensity volume renders with one fixed display range and camera; it needs
+the optional PyVista.
 `moby_series_checks` is data only (no model): tissue mean curves over a whole slice
 series, the time-grid resolution they need, the breathing periodicity, and the SVD of
 frames of one respiratory phase (the rank of the intensity change without motion).

@@ -2019,3 +2019,16 @@ agreed before a module is written): maximum-intensity volume renders of truth, N
 |NF - truth| at four frames (plain opacity hid the interior behind the body surface), the
 true lesion shell and core surfaces with an xy and a yz slice of truth and NF intensity,
 and a GIF of the truth and NF renders over the window.
+
+**Truth | NF volume GIF (2026-11-09): completed.** The user asked for one simple view
+first: [evaluation/moby_box_gif.py](evaluation/moby_box_gif.py) renders truth (left) and
+NF (right) as maximum-intensity volume renders, gray, one fixed display range (default
+0..0.05 raw p0, as the 2D GIFs) and one camera, 90 ms per frame, with `--frames` ranges
+as in `moby_branch_gifs`. The renderer keeps one scene and replaces the volume values
+each frame; an explicit render before each screenshot is needed (without it, PyVista
+returned the previous frame). [tests/test_moby_box_gif.py](tests/test_moby_box_gif.py)
+(2 tests, skipped without PyVista): an updated scene renders exactly like a fresh one,
+and a tiny run's GIF has one frame per selected window frame, with a rejection for slice
+runs. 155 tests pass. For the small test run (all 151 frames, 4.2 min):
+[visuals/window_volume.gif](results/dce_moby_box64_20261109_2k_test_window_r2_s0/visuals/window_volume.gif)
+(7.4 MB) and its middle-frame still.
