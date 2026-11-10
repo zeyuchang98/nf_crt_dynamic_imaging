@@ -2055,3 +2055,49 @@ block and never held whole. [evaluation/evaluate.py](evaluation/evaluate.py) use
   array) to 6.2e-15 relative; 272 s.
 - Memory (tracemalloc, synthetic 64^3 sequences): 2.43 GiB beyond the data at 151 and at
   600 frames, so about 14 GiB + 2.4 GiB for the full series.
+
+**Full-series box and 10k-step trial (2026-11-09): completed.** Approved by the user as a
+short `gh-dev` job to measure speed and memory before the formal run, as for the 2D trial.
+- Data: Slurm job 1132716 (`gg`, `evaluate.sbatch`, 53 min, 1.1 GB peak) extracted the
+  64^3 box over all 14,401 frames to `$WORK/moby_box/moby_box64_full.h5` (11.9 GB, sha256
+  `c2bb7db1...c887e`). Check job 1132807 (`gg`, 6 min): times strictly increasing (-36 to
+  684 s), phases 0-199 cycling, frames 1250-1400 equal to the test-window file (p0, times,
+  phases, indicators), p0 range 0-0.4674.
+- Input [experiments/dce_moby_box64_full_series.json](experiments/dce_moby_box64_full_series.json)
+  (commit `50d4d9c`, recorded in the run's `config.json`): the 2D full-series design in
+  3D, R = 3, intensity hash 8-128 cells per axis (2^19), motion [2, 2, 2, 384] to
+  [8, 8, 8, 1536] cells (2^17), time grid 3-288, 10,000 cosine steps at batch 65,536,
+  seed 0; 3.85 M parameters. Job 1132808, `sbatch -p gh-dev -t 02:00:00`, after the check
+  job; 1 h 03 min, exit code 0 (about 1 SU).
+- Records: [dce_moby_box64_20261109_10k_trial_r3_s0](results/dce_moby_box64_20261109_10k_trial_r3_s0/)
+  (`config.json`, `metrics.json`, `loss.csv`, `loss.png`, `run.log`, `monitor_samples.npz`,
+  `source.zip`, the Slurm log and `gpu-1132808.csv`; copied with rsync). `model.pt`
+  (15 MB) stays on Vista in the same folder.
+- Time: loading the 11.9 GB file about 6 min (GPU idle); training 843 s, 84.3 ms per step
+  (0.78 M samples/s, 1.5 times the 2D trial's 54.4 ms), GPU 98-99% busy; the 10k steps
+  drew 655 M samples, 0.17 per point (3.78 B points). The streamed evaluation of all
+  frames took 42 min (GPU 0-35%, the CPU metrics dominate).
+- Memory: GPU 16,228 MiB (nvidia-smi, includes PyTorch's cache) of 97,871 MiB; host peak
+  30.2 GB (`/usr/bin/time -v` maximum RSS) of the node's 212 GB, about twice the 15.1 GB
+  of float32 data, so the streamed evaluation kept the host well inside the node.
+- Fit (protocol A, all frames): RRMSE 11.78%, PSNR 49.43 dB, SSIM 0.99712; ROI 11.78%;
+  activity-curve RRMSE 0.63%. The fixed-sample training MSE fell from 1.12e-3 (step 1) to
+  1.06e-5 and was flattening as the cosine schedule reached zero.
+- Per-frame RRMSE: median 11.29% (10th-90th percentile 5.01-15.46%, 99th 24.42%), flat over
+  the series (median 11.1-12.3% in each interval from pre-injection to 684 s). It depends
+  on the breathing phase: the median over frames of one phase (frame index mod 50) ranges
+  from 4.20% (phase 25) to 16.81% (phase 32). The worst frames are the first ones: 81.6%
+  at frame 0 (t = -36 s, the motion reference frame) and 63-80% for frames 0-4, against
+  9.6% at frame 50. The same pattern as the 2D trial (frame 0: 55.4%).
+- Not comparable with the 2D trial (10.61%): a different region (the box around the
+  lesion, not the whole slice) and 0.17 instead of 0.74 samples per point.
+- Projection, not measured: e01's sampling density (21 samples per point) would be about
+  1.21 M steps, 28 h of training at this speed plus about 50 min of loading and evaluation,
+  about 29 SU on `gh`, inside its 48 h limit; the 2D formal run's 288k steps would be
+  6.7 h (5 samples per point).
+
+Next steps, to be agreed with the user before the formal run: the step budget (samples per
+point), the hash table sizes (at 2^19 the two finest intensity levels, 87^3 and 129^3
+vertices, are hashed; at 2^17 so are the three finest motion levels, 0.22-0.79 M
+vertices), and the motion's spatial resolution (2-8 cells per axis on the 9.6 mm box are
+about four times finer in mm than on the 37.2 mm slice).
