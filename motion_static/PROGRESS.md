@@ -2131,3 +2131,25 @@ Validated:
   with midpoints and 300 steps; 76 training frames (26.5-34.0 s), 75 midpoint frames each
   halfway between two training frames, the held-out MSE logged at every interval;
   training 69 s, 462 s with evaluation, 3.0 GB peak.
+
+**Round 1 of the 3D window tuning (2026-11-10): inputs written, not yet submitted.** Agreed
+with the user: run in parallel as separate short jobs (Vista schedules by requested wall
+time), so S1 and S2 of the staged plan become one grid submitted at once, then a second
+round (the round-1 best with 2x steps, and seeds 1-2 of it). Common settings: the
+test-window design in 3D (R = 2, intensity 8-128 cells per axis, time grid 3-48, motion
+time 4-16 cells), held-out midpoints, 12,800 cosine steps at batch 65,536 (42.1 samples
+per training point, the budget of the best 2D tuning runs), seed 0, one `gh-dev` node and
+45 min each. Inputs: [experiments/box64_window_tuning/](experiments/box64_window_tuning/).
+
+| Input | Intensity table | Motion cells per spatial axis | Parameters |
+|---|---|---|---:|
+| `w0_table19_motion2-8` | 2^19 (two finest levels hashed) | 2-8 (cells 4.8-1.2 mm) | 2,727,185 |
+| `w1_table22_motion2-8` | 2^22 (all levels dense) | 2-8 | 6,240,417 |
+| `w2_table19_motion1-4` | 2^19 | 1-4 (9.6-2.4 mm) | 2,691,411 |
+| `w3_table19_motion1-2` | 2^19 | 1-2 (9.6-4.8 mm, about the 2D slice's mm scale) | 2,685,751 |
+| `w4_table22_motion1-4` | 2^22 | 1-4 | 6,204,643 |
+| `w5_table22_motion1-2` | 2^22 | 1-2 | 6,198,983 |
+
+Motion tables stay 2^15, dense in every run. Local dry runs (CPU, local copy of the window
+file) resolve each input to 76 training frames and the midpoint split. Selection: lowest
+held-out midpoint RRMSE; within about 1 point, the simpler or smaller setting.
