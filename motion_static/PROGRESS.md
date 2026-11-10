@@ -2132,7 +2132,7 @@ Validated:
   halfway between two training frames, the held-out MSE logged at every interval;
   training 69 s, 462 s with evaluation, 3.0 GB peak.
 
-**Round 1 of the 3D window tuning (2026-11-10): inputs written, not yet submitted.** Agreed
+**Round 1 of the 3D window tuning (2026-11-10): submitted.** Agreed
 with the user: run in parallel as separate short jobs (Vista schedules by requested wall
 time), as one grid submitted at once, then a second round of three runs (the round-1 best
 with 2x steps, and seeds 1-2 of it). The motion's time axis is tuned too (user, same day):
@@ -2150,6 +2150,14 @@ on the table size), held-out midpoints, 12,800 cosine steps at batch 65,536 (42.
 per training point, the budget of the best 2D tuning runs), seed 0, one `gh-dev` node and
 45 min each. Inputs: [experiments/box64_window_tuning/](experiments/box64_window_tuning/)
 (they replace the six inputs of commit `ba26d8f`, never submitted).
+
+Submitted from code `d4f9f73` (Vista checkout fast-forwarded after restoring its
+`results/summary.csv`, which the trial run had rewritten to the committed content; user
+approved), run names `dce_moby_box64_tune_20261110_<input>_s0`, `-t 00:45:00`: job 1135550
+(`table19_space2-8_time16`) on `gh-dev`, jobs 1135553-1135561 (the nine `table22` inputs,
+in file-name order) on `gh`. `qlimits` shows `gh-dev` allows one running and three
+submitted jobs per user (`gh`: 20 and 40, same nodes), so the other `gh-dev` submissions
+were refused or cancelled while pending (1135551-1135552) and resubmitted on `gh`.
 
 | Input | Intensity table | Motion cells per spatial axis | Motion time cells (per breath) | Parameters |
 |---|---|---|---|---:|
