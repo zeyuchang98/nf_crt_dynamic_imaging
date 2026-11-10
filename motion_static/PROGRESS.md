@@ -2101,3 +2101,33 @@ point), the hash table sizes (at 2^19 the two finest intensity levels, 87^3 and 
 vertices, are hashed; at 2^17 so are the three finest motion levels, 0.22-0.79 M
 vertices), and the motion's spatial resolution (2-8 cells per axis on the 9.6 mm box are
 about four times finer in mm than on the 37.2 mm slice).
+
+## 3D settings: held-out midpoints for the box window (2026-11-10)
+
+Decided with the user: the 2D settings are not carried to 3D. The 3D settings are tuned
+first on the 64^3 test window (frames 1250-1400, the window of the 2D tuning) and then
+used on the full series, with the 2D tuning's selection criterion, the image RRMSE on the
+held-out midpoints (A). The run list is still to be agreed.
+
+Code (2D behavior unchanged): [run.py](run.py) accepts `"held_out_split": "midpoints"`
+for 3D box data (the alternate split and the plateau schedule stay 2D only); training
+and held-out pools come from `coordinate_rows` in [phantoms/data.py](phantoms/data.py),
+which gives a `CoordinateGrid` for 3D grids, so the held-out monitor pool has its z rows.
+The evaluation already streamed every split. [evaluation/moby_box_gif.py](evaluation/moby_box_gif.py)
+now refuses held-out runs, whose training entry holds only the even frames.
+
+Validated:
+- [tests/test_moby_3d.py](tests/test_moby_3d.py): a tiny 3D midpoint run observes the
+  even window frames and scores the odd ones (times and volumes equal the window's);
+  the logged final held-out MSE is reproduced from the saved monitor indices and the
+  final weights; `training_grid` and `unseen_time_midpoints` equal the metrics of a
+  direct prediction. The alternate split is still rejected for 3D; the GIF test covers
+  the new refusal. [tests/test_phantoms.py](tests/test_phantoms.py) now lists
+  `dce_moby_box64_full_series.json`: commit `50d4d9c` had added it to `experiments/`
+  without updating that test, which failed until now. 158 tests pass.
+- 2D regression: the six tiny runs give bitwise identical weights, loss.csv and
+  metrics.json to the `af1b2d6` baseline.
+- Smoke run on the real window (local CPU, scratch, not kept): the test-window settings
+  with midpoints and 300 steps; 76 training frames (26.5-34.0 s), 75 midpoint frames each
+  halfway between two training frames, the held-out MSE logged at every interval;
+  training 69 s, 462 s with evaluation, 3.0 GB peak.

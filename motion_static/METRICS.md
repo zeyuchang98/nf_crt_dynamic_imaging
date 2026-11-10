@@ -345,7 +345,10 @@ The displacement of the scored planes, in p0's layout, comes from
   the series (2.4 GiB for 64^3 voxels at 151 and at 600 frames, besides the data). The
   definitions are those of `evaluate_sequence`; tests require agreement to 1e-12, and
   the small 3D test run reproduces its saved metrics to 6e-15. Noted in
-  `settings.computation`. 2D runs use the unchanged whole-array code.
+  `settings.computation`. 2D runs use the unchanged whole-array code. Since 2026-11-10
+  3D runs may also use the midpoint protocol (`training_grid`, `unseen_time_midpoints`:
+  even window frames observed, odd frames scored only, one ROI over both); each split
+  is streamed the same way.
 - **Block SSIM:** only spatial 7-by-7 windows entirely inside the selected mask
   are valid. Overall SSIM averages valid centers across all frames; it is not
   necessarily an equal-weight frame average. Do not mix it with midpoint SSIM.

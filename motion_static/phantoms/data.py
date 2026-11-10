@@ -66,6 +66,17 @@ class CoordinateGrid:
         return torch.stack([values[1], values[0], *values[2:]], dim=-1)  # columns x, y[, z], t
 
 
+def coordinate_rows(entry):
+    """Rows (x, y[, z], t) of an entry's whole grid, in entry["truth"].reshape(-1) order.
+
+    2D grids give the coordinate_grid array; 3D grids give a CoordinateGrid, whose rows
+    are computed on demand because the (N, 4) array may not fit in memory.
+    """
+    if "z" in entry:
+        return CoordinateGrid(entry["x"], entry["y"], entry["t"], entry["z"])
+    return coordinate_grid(entry["x"], entry["y"], entry["t"])
+
+
 def sample(name, size, times, time_bounds=(-0.5, 0.5)):
     if size < 16:
         raise ValueError("Use at least 16 pixels per side")

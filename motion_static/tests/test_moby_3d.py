@@ -1,4 +1,4 @@
-"""3D (x, y, z, t) support: coordinate rows, 4D hash grids, the 3D nested model, box files and a tiny run."""
+"""3D (x, y, z, t) support: coordinate rows, 4D hash grids, the 3D nested model, box files and tiny runs."""
 import json
 from pathlib import Path
 import tempfile
@@ -14,8 +14,9 @@ from motion_static.evaluation.moby_embedding_figures import load_model
 from motion_static.models.hash_grid import HashGridEncoding
 from motion_static.models.nested_low_rank_hash_nf import NestedLowRankHashNF
 from motion_static.phantoms import moby
-from motion_static.phantoms.data import CoordinateGrid, coordinate_grid
+from motion_static.phantoms.data import CoordinateGrid, coordinate_grid, coordinate_rows
 from motion_static.run import main, prepare_data
+from motion_static.training_monitor import fixed_mse
 from motion_static.tests.test_moby_data import DATA, DT, FRAMES, SPACING, T0
 
 
@@ -141,8 +142,43 @@ class BoxFileTests(unittest.TestCase):
         self.assertAlmostEqual(metrics["rrmse"], error_metrics(training["truth"], direct, data_range=1)["rrmse"], places=6)
         self.assertEqual(len(metrics["per_frame_rrmse"]), len(training["t"]))
 
-    def test_3d_rejects_held_out_splits_and_wrong_resolution_lists(self):
-        bad = [dict(held_out_split="midpoints"),
+    def test_tiny_3d_midpoint_run_observes_even_frames_and_scores_odd_frames(self):
+        config = self.root / "run.json"
+        config.write_text(json.dumps(config_3d(self.path, held_out_split="midpoints")))
+        out = self.root / "results" / "run"
+        main(["--config", str(config), "--out", str(out)])
+        saved = json.loads((out / "config.json").read_text())
+        self.assertEqual(saved["status"], "complete")
+        data = prepare_data(saved)[0]
+        window = moby.make_all_frames(saved["data"])["training"]
+        for split, start in (("training", 0), ("midpoint", 1)):
+            np.testing.assert_array_equal(data[split]["t"], window["t"][start::2])
+            np.testing.assert_array_equal(data[split]["truth"], window["truth"][..., start::2])
+        self.assertEqual(saved["frames"], len(data["training"]["t"]))
+        model = load_model(out)
+
+        # The monitor's held-out pool is the midpoint grid with its z rows: the logged final
+        # validation MSE is reproduced from the saved indices and the final weights.
+        indices = np.load(out / "monitor_samples.npz")["validation_indices"]
+        rows = coordinate_rows(data["midpoint"])[indices]
+        values = torch.as_tensor(data["midpoint"]["truth"].reshape(-1)[indices])
+        with open(out / "loss.csv") as stream:
+            logged = [line.split(",") for line in stream.read().splitlines()]
+        column = logged[0].index("fixed_validation_mse")
+        self.assertAlmostEqual(float(logged[-1][column]), fixed_mse(model, rows, values), places=10)
+
+        # Both splits are scored, each equal to metrics of a direct prediction.
+        image = json.loads((out / "metrics.json").read_text())["image"]
+        for split, label in (("training", "training_grid"), ("midpoint", "unseen_time_midpoints")):
+            entry = data[split]
+            direct = predict(model, coordinate_grid(entry["x"], entry["y"], entry["t"], entry["z"]))
+            direct = direct.reshape(entry["truth"].shape)
+            expected = error_metrics(entry["truth"], direct, data_range=1)["rrmse"]
+            self.assertAlmostEqual(image[label]["rrmse"], expected, places=6)
+            self.assertEqual(len(image[label]["per_frame_rrmse"]), len(entry["t"]))
+
+    def test_3d_rejects_other_held_out_splits_and_wrong_resolution_lists(self):
+        bad = [dict(held_out_split="alternate_validation_test"),
                dict(motion_encoding=dict(levels=2, features=2, log2_hash_size=10,
                                          min_resolution=[2, 2, 4], max_resolution=[4, 4, 8]))]
         for k, changes in enumerate(bad):

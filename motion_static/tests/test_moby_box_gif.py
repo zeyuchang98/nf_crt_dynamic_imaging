@@ -53,6 +53,12 @@ class BoxGifTests(unittest.TestCase):
             (two_d / "config.json").write_text(json.dumps({"phantom": "dce_moby"}))
             with self.assertRaises(SystemExit):  # slice runs have no volume to render
                 moby_box_gif.main([str(two_d)])
+            held_out = root / "held_out"
+            held_out.mkdir()
+            (held_out / "config.json").write_text(json.dumps(
+                {"phantom": "dce_moby", "spatial_dimensions": 3, "held_out_split": "midpoints"}))
+            with self.assertRaises(SystemExit):  # its training entry has only the even frames
+                moby_box_gif.main([str(held_out)])
 
 
 if __name__ == "__main__":

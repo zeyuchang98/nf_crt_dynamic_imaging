@@ -23,7 +23,7 @@ from .models.low_rank_intensity import LowRankIntensity
 from .models.oracle_branches import PHANTOM_REFERENCE_TIME, TrueMotion, TrueReferenceIntensity
 from .models.time_grid import TimeGridField
 from .phantoms import moby
-from .phantoms.data import DEFAULT_PHANTOM, DEFAULT_SAMPLING, CoordinateGrid, coordinate_grid, make_pair, sample
+from .phantoms.data import DEFAULT_PHANTOM, DEFAULT_SAMPLING, CoordinateGrid, coordinate_rows, make_pair, sample
 from .splits import block_split
 from .evaluation.evaluate import evaluate, evaluate_image_only
 from .evaluation.block_evaluate import evaluate_blocks
@@ -498,10 +498,11 @@ def parse_configuration(argv=None):
         if weight > 0:
             parser.error("oracle_branch does not support the temporal penalty")
 
-    # 3D box data: so far only the embedding protocol with the nested low-rank model.
+    # 3D box data: the nested low-rank model, with the embedding protocol or the held-out
+    # midpoints (even window frames observed, odd frames scored only).
     if config.get("spatial_dimensions", 2) == 3:
-        if config["model"] != "nested_low_rank_hash_nf" or held_out_split != "none":
-            parser.error("3D data support the nested_low_rank_hash_nf model with held_out_split none only")
+        if config["model"] != "nested_low_rank_hash_nf" or held_out_split not in ("none", "midpoints"):
+            parser.error("3D data support the nested_low_rank_hash_nf model with held_out_split none or midpoints only")
         for name in ("encoding", "motion_encoding"):
             for key in ("min_resolution", "max_resolution"):
                 value = config.get(name, {}).get(key)
@@ -569,18 +570,15 @@ def execute(config, out):
             # Build observed and held-out pools; held-out samples go only to the monitor.
             data, split = prepare_data(config)
             training = data["training"]
-            if "z" in training:
-                # 3D: the (N, 4) coordinate array would not fit in memory; rows are computed per batch.
-                coordinates = CoordinateGrid(training["x"], training["y"], training["t"], training["z"])
-            else:
-                coordinates = coordinate_grid(training["x"], training["y"], training["t"])
+            # 3D grids give a CoordinateGrid: the (N, 4) array may not fit; rows are computed per batch.
+            coordinates = coordinate_rows(training)
             intensities = training["truth"].reshape(-1)
             if split is None:
                 # Test frames, when present, are never shown to training or monitoring.
                 # The embedding protocol has no held-out frames to monitor.
                 held_out = data.get("validation", data.get("midpoint"))
                 validation = None if held_out is None else (
-                    coordinate_grid(held_out["x"], held_out["y"], held_out["t"]),
+                    coordinate_rows(held_out),
                     held_out["truth"].reshape(-1),
                 )
             else:

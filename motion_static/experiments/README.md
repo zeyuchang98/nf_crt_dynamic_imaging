@@ -146,6 +146,9 @@ sbatch -p gh-dev -t 02:00:00 motion_static/experiments/vista/train.sbatch motion
 the 3D 64^3 lesion box (`moby_slice.py --box 93 161 65 64 64 64`): intensity hash 8-128
 cells per axis, motion 2-8 cells per spatial axis and 384-1536 in time, 10,000 steps for
 the throughput trial; the formal step budget and hash settings are still to be agreed.
+3D box data take `"held_out_split": "none"` (embedding) or `"midpoints"` (even window
+frames observed, odd frames only scored, as on the slice); the alternate split and the
+plateau schedule are not implemented for 3D.
 
 Extra arguments go to `run.py` (for example `--steps`). The job log, with the peak host
 memory, and a per-minute GPU record are moved into the run folder.

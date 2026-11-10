@@ -102,6 +102,9 @@ def main(argv=None):
     config = json.loads((args.run / "config.json").read_text())
     if config.get("phantom") != moby.NAME or config.get("spatial_dimensions") != 3:
         parser.error("Run is not a 3D dce_moby box run")
+    if config.get("held_out_split") != "none":
+        # A held-out run's training entry holds only the even window frames.
+        parser.error("Only embedding-protocol runs (held_out_split none) are drawn")
     if args.data_file is not None:
         if moby.file_sha256(args.data_file) != config["data"]["sha256"]:
             parser.error("--data-file does not have the sha256 recorded by the run")
