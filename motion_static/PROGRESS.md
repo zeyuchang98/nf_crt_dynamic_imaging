@@ -2134,22 +2134,41 @@ Validated:
 
 **Round 1 of the 3D window tuning (2026-11-10): inputs written, not yet submitted.** Agreed
 with the user: run in parallel as separate short jobs (Vista schedules by requested wall
-time), so S1 and S2 of the staged plan become one grid submitted at once, then a second
-round (the round-1 best with 2x steps, and seeds 1-2 of it). Common settings: the
-test-window design in 3D (R = 2, intensity 8-128 cells per axis, time grid 3-48, motion
-time 4-16 cells), held-out midpoints, 12,800 cosine steps at batch 65,536 (42.1 samples
+time), as one grid submitted at once, then a second round of three runs (the round-1 best
+with 2x steps, and seeds 1-2 of it). The motion's time axis is tuned too (user, same day):
+in the window data the image changes fast during about 35 of the 50 frames of a breath
+(relative change between consecutive frames 10-41%; quiet at breath frames 20-29 and
+42-46), and the 3D trial's per-phase median RRMSE follows that change (correlation 0.83
+over the 50 breath positions; 4.2% where quiet, up to 16.8%). In 2D a finer motion time
+axis did not help the midpoints, but there through-plane motion had to go into the
+intensity; in 3D the motion carries it. The correlation could also come from the trial's
+small budget (0.17 samples per point), so it is tested rather than assumed.
+
+Common settings: the test-window design in 3D (R = 2, intensity 8-128 cells per axis,
+time grid 3-48), motion table 2^17 (every motion level dense; dense levels do not depend
+on the table size), held-out midpoints, 12,800 cosine steps at batch 65,536 (42.1 samples
 per training point, the budget of the best 2D tuning runs), seed 0, one `gh-dev` node and
-45 min each. Inputs: [experiments/box64_window_tuning/](experiments/box64_window_tuning/).
+45 min each. Inputs: [experiments/box64_window_tuning/](experiments/box64_window_tuning/)
+(they replace the six inputs of commit `ba26d8f`, never submitted).
 
-| Input | Intensity table | Motion cells per spatial axis | Parameters |
-|---|---|---|---:|
-| `w0_table19_motion2-8` | 2^19 (two finest levels hashed) | 2-8 (cells 4.8-1.2 mm) | 2,727,185 |
-| `w1_table22_motion2-8` | 2^22 (all levels dense) | 2-8 | 6,240,417 |
-| `w2_table19_motion1-4` | 2^19 | 1-4 (9.6-2.4 mm) | 2,691,411 |
-| `w3_table19_motion1-2` | 2^19 | 1-2 (9.6-4.8 mm, about the 2D slice's mm scale) | 2,685,751 |
-| `w4_table22_motion1-4` | 2^22 | 1-4 | 6,204,643 |
-| `w5_table22_motion1-2` | 2^22 | 1-2 | 6,198,983 |
+| Input | Intensity table | Motion cells per spatial axis | Motion time cells (per breath) | Parameters |
+|---|---|---|---|---:|
+| `table19_space2-8_time16` | 2^19 (two finest levels hashed) | 2-8 (4.8-1.2 mm) | 4-16 (1.3-5.3) | 2,727,185 |
+| `table22_space2-8_time16` | 2^22 (all levels dense) | 2-8 | 4-16 | 6,240,417 |
+| `table22_space1-4_time16` | 2^22 | 1-4 (9.6-2.4 mm) | 4-16 | 6,204,643 |
+| `table22_space1-2_time16` | 2^22 | 1-2 (9.6-4.8 mm) | 4-16 | 6,198,983 |
+| `table22_space2-8_time32` | 2^22 | 2-8 | 4-32 (1.3-10.7) | 6,275,297 |
+| `table22_space1-4_time32` | 2^22 | 1-4 | 4-32 | 6,210,651 |
+| `table22_space1-2_time32` | 2^22 | 1-2 | 4-32 | 6,200,279 |
+| `table22_space2-8_time64` | 2^22 | 2-8 | 4-64 (1.3-21.3; finest cell 0.12 s) | 6,342,491 |
+| `table22_space1-4_time64` | 2^22 | 1-4 | 4-64 | 6,222,209 |
+| `table22_space1-2_time64` | 2^22 | 1-2 | 4-64 | 6,202,679 |
 
-Motion tables stay 2^15, dense in every run. Local dry runs (CPU, local copy of the window
-file) resolve each input to 76 training frames and the midpoint split. Selection: lowest
-held-out midpoint RRMSE; within about 1 point, the simpler or smaller setting.
+The first input is the 2D window design carried to 3D unchanged, the table-size
+reference. Local dry runs (CPU, local copy of the window file) resolve each input to 76
+training frames and the midpoint split. Selection: lowest held-out midpoint RRMSE; within
+about 1 point, the simpler or smaller setting. Not tuned here: learning rates, batch, the
+intensity resolution and time grid, and R (a 7.5 s window cannot set the full series'
+rank). The chosen setting goes to the full series with the same motion time cells per
+breath (4-16 on 3 breaths is 384-1536 on 288), R = 3 and the full-series time grid; the
+formal step budget is to be agreed then.

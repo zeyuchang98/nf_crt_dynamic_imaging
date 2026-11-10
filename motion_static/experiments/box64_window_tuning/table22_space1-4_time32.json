@@ -13,7 +13,7 @@
   "encoding": {
     "levels": 8,
     "features": 2,
-    "log2_hash_size": 19,
+    "log2_hash_size": 22,
     "min_resolution": 8,
     "max_resolution": 128
   },
@@ -31,7 +31,7 @@
   "motion_encoding": {
     "levels": 8,
     "features": 2,
-    "log2_hash_size": 15,
+    "log2_hash_size": 17,
     "min_resolution": [
       1,
       1,
@@ -42,7 +42,7 @@
       4,
       4,
       4,
-      16
+      32
     ]
   },
   "data": {

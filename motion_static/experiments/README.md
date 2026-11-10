@@ -152,13 +152,14 @@ plateau schedule are not implemented for 3D.
 
 [box64_window_tuning/](box64_window_tuning/) holds the inputs of the 3D settings tuning on
 the 64^3 test window (frames 1250-1400, `moby_box64_f1250_1400.h5`), held-out midpoints:
-the 2D window settings in 3D (R = 2, time grid 3-48, motion time 4-16), 12,800 steps at
+R = 2 and the time grid 3-48 of the 2D window design, motion table 2^17, 12,800 steps at
 batch 65,536 (42 samples per training point, as the best 2D tuning budget), seed 0.
-Round 1 is a grid of intensity table 2^19 or 2^22 (`w0`/`w2`/`w3`, `w1`/`w4`/`w5`) by
-motion 2-8, 1-4 or 1-2 cells per spatial axis. Each run is one short `gh-dev` job:
+Round 1: `table19_space2-8_time16` (the 2D window design in 3D) and, with the intensity
+table 2^22, motion 2-8, 1-4 or 1-2 cells per spatial axis by 4-16, 4-32 or 4-64 cells in
+time (`table22_spaceS_timeT`). Each run is one short `gh-dev` job:
 
 ```bash
-sbatch -p gh-dev -t 00:45:00 motion_static/experiments/vista/train.sbatch motion_static/experiments/box64_window_tuning/w0_table19_motion2-8.json NAME
+sbatch -p gh-dev -t 00:45:00 motion_static/experiments/vista/train.sbatch motion_static/experiments/box64_window_tuning/table19_space2-8_time16.json NAME
 ```
 
 Extra arguments go to `run.py` (for example `--steps`). The job log, with the peak host
