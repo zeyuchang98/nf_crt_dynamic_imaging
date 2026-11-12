@@ -2,7 +2,7 @@
   "phantom": "dce_moby",
   "model": "nested_low_rank_hash_nf",
   "seed": 0,
-  "steps": 10000,
+  "steps": 1220000,
   "batch_size": 65536,
   "threads": 8,
   "mlp_lr": 0.001,
@@ -23,7 +23,10 @@
   "monitor_samples": 65536,
   "monitor_seed": 2026,
   "log_interval": 500,
-  "checkpoint_steps": [],
+  "checkpoint_steps": [
+    400000,
+    800000
+  ],
   "output": {
     "gifs": false,
     "predictions": false
@@ -31,7 +34,7 @@
   "motion_encoding": {
     "levels": 8,
     "features": 2,
-    "log2_hash_size": 17,
+    "log2_hash_size": 21,
     "min_resolution": [
       2,
       2,

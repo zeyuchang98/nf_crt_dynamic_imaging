@@ -2220,5 +2220,47 @@ regenerated (ten new rows). Sorted by the selection metric:
   30.6%). It is concentrated in the fast phases of the breath, the quiet phase 20-29 is
   near the training-grid level (3.6% median).
 
-Open: whether round 2 stays as agreed (the selected setting with 2x steps, seeds 1-2) given
-the flat held-out curve and the edge-of-grid time axis; to be decided by the user.
+Midpoint check (2026-11-12, local copy of the window file, scratch scripts, not kept):
+- The midpoint truth is the window's real odd frames (`moby.make_pair`), not an
+  interpolation.
+- No-model baselines on the same split: the previous training frame gives 23.64%, the
+  next 22.48%, the mean of the two neighbours 16.19%, against 16.67% for the selected
+  run. The run beats the neighbour mean on 25 of 75 midpoints (per-frame correlation
+  0.86); by breath position 0-9/10-19/20-29/30-39/40-49 the mean gives 17.5/14.6/2.3/23.8/
+  10.0% and the run 20.4/14.9/3.5/21.3/11.4%. At this frame spacing the midpoint metric
+  does not separate the model from a cross-fade.
+- The phantom's motion is unevenly sampled in the fast phase: the tumor indicator's
+  centroid moves 0.5-0.66 mm per breath, up to 0.18 mm per frame (more than one voxel),
+  and the four breaths follow one trajectory with timing jitter (in some breaths a frame
+  barely moves and the next makes a double step of 143-179 um). The two worst midpoints,
+  window frames 37 and 137, sit at one end of their interval (171 um from the previous
+  training frame and 35 um from the next; equal to the previous, then 143 um), where any
+  time-smooth model predicts near the middle. The cause in the generator is not checked.
+- With 9 midpoints whose organ state lies within 20% of one neighbour set aside (a
+  coarse rule; it misses frame 37), the selected run gives 15.85% and the neighbour mean
+  16.00%; the ten round-1 runs keep their order on the rest.
+
+Decided by the user (2026-11-12): no further tuning and no round 2; the selected setting
+goes straight to the full series.
+
+## Formal 3D full-series run (2026-11-12)
+
+Agreed with the user: [experiments/dce_moby_box64_full_series.json](experiments/dce_moby_box64_full_series.json)
+(the selected window setting carried over by the agreed rule: R = 3, intensity 8-128
+cells per axis at 2^19, motion 2-8 cells per spatial axis and 384-1536 in time, time grid
+3-288, batch 65,536, rates 0.01/0.001, cosine schedule, seed 0, embedding protocol: all
+14,401 frames observed and scored), changed from the 10k-step trial in three fields:
+- 1,220,000 steps: e01's density, 21.2 samples per point, the rule of the 2D formal run.
+  The window tuning's 42 samples per point would be about 2.42 M steps (57 h), beyond the
+  48 h limit of `gh`, and run.py has no resume.
+- Motion table 2^21: at 2^17 the three finest full-series motion levels (0.22, 0.43 and
+  1.12 M vertices) were hashed; at 2^21 every motion level is dense, as on the window and
+  in the 2D formal run. 6,615,461 parameters (trial 3,849,213).
+- Checkpoints at steps 400,000 and 800,000 (weights, optimizer, scheduler), so a failed
+  job still leaves weights to evaluate; they cannot be resumed from.
+
+Expected time: 28.6 h of training at the trial's 84.3 ms per step (32 h at the window
+runs' 95 ms) plus about 1 h of loading and evaluation; requested `-t 36:00:00` on `gh`,
+one node. Validated locally: the model builds from the input with every motion level
+dense and 6,615,461 parameters; the input differs from the trial's only in the three
+fields above; 158 tests pass.

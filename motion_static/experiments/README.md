@@ -144,8 +144,11 @@ sbatch -p gh-dev -t 02:00:00 motion_static/experiments/vista/train.sbatch motion
 
 [dce_moby_box64_full_series.json](dce_moby_box64_full_series.json) is the same design for
 the 3D 64^3 lesion box (`moby_slice.py --box 93 161 65 64 64 64`): intensity hash 8-128
-cells per axis, motion 2-8 cells per spatial axis and 384-1536 in time, 10,000 steps for
-the throughput trial; the formal step budget and hash settings are still to be agreed.
+cells per axis (2^19), motion 2-8 cells per spatial axis and 384-1536 in time. Since
+2026-11-12 it is the formal run's input (agreed with the user): 1,220,000 steps (e01's
+21 samples per point), motion table 2^21 so every motion level is dense, checkpoints at
+steps 400,000 and 800,000; the 10,000-step throughput trial used motion 2^17 and no
+checkpoints (its `config.json` keeps them). Submit it on `gh` with `-t 36:00:00`.
 3D box data take `"held_out_split": "none"` (embedding) or `"midpoints"` (even window
 frames observed, odd frames only scored, as on the slice); the alternate split and the
 plateau schedule are not implemented for 3D.
