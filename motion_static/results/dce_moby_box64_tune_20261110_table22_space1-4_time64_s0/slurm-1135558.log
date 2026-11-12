@@ -1,0 +1,63 @@
+
+Lmod is automatically replacing "nvidia/24.7" with "gcc/15.1.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) openmpi/5.0.5
+
+The following have been reloaded with a version change:
+  1) nvpl/24.7 => nvpl/26.9
+
+Phantom: dce_moby | size: 64x64x64 | cycles: 3 | training frames: 76 | time: [26.5, 34.0]
+dce_moby/nested_low_rank_hash_nf step 1: MSE 0.00147611, temporal L2 0, total 0.00147611, fixed train 0.00113996, held-out 0.00117731
+dce_moby/nested_low_rank_hash_nf step 500: MSE 2.94872e-05, temporal L2 0, total 2.94872e-05, fixed train 1.52674e-05, held-out 3.75371e-05
+dce_moby/nested_low_rank_hash_nf step 1000: MSE 1.40821e-05, temporal L2 0, total 1.40821e-05, fixed train 1.13276e-05, held-out 3.51856e-05
+dce_moby/nested_low_rank_hash_nf step 1500: MSE 7.80849e-06, temporal L2 0, total 7.80849e-06, fixed train 7.2058e-06, held-out 3.56972e-05
+dce_moby/nested_low_rank_hash_nf step 2000: MSE 5.84373e-06, temporal L2 0, total 5.84373e-06, fixed train 5.56987e-06, held-out 3.90944e-05
+dce_moby/nested_low_rank_hash_nf step 2500: MSE 3.69151e-06, temporal L2 0, total 3.69151e-06, fixed train 3.96105e-06, held-out 3.54139e-05
+dce_moby/nested_low_rank_hash_nf step 3000: MSE 3.48049e-06, temporal L2 0, total 3.48049e-06, fixed train 4.52166e-06, held-out 3.78977e-05
+dce_moby/nested_low_rank_hash_nf step 3500: MSE 3.49238e-06, temporal L2 0, total 3.49238e-06, fixed train 3.23426e-06, held-out 3.24077e-05
+dce_moby/nested_low_rank_hash_nf step 4000: MSE 3.45864e-06, temporal L2 0, total 3.45864e-06, fixed train 2.75323e-06, held-out 3.51425e-05
+dce_moby/nested_low_rank_hash_nf step 4500: MSE 4.16723e-06, temporal L2 0, total 4.16723e-06, fixed train 2.7559e-06, held-out 3.45837e-05
+dce_moby/nested_low_rank_hash_nf step 5000: MSE 3.08275e-06, temporal L2 0, total 3.08275e-06, fixed train 2.59247e-06, held-out 3.62243e-05
+dce_moby/nested_low_rank_hash_nf step 5500: MSE 2.60551e-06, temporal L2 0, total 2.60551e-06, fixed train 2.09195e-06, held-out 3.89957e-05
+dce_moby/nested_low_rank_hash_nf step 6000: MSE 2.3202e-06, temporal L2 0, total 2.3202e-06, fixed train 2.14394e-06, held-out 3.86834e-05
+dce_moby/nested_low_rank_hash_nf step 6500: MSE 1.35723e-06, temporal L2 0, total 1.35723e-06, fixed train 1.86501e-06, held-out 3.92634e-05
+dce_moby/nested_low_rank_hash_nf step 7000: MSE 1.79827e-06, temporal L2 0, total 1.79827e-06, fixed train 1.70257e-06, held-out 3.73335e-05
+dce_moby/nested_low_rank_hash_nf step 7500: MSE 1.60045e-06, temporal L2 0, total 1.60045e-06, fixed train 1.39409e-06, held-out 3.59737e-05
+dce_moby/nested_low_rank_hash_nf step 8000: MSE 1.41143e-06, temporal L2 0, total 1.41143e-06, fixed train 1.16022e-06, held-out 3.67037e-05
+dce_moby/nested_low_rank_hash_nf step 8500: MSE 1.16568e-06, temporal L2 0, total 1.16568e-06, fixed train 1.01143e-06, held-out 3.54207e-05
+dce_moby/nested_low_rank_hash_nf step 9000: MSE 1.03347e-06, temporal L2 0, total 1.03347e-06, fixed train 1.02943e-06, held-out 3.64877e-05
+dce_moby/nested_low_rank_hash_nf step 9500: MSE 1.00818e-06, temporal L2 0, total 1.00818e-06, fixed train 8.79178e-07, held-out 3.68908e-05
+dce_moby/nested_low_rank_hash_nf step 10000: MSE 8.28934e-07, temporal L2 0, total 8.28934e-07, fixed train 8.72832e-07, held-out 3.72525e-05
+dce_moby/nested_low_rank_hash_nf step 10500: MSE 8.46968e-07, temporal L2 0, total 8.46968e-07, fixed train 7.46359e-07, held-out 3.67688e-05
+dce_moby/nested_low_rank_hash_nf step 11000: MSE 8.81515e-07, temporal L2 0, total 8.81515e-07, fixed train 7.26836e-07, held-out 3.67085e-05
+dce_moby/nested_low_rank_hash_nf step 11500: MSE 7.52245e-07, temporal L2 0, total 7.52245e-07, fixed train 7.03613e-07, held-out 3.69876e-05
+dce_moby/nested_low_rank_hash_nf step 12000: MSE 5.47008e-07, temporal L2 0, total 5.47008e-07, fixed train 6.99798e-07, held-out 3.70022e-05
+dce_moby/nested_low_rank_hash_nf step 12500: MSE 7.14515e-07, temporal L2 0, total 7.14515e-07, fixed train 7.06679e-07, held-out 3.69266e-05
+dce_moby/nested_low_rank_hash_nf step 12800: MSE 1.02066e-06, temporal L2 0, total 1.02066e-06, fixed train 7.04236e-07, held-out 3.69107e-05
+Midpoint image RRMSE=18.4941%, SSIM=0.9952720382544779
+Saved results: motion_static/results/dce_moby_box64_tune_20261110_table22_space1-4_time64_s0
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --config motion_static/experiments/box64_window_tuning/table22_space1-4_time64.json --out motion_static/results/dce_moby_box64_tune_20261110_table22_space1-4_time64_s0"
+	User time (seconds): 1223.90
+	System time (seconds): 3.76
+	Percent of CPU this job got: 97%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 21:03.09
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4610752
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 4700
+	Minor (reclaiming a frame) page faults: 374569
+	Voluntary context switches: 75568
+	Involuntary context switches: 2343
+	Swaps: 0
+	File system inputs: 2295219
+	File system outputs: 72704
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 65536
+	Exit status: 0

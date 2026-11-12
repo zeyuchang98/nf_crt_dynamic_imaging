@@ -2132,7 +2132,7 @@ Validated:
   halfway between two training frames, the held-out MSE logged at every interval;
   training 69 s, 462 s with evaluation, 3.0 GB peak.
 
-**Round 1 of the 3D window tuning (2026-11-10): submitted.** Agreed
+**Round 1 of the 3D window tuning (2026-11-10): completed (results at the end).** Agreed
 with the user: run in parallel as separate short jobs (Vista schedules by requested wall
 time), as one grid submitted at once, then a second round of three runs (the round-1 best
 with 2x steps, and seeds 1-2 of it). The motion's time axis is tuned too (user, same day):
@@ -2180,3 +2180,45 @@ intensity resolution and time grid, and R (a 7.5 s window cannot set the full se
 rank). The chosen setting goes to the full series with the same motion time cells per
 breath (4-16 on 3 breaths is 384-1536 on 288), R = 3 and the full-series time grid; the
 formal step budget is to be agreed then.
+
+Round-1 results (checked 2026-11-12, after the Vista maintenance of 2026-11-11): all ten
+jobs completed on 2026-11-10 (20-24 min each; training 1,153-1,210 s, 90-95 ms per step;
+GPU memory at most 1.9 GB in the per-minute samples). Records copied without `model.pt`
+(kept on Vista) to `results/dce_moby_box64_tune_20261110_<input>_s0/`; `summary.csv`
+regenerated (ten new rows). Sorted by the selection metric:
+
+| Input | Training-grid RRMSE | Midpoint RRMSE | Midpoint PSNR (dB) | Midpoint SSIM |
+|---|---:|---:|---:|---:|
+| `table19_space2-8_time16` | 3.83% | **16.67%** | 44.40 | 0.99556 |
+| `table22_space2-8_time16` | 3.20% | 16.74% | 44.36 | 0.99565 |
+| `table22_space1-4_time16` | 3.16% | 16.80% | 44.32 | 0.99589 |
+| `table22_space2-8_time32` | 2.65% | 17.41% | 44.02 | 0.99563 |
+| `table22_space1-4_time32` | 2.91% | 17.54% | 43.95 | 0.99566 |
+| `table22_space1-2_time16` | 3.14% | 17.63% | 43.91 | 0.99575 |
+| `table22_space1-2_time32` | 3.03% | 18.00% | 43.73 | 0.99562 |
+| `table22_space2-8_time64` | 1.94% | 18.43% | 43.52 | 0.99521 |
+| `table22_space1-4_time64` | 2.47% | 18.49% | 43.49 | 0.99527 |
+| `table22_space1-2_time64` | 2.61% | 19.23% | 43.15 | 0.99484 |
+
+- By the agreed rule the selected setting is `table19_space2-8_time16`, which is both the
+  lowest and the smallest (2.73 M parameters): the 2D window design carried to 3D
+  unchanged. The top three differ by 0.13 points, a spread whose seed-to-seed size is not
+  yet measured.
+- The intensity table size does not matter here (2^19 vs 2^22: 16.67% vs 16.74%).
+- In every spatial row the midpoint error rises with the motion time resolution (16 < 32
+  < 64 cells), while the training-grid error falls: the finer time axes fit the observed
+  frames better and interpolate worse. The best value is at the coarsest time axis
+  tested, the edge of the grid; coarser axes were not run.
+- Motion space 2-8 and 1-4 tie (16.74% vs 16.80% at time 16); 1-2 is worse (17.63%).
+- The held-out monitor (fixed sample of 65,536 midpoint values) is flat after about
+  2,000 steps: minimum at steps 2,000-6,500, final value 1-25% above it, while the fixed
+  training MSE falls a further 8-13 times from step 2,000 to the end. The sample is noisy: it ranks
+  `table22_space1-4_time16` first, the full midpoint grid ranks it third.
+- Where the midpoint error sits (selected run, per-frame RRMSE averaged by breath
+  position of the midpoint, window frame 2k+1 mod 50): 20.4% at 0-9, 14.9% at 10-19,
+  3.5% at 20-29, 21.3% at 30-39, 11.4% at 40-49; worst frames 37 and 137 (30.9%,
+  30.6%). It is concentrated in the fast phases of the breath, the quiet phase 20-29 is
+  near the training-grid level (3.6% median).
+
+Open: whether round 2 stays as agreed (the selected setting with 2x steps, seeds 1-2) given
+the flat held-out curve and the edge-of-grid time axis; to be decided by the user.
