@@ -2264,3 +2264,9 @@ runs' 95 ms) plus about 1 h of loading and evaluation; requested `-t 36:00:00` o
 one node. Validated locally: the model builds from the input with every motion level
 dense and 6,615,461 parameters; the input differs from the trial's only in the three
 fields above; 158 tests pass.
+
+Submitted 2026-11-12 from code `554a881` (Vista's `results/summary.csv`, rewritten by the
+round-1 jobs, restored to the committed content with the user's OK, then fast-forwarded):
+job 1139396, `sbatch -p gh -t 36:00:00 motion_static/experiments/vista/train.sbatch
+motion_static/experiments/dce_moby_box64_full_series.json dce_moby_box64_full_20261112_1220k_r3_s0`,
+pending (Resources) at submission. Do not pull on Vista until the job has started.
