@@ -2270,3 +2270,10 @@ round-1 jobs, restored to the committed content with the user's OK, then fast-fo
 job 1139396, `sbatch -p gh -t 36:00:00 motion_static/experiments/vista/train.sbatch
 motion_static/experiments/dce_moby_box64_full_series.json dce_moby_box64_full_20261112_1220k_r3_s0`,
 pending (Resources) at submission. Do not pull on Vista until the job has started.
+
+Cancelled 2026-11-13 10:23 by the user's decision, never started (no output): after
+22.5 h in the queue, `gh` had all 537 nodes allocated and 447 jobs pending on priority;
+job 1139396 ranked 205th, with no start estimate (fairshare factor 56). A 36 h request
+is hard to backfill. Decided by the user: run the formal full series with multi-node data
+parallelism instead (shorter jobs); the implementation scope is to be agreed. The input
+`dce_moby_box64_full_series.json` stays as agreed.
