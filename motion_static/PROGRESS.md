@@ -1,8 +1,8 @@
 # Motion and Intensity Separation: Current Progress
 
-Last updated: 2026-11-04.
+Last updated: 2026-11-13.
 
-## Current status (2026-10-30)
+## Current status (2026-11-13; 2D items from 2026-10-30)
 
 Summary for continuing on another machine; details and links are in the dated sections
 at the end of this file.
@@ -27,7 +27,7 @@ at the end of this file.
 - **Code:** `device` option (cpu, cuda, mps; CUDA verified on Vista 2026-10-26), `held_out_split`
   (midpoints, alternate_validation_test, none), plateau schedule, SS(r) baseline,
   embedding figures, branch GIFs (with frame subsets), whole-series data checks,
-  time-chunked SSIM, Vista job scripts, lesion activity curves. 139 tests pass in this machine's `nf-crt` conda
+  time-chunked SSIM, Vista job scripts, lesion activity curves. 158 tests pass (2026-11-12) in this machine's `nf-crt` conda
   environment (Python 3.11, torch 2.14.0, numpy 1.26.4, h5py 3.16.0); 136 passed earlier
   in the second machine's `.venv-hash-sweep` and Vista's `$WORK/envs/nf-crt`.
 - **Local only on the second machine (not on GitHub):** `model.pt` of the DCE-MOBY runs
@@ -52,6 +52,20 @@ at the end of this file.
   on the full-body grid (inspected 2026-11-04; see the last section). Scored against the
   289 frames in t0's configuration (METRICS.md Section 3.7), the formal run's intensity
   branch has 53.4% RRMSE: it is not in t0's geometry.
+- **3D lesion box (2026-11-09 to 11-13):** a 64^3 box around the lesion (9.6 mm, 0.15 mm
+  voxels) over all 14,401 frames (`$WORK/moby_box/moby_box64_full.h5`, 11.9 GB) and the
+  test window 1250-1400 (local copy). Code: 3D nested low-rank model (4D motion hash,
+  three motion components), on-demand coordinate rows, streamed evaluation, held-out
+  midpoints in 3D, truth | NF volume GIF; 158 tests pass. 10k-step trial on the full
+  series (0.17 samples per point): 11.78% all-frame RRMSE, 84.3 ms per step. Window
+  tuning round 1 (ten runs, midpoint RRMSE): the 2D window design carried to 3D is best
+  (16.67%); finer motion time axes interpolate worse; but the mean of the two
+  neighbouring training frames gives 16.19%, so this metric does not separate the NF
+  from a cross-fade, and the phantom's fast-phase motion is unevenly sampled in time.
+  The user stopped tuning there. Formal full-series input agreed (1.22 M steps, motion
+  table 2^21, 6.6 M parameters, about 29 h on one node); its job queued 22.5 h on `gh`
+  and was cancelled. Next: multi-node data parallelism with frame sharding from the
+  start, not implemented yet (the user will say when).
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -2277,3 +2291,9 @@ job 1139396 ranked 205th, with no start estimate (fairshare factor 56). A 36 h r
 is hard to backfill. Decided by the user: run the formal full series with multi-node data
 parallelism instead (shorter jobs); the implementation scope is to be agreed. The input
 `dce_moby_box64_full_series.json` stays as agreed.
+
+Parallel design, decided by the user (2026-11-13): the data-parallel code supports frame
+sharding from the start (each node holds a contiguous block of frames; gradients are
+averaged with weights M_p / M, so the step gradient stays unbiased; evaluation in
+per-node partial sums), so it can later serve the whole volume (about 709 GB of float32
+over 14,401 frames). Not implemented yet: the user will say when to start.
