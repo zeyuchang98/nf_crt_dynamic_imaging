@@ -2368,7 +2368,17 @@ one-pass report (relative 1e-12). Real-data smoke run on this machine (scratch, 
 the 64^3 box from the two local phase files (145 frames, window of 101), 2 CPU steps,
 completed in 3 min (scale 0.4588 over those 145 frames).
 
-Open: a Vista check of NCCL across nodes and of the source files' paths (to be approved
-before submitting); resume; reading speed on Lustre (set aside by the user); post-hoc
+2-node Vista check (approved by the user 2026-11-16): input
+[experiments/dce_moby_box64_source_check.json](experiments/dce_moby_box64_source_check.json)
+(the formal full-series model, 6,615,461 parameters, on the 64^3 box read from the source
+files, test window 1250-1400, 2,000 steps, frame groups of 40 frames for 250 steps, no
+checkpoints). Submitted from code `f39dffe` (Vista fast-forwarded from `554a881`, clean
+tree): job 1147351, `sbatch -p gh-dev -N 2 -t 00:45:00 motion_static/experiments/vista/train_multinode.sbatch
+motion_static/experiments/dce_moby_box64_source_check.json dce_moby_box64_source_check_20261116_2node`,
+pending (Priority) at submission. Pass criteria: the run completes (NCCL and the 20
+parameter checks), `intensity_scale_value` equals the full box file's 0.4674420654773712
+and `source_sha256` lists 200 files; the step time on 2 nodes is recorded.
+
+Open: resume; reading speed on Lustre (set aside by the user); post-hoc
 tools that call `prepare_data` load a source-data window into memory (fine for the box,
 not for the whole volume).
