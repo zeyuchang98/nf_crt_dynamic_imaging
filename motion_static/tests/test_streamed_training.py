@@ -380,6 +380,30 @@ class DistributedTests(unittest.TestCase):
         self.assertEqual([(self.out / f"divergence{r}.txt").read_text() for r in range(2)], ["diverged"] * 2)
 
 
+class ContiguousReductionTests(unittest.TestCase):
+    def test_every_reduction_passes_contiguous_tensors_as_nccl_requires(self):
+        from unittest import mock
+        from motion_static import distributed
+
+        def strict(tensor, *args, **kwargs):  # NCCL's check; gloo does not make it
+            if not tensor.is_contiguous():
+                raise ValueError("Tensors must be contiguous")
+
+        context = distributed.Context(0, 2, 0, "gloo")
+        model = torch.nn.Linear(3, 2)
+        model(torch.ones(4, 3)).sum().backward()
+        model.weight.grad = model.weight.grad.t().contiguous().t()  # a transposed gradient
+        with mock.patch.object(distributed.dist, "all_reduce", strict), \
+                mock.patch.object(distributed.dist, "broadcast", strict):
+            context.any(np.ones((3, 4, 5), dtype=bool).transpose(1, 0, 2))
+            context.sum_array(np.ones((3, 4), dtype=np.float32).T)
+            context.all_reduce_gradients(model)
+            context.broadcast_parameters(model)
+            context.weighted_sum({"loss": 1.})
+            context.maximum(1.)
+            context.check_parameters(model)
+
+
 class captured_stderr:
     """Collect argparse's error message while a SystemExit is expected."""
 

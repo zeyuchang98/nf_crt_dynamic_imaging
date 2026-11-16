@@ -8,9 +8,11 @@ for agreement whenever losses are logged. Process 0 writes every file.
 
 Launch: RANK, WORLD_SIZE, LOCAL_RANK, MASTER_ADDR and MASTER_PORT in the environment
 (torchrun or experiments/vista/train_multinode.sbatch), and `run.py --distributed`.
+NCCL (GPUs) reduces contiguous tensors only; every reduction here passes contiguous ones.
 """
 import os
 
+import numpy as np
 import torch
 import torch.distributed as dist
 
@@ -40,6 +42,8 @@ class Context:
             if parameter.requires_grad:
                 if parameter.grad is None:  # every process must take part in every reduction
                     parameter.grad = torch.zeros_like(parameter)
+                elif not parameter.grad.is_contiguous():  # NCCL reduces contiguous tensors only
+                    parameter.grad = parameter.grad.contiguous()
                 dist.all_reduce(parameter.grad)
 
     def weighted_sum(self, values):
@@ -51,8 +55,10 @@ class Context:
         return dict(zip(names, tensor.tolist()))
 
     def broadcast_parameters(self, model):
-        for tensor in model.state_dict().values():
-            dist.broadcast(tensor, 0)
+        """Process 0's initial weights everywhere (buffers follow from the configuration)."""
+        with torch.no_grad():
+            for parameter in model.parameters():
+                dist.broadcast(parameter, 0)
 
     def check_parameters(self, model):
         """Raise if the processes' parameters differ (they must stay identical)."""
@@ -70,13 +76,13 @@ class Context:
 
     def any(self, mask):
         """Elementwise OR of a boolean numpy array over processes."""
-        tensor = torch.as_tensor(mask.astype("uint8"), device=self._device())
+        tensor = torch.as_tensor(np.ascontiguousarray(mask, dtype=np.uint8), device=self._device())
         dist.all_reduce(tensor, op=dist.ReduceOp.MAX)
         return tensor.cpu().numpy().astype(bool)
 
     def sum_array(self, array):
         """Elementwise sum of a float32 numpy array over processes."""
-        tensor = torch.as_tensor(array, device=self._device())
+        tensor = torch.as_tensor(np.ascontiguousarray(array), device=self._device())
         dist.all_reduce(tensor)
         return tensor.cpu().numpy()
 

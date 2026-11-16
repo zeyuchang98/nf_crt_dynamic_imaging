@@ -128,7 +128,7 @@ def scan_shard(read_raw, positions, frame_count, sample_indices):
     maximum, positive = -np.inf, None
     values = np.zeros(len(sample_indices), dtype=np.float32)
     for position in positions:
-        frame = np.transpose(read_raw(position), (1, 0, 2))  # the training layout (y, x, z)
+        frame = np.ascontiguousarray(np.transpose(read_raw(position), (1, 0, 2)))  # training layout (y, x, z)
         maximum = max(maximum, float(frame.max()))
         positive = frame > 0 if positive is None else positive | (frame > 0)
         selected = np.flatnonzero(sample_frame == position)

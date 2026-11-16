@@ -2379,6 +2379,29 @@ pending (Priority) at submission. Pass criteria: the run completes (NCCL and the
 parameter checks), `intensity_scale_value` equals the full box file's 0.4674420654773712
 and `source_sha256` lists 200 files; the step time on 2 nodes is recorded.
 
+Job 1147351 failed after 18 min 45 s (nodes c642-[042,072]), before training:
+`ValueError: Tensors must be contiguous` in `Context.any` (the positive-voxel mask was a
+transposed numpy view; NCCL needs contiguous tensors, gloo had accepted it in the local
+tests). The process group itself worked across the two nodes (the start barrier and the
+maximum's all-reduce passed). The 18 minutes went to hashing the 200 source files and the
+scan: about 164 GB read per process (`/usr/bin/time` file-system inputs), about 150 MB/s.
+Fixed: contiguous arrays in every reduction, contiguous scan frames, and only parameters
+are broadcast (buffers follow from the configuration); a new test applies NCCL's
+contiguity check to every reduction. The test that lists `experiments/` now includes the
+check input (it failed after `f39dffe`, which added the input without rerunning the
+suite). 172 tests pass.
+
+Support mask for the whole volume, decided by the user (2026-11-16), not implemented:
+the mask is the voxels with p0 > 0 in any frame of the series (the indicator files hold
+only four tissues and `phantom_anatomy_0.h5` only phase 0, so neither is used); training
+samples only inside the mask; the model is unchanged; evaluation sets the prediction to 0
+outside the mask and then computes every metric as now (whole volume, ROI, per frame,
+activity curve), so RRMSE equals the in-mask RRMSE and SSIM keeps its definition. Measured
+on this machine: 39.5% of the whole volume is positive in some frame of the two local
+phases (145 frames; the union over all 200 phases is not known yet), 76.8% of the 64^3 box
+over the test window; 56 of the 64 source chunks per frame contain positive voxels, so
+reading barely shrinks. Default off: existing runs are unchanged.
+
 Open: resume; reading speed on Lustre (set aside by the user); post-hoc
 tools that call `prepare_data` load a source-data window into memory (fine for the box,
 not for the whole volume).
