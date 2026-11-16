@@ -8,8 +8,13 @@ import torch
 from .evaluation.plots import pyplot
 
 
+def fixed_indices(total, count, generator):
+    """Indices of the fixed samples among `total` pool points, drawn without replacement."""
+    return generator.choice(total, min(count, total), replace=False)
+
+
 def fixed_subset(coordinates, intensities, count, generator):
-    indices = generator.choice(len(coordinates), min(count, len(coordinates)), replace=False)
+    indices = fixed_indices(len(coordinates), count, generator)
     return (torch.as_tensor(coordinates[indices], dtype=torch.float32),
             torch.as_tensor(np.asarray(intensities).reshape(-1)[indices], dtype=torch.float32), indices)
 
@@ -33,12 +38,16 @@ def fixed_mse(model, coordinates, values):
 
 
 class TrainingMonitor:
-    def __init__(self, out, coordinates, intensities, validation, config, optimizer):
+    def __init__(self, out, coordinates, intensities, validation, config, optimizer, training=None):
+        """`training`: the fixed training samples (coordinates, values, indices) when the pool is
+        not in memory (streamed training draws the same indices with fixed_indices first)."""
         self.out = Path(out)
         # This generator is separate from the torch generator used for batches.
         rng = np.random.default_rng(config.get("monitor_seed", 2026))
         count = config.get("monitor_samples", 65536)
-        self.training = fixed_subset(coordinates, intensities, count, rng)
+        if training is not None and validation is not None:
+            raise ValueError("Precomputed training samples are supported without held-out samples only")
+        self.training = fixed_subset(coordinates, intensities, count, rng) if training is None else training
         self.validation = None if validation is None else fixed_subset(*validation, count, rng)
         indices = {"training_indices": self.training[2]}
         if self.validation is not None:

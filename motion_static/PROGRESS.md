@@ -1,8 +1,8 @@
 # Motion and Intensity Separation: Current Progress
 
-Last updated: 2026-11-13.
+Last updated: 2026-11-16.
 
-## Current status (2026-11-13; 2D items from 2026-10-30)
+## Current status (2026-11-16; 2D items from 2026-10-30)
 
 Summary for continuing on another machine; details and links are in the dated sections
 at the end of this file.
@@ -27,7 +27,8 @@ at the end of this file.
 - **Code:** `device` option (cpu, cuda, mps; CUDA verified on Vista 2026-10-26), `held_out_split`
   (midpoints, alternate_validation_test, none), plateau schedule, SS(r) baseline,
   embedding figures, branch GIFs (with frame subsets), whole-series data checks,
-  time-chunked SSIM, Vista job scripts, lesion activity curves. 158 tests pass (2026-11-12) in this machine's `nf-crt` conda
+  time-chunked SSIM, Vista job scripts, lesion activity curves, streamed source data over several processes
+  (2026-11-16). 171 tests pass (2026-11-16) in this machine's `nf-crt` conda
   environment (Python 3.11, torch 2.14.0, numpy 1.26.4, h5py 3.16.0); 136 passed earlier
   in the second machine's `.venv-hash-sweep` and Vista's `$WORK/envs/nf-crt`.
 - **Local only on the second machine (not on GitHub):** `model.pt` of the DCE-MOBY runs
@@ -64,8 +65,9 @@ at the end of this file.
   from a cross-fade, and the phantom's fast-phase motion is unevenly sampled in time.
   The user stopped tuning there. Formal full-series input agreed (1.22 M steps, motion
   table 2^21, 6.6 M parameters, about 29 h on one node); its job queued 22.5 h on `gh`
-  and was cancelled. Next: multi-node data parallelism with frame sharding from the
-  start, not implemented yet (the user will say when).
+  and was cancelled. Streamed training is now implemented (2026-11-16): the source phase
+  files are read directly, frame by frame (box or whole volume), with frame shards over
+  processes and frame groups per round; tested locally (gloo), not yet on Vista (NCCL).
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -2297,3 +2299,76 @@ sharding from the start (each node holds a contiguous block of frames; gradients
 averaged with weights M_p / M, so the step gradient stays unbiased; evaluation in
 per-node partial sums), so it can later serve the whole volume (about 709 GB of float32
 over 14,401 frames). Not implemented yet: the user will say when to start.
+
+## Streamed source data and data parallelism (2026-11-16): implemented, tested locally
+
+Decided by the user (2026-11-16), after the advisor's remark that h5 can be read in
+chunks: implement chunked reading and parallel training together; ignore read speed
+for now (no speed tests, no prefetch); read the source phase files directly, with one
+reader for the box and the whole volume, instead of exporting a new file; random frame
+groups per round when a shard does not fit; keep the monitor's fixed-sample rule; add
+resume later.
+
+Read-layout facts measured on this machine (scratch scripts, not kept; warm page cache,
+so CPU cost only, not Lustre): reading one whole 248 x 248 x 200 frame from the source
+layout (x, y, z, frame), chunks (62, 62, 50, 1), lzf, takes 36 ms with a selection that
+keeps the frame axis, and about 310 ms with one that drops it (h5py then copies element
+by element); a frame-first layout gives 32 ms, uncompressed 4 ms. So the source files
+need no conversion. A first comparison that reported frame-first as 7-70 times faster
+was this selection artifact and was corrected the same day. Frame 1400 of the series
+(phase 0, frame 7), read from `p0_00000.h5` with the box region, equals the box test
+window file bit for bit (8 of the frame's 64 chunks are read).
+
+Code:
+- [phantoms/moby_source.py](phantoms/moby_source.py): `SourceFrames` orders all phase
+  files' frames by time (moby_slice.frame_order), reads one frame of a region (box or
+  whole volume), returns (y, x, z) / scale in the training layout, C-contiguous;
+  `resolve_settings` gives the same run settings as an extracted file of the region.
+  Config: `data.source_root`, optional `data.box_start` and `data.box_shape`.
+- [streaming.py](streaming.py): frame shards (contiguous, sizes differ by one at most,
+  weights w_p = |S_p| / F), frame groups per round (`frame_groups.frames_per_group`,
+  `steps_per_group`; `steps` a whole number of rounds), `StreamedSampler` (buffer
+  (voxels, group frames), frame fastest, so one process with one group reproduces the
+  in-memory draws), the pre-training scan (whole-series maximum, positive voxels for the
+  ROI, monitor sample values) and `StreamedTruth` for evaluation. The sampling math is
+  in the module docstring: unbiased per step without groups (stratified), unbiased over
+  a round with groups.
+- [distributed.py](distributed.py) and `run.py --distributed` (requires `--out`): one
+  process per GPU; weighted gradients summed by all-reduce; parameters broadcast from
+  process 0 and checked for agreement at every log step; process 0 writes every file.
+  Process 0 draws batches from the default torch generator (as one process); process
+  p > 0 from a generator seeded with SeedSequence([seed, p]).
+- `run.execute_streamed`: one pass over each shard before training (scale, ROI, monitor
+  values, sha256 of the source files split over processes), streamed training, model.pt,
+  then each process scores its frames (metrics.sequence_block_partials) and process 0
+  combines them (sequence_report_from_partials); `evaluate_sequence_in_blocks` is now these
+  two steps over one range, with unchanged results.
+- [experiments/vista/train_multinode.sbatch](experiments/vista/train_multinode.sbatch):
+  `srun` with one process per node, MASTER_ADDR from the node list.
+- Unchanged: runs with `data.file` (extracted files) and every other phantom use the
+  original path; streamed data support the embedding protocol (`held_out_split` none)
+  only, without `output.predictions` or the plateau schedule.
+
+Normalization note: `global_maximum` for source data is the maximum over every source
+frame of the region (the whole series, as moby.py states), also for a shorter window.
+For the full series this equals the extracted full-series box file's scale; a window
+file extracted alone (e.g. frames 1250-1400) has its own maximum, so a source-data run
+of that window is scaled differently from the window-file runs.
+
+Validated (2026-11-16, this machine): 171 tests pass (158 earlier + 13 in
+[tests/test_streamed_training.py](tests/test_streamed_training.py)): the source box
+equals `extract_box`'s file frame by frame with the same times, fov and run settings;
+one streamed process reproduces the in-memory run of the extracted box bit for bit
+(`loss.csv` apart from elapsed time, weights, `metrics.json` apart from training time);
+two gloo processes with frame groups complete, and their combined scores equal the
+one-process scores of the saved model (relative 1e-10, per-frame values exact); the
+summed weighted gradients equal the single-process gradient of sum_p w_p loss_p; a
+perturbed process is detected; partial evaluation sums over three frame ranges equal the
+one-pass report (relative 1e-12). Real-data smoke run on this machine (scratch, not kept):
+the 64^3 box from the two local phase files (145 frames, window of 101), 2 CPU steps,
+completed in 3 min (scale 0.4588 over those 145 frames).
+
+Open: a Vista check of NCCL across nodes and of the source files' paths (to be approved
+before submitting); resume; reading speed on Lustre (set aside by the user); post-hoc
+tools that call `prepare_data` load a source-data window into memory (fine for the box,
+not for the whole volume).

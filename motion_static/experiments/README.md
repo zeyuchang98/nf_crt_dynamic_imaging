@@ -84,6 +84,36 @@ study of Lozenski et al. 2022; nothing is held out or monitored. `metrics.json`
 reports `all_window_frames`; the summary row is labelled "embedding, all frames". It
 cannot be combined with the plateau schedule, which needs validation frames.
 
+### Streamed source data and several processes (dce_moby, embedding only)
+
+Instead of an extracted file (`data.file`), `data.source_root` reads the DCE-MOBY source
+phase files directly ([phantoms/moby_source.py](../phantoms/moby_source.py)): the whole
+volume, or a box with `data.box_start` and `data.box_shape` (x, y, z voxels, as
+`moby_slice.py --box`). A box read this way equals the extracted box file bit for bit.
+Frames are read from h5 one at a time; only the chunks overlapping the region are
+decompressed. The `global_maximum` scale is the maximum over every source frame of the
+region (the whole series), found in one pass before training, together with the ROI and
+the monitor's fixed samples (the same rule and indices as in memory); the source files'
+sha256 go to `config.json` (`data.source_sha256`).
+
+Training and sampling ([streaming.py](../streaming.py), [distributed.py](../distributed.py)):
+- Run with `--distributed` under `experiments/vista/train_multinode.sbatch` (one process per
+  node) for several processes, or without it for one. Process p owns the contiguous
+  window frames S_p (`data_parallel.frame_shards`), draws `batch_size / P` points per step
+  from them, and the gradients `w_p grad(loss_p)`, `w_p = |S_p| / F`, are summed over
+  processes, so every process makes the same update. Process 0 writes every file; the
+  parameters are checked for agreement whenever losses are logged.
+- `"frame_groups": {"frames_per_group": G, "steps_per_group": K}` keeps only G frames of a
+  shard in memory: each round shuffles the shard into equal groups (sizes differ by one at
+  most), and each group is trained for K steps; `steps` must be a whole number of rounds.
+  Without `frame_groups` each process keeps its whole shard. See streaming.py for the
+  sampling math (unbiased over a round, not per step, with groups).
+- One process without `frame_groups` reproduces the in-memory run of the extracted file
+  (same batches, weights and metrics; `tests/test_streamed_training.py`).
+- Evaluation: each process scores its own frames from h5 and process 0 combines the sums;
+  equal to the one-pass evaluation up to rounding. `output.predictions`, held-out splits
+  and the plateau schedule are not supported for streamed data.
+
 ### Plateau schedule and early stop (dce_moby only)
 
 `"schedule": "plateau"` replaces the cosine schedule and requires
@@ -177,6 +207,16 @@ sbatch -p gg -t 12:00:00 motion_static/experiments/vista/evaluate.sbatch motion_
 
 Its log (code commit, thread counts, peak host memory) stays in `motion_static/results/`. It sets
 numpy's BLAS threads to the node's cores and torch's to 16, since TACC jobs start with 1.
+
+[vista/train_multinode.sbatch](vista/train_multinode.sbatch) runs a streamed source-data
+configuration (see "Streamed source data and several processes") with one process per
+node; choose the node count with `-N`:
+
+```bash
+sbatch -p gh -N 4 -t 02:00:00 motion_static/experiments/vista/train_multinode.sbatch CONFIG NAME
+```
+
+Not yet run on Vista: NCCL between nodes is untested there (2026-11-16).
 
 ## Output and later visualization
 

@@ -94,7 +94,11 @@ def resolve_settings(data):
 
 def read_window_entry(data):
     """Every frame of the window: pixel centers x, y (and z for a box file), times t and
-    normalized truth, (y, x, t) for a slice file and (y, x, z, t) for a box file."""
+    normalized truth, (y, x, t) for a slice file and (y, x, z, t) for a box file.
+    Source data (`source_root`, phantoms/moby_source.py) give the same entry for their region."""
+    if "source_root" in data:
+        from .moby_source import read_window_entry as read_source_window  # moby_source imports this module
+        return read_source_window(data)
     frames = window_frames(data)
     with h5py.File(data["file"], "r") as f:
         values = f["p0"][..., frames[0]:frames[-1] + 1]  # (x, y[, z], t)

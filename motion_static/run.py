@@ -1,6 +1,6 @@
 """One training entry point for image and nested fields. Run from the repository root."""
 import argparse
-from contextlib import redirect_stdout, redirect_stderr
+from contextlib import ExitStack, redirect_stdout, redirect_stderr
 import copy
 from datetime import datetime, timezone
 import json
@@ -22,12 +22,18 @@ from .models.nested_low_rank_hash_nf import NestedLowRankHashNF
 from .models.low_rank_intensity import LowRankIntensity
 from .models.oracle_branches import PHANTOM_REFERENCE_TIME, TrueMotion, TrueReferenceIntensity
 from .models.time_grid import TimeGridField
-from .phantoms import moby
+from .phantoms import moby, moby_source
 from .phantoms.data import DEFAULT_PHANTOM, DEFAULT_SAMPLING, CoordinateGrid, coordinate_rows, make_pair, sample
 from .splits import block_split
-from .evaluation.evaluate import evaluate, evaluate_image_only
+from .evaluation.evaluate import (evaluate, evaluate_image_only, roi_from_mask, streamed_embedding_partials,
+                                  streamed_embedding_report)
+from .evaluation.metrics import save_metrics
 from .evaluation.block_evaluate import evaluate_blocks
-from .training_monitor import TrainingMonitor, fixed_mse
+from .training_monitor import TrainingMonitor, fixed_indices, fixed_mse
+from . import distributed
+from .distributed import Context, world_size_from_environment
+from .streaming import (InMemorySampler, StreamedSampler, StreamedTruth, frame_shards, groups_per_round,
+                        scan_shard)
 from .run_records import (
     Tee,
     initialize_run_metadata,
@@ -176,7 +182,8 @@ def build_optimizer(model, config):
     return torch.optim.Adam(groups)
 
 
-def train(model, coordinates, intensities, config, *, out=None, validation=None, selection=None):
+def train(model, coordinates, intensities, config, *, out=None, validation=None, selection=None,
+          sampler=None, context=None, monitor_subset=None):
     """One step = one random batch and one joint optimizer update.
 
     Loss definitions live in losses.compute_training_losses. Validation is used
@@ -185,6 +192,10 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None,
     sets the learning rate, the stop and the kept weights; it never enters the loss.
     Return the logged (step, image MSE, temporal L2, total) history, elapsed
     seconds and the plateau summary (None for cosine); the model is updated in place.
+
+    Streamed training (run.execute_streamed) passes a `sampler` instead of the pool, a
+    distributed `context` (weighted gradients summed over processes, see streaming.py)
+    and the monitor's precomputed fixed samples; only process 0 writes files or prints.
     """
     device = torch_device(config)
     model.to(device)
@@ -204,11 +215,9 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None,
     else:
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["steps"])
     stopped_by = "step limit"
-    if isinstance(coordinates, CoordinateGrid):
-        training_coordinates = coordinates.to(device)  # rows computed per batch (3D grids)
-    else:
-        training_coordinates = torch.as_tensor(coordinates, dtype=torch.float32, device=device)
-    observed_intensities = torch.as_tensor(intensities.reshape(-1), dtype=torch.float32, device=device)
+    if sampler is None:
+        sampler = InMemorySampler(coordinates, intensities, config["batch_size"], device)
+    context = context or Context()
     checkpoint_steps = set(config.get("checkpoint_steps", []))
     log_interval = config.get("log_interval", 500)
     history = []
@@ -217,16 +226,14 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None,
 
     # Record the initial model on fixed samples, using a separate sampling RNG.
     monitor = None
-    if out is not None:
-        monitor = TrainingMonitor(out, coordinates, intensities, validation, config, optimizer)
+    if out is not None and context.is_root:
+        monitor = TrainingMonitor(out, coordinates, intensities, validation, config, optimizer,
+                                  training=monitor_subset)
         monitor.record(model, optimizer, 0, time.perf_counter() - start)
 
     for step in range(1, config["steps"] + 1):
         # 1. Sample observed space-time points, with replacement.
-        # The CPU generator draws the indices on every device, so a seed selects the same batches.
-        indices = torch.randint(len(observed_intensities), (config["batch_size"],)).to(device)
-        batch_coordinates = training_coordinates[indices]
-        batch_targets = observed_intensities[indices]
+        batch_coordinates, batch_targets = sampler.batch(step)
 
         # 2. Compute named loss terms and the objective before the update.
         losses = compute_training_losses(model, batch_coordinates, batch_targets, config)
@@ -235,8 +242,13 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None,
             raise RuntimeError(f"Nonfinite loss at step {step}")
 
         # 3. Update all model branches jointly, then set the next step's rates.
+        # With several processes: g = sum_p w_p grad(loss_p), the same on every process.
         optimizer.zero_grad(set_to_none=True)
-        total_loss.backward()
+        if context.parallel:
+            (context.weight * total_loss).backward()
+            context.all_reduce_gradients(model)
+        else:
+            total_loss.backward()
         optimizer.step()
         selection_mse = None
         if not plateau:
@@ -260,6 +272,9 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None,
         )
         if should_log:
             scalar_losses = {name: value.item() for name, value in losses.items()}
+            if context.parallel:
+                scalar_losses = context.weighted_sum(scalar_losses)  # the objective's batch estimate
+                context.check_parameters(model)
             history.append((step, scalar_losses["batch_mse"],
                             scalar_losses["temporal_l2"], scalar_losses["total_loss"]))
             monitoring_text = ""
@@ -277,15 +292,16 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None,
                 )
             if selection_mse is not None:
                 monitoring_text += f", validation frames {selection_mse:.6g}"
-            print(
-                f"{config['phantom']}/{config['model']} step {step}: "
-                f"MSE {scalar_losses['batch_mse']:.6g}, "
-                f"temporal L2 {scalar_losses['temporal_l2']:.6g}, "
-                f"total {scalar_losses['total_loss']:.6g}{monitoring_text}",
-                flush=True,
-            )
+            if context.is_root:
+                print(
+                    f"{config['phantom']}/{config['model']} step {step}: "
+                    f"MSE {scalar_losses['batch_mse']:.6g}, "
+                    f"temporal L2 {scalar_losses['temporal_l2']:.6g}, "
+                    f"total {scalar_losses['total_loss']:.6g}{monitoring_text}",
+                    flush=True,
+                )
 
-        if out is not None and step in checkpoint_steps:
+        if out is not None and context.is_root and step in checkpoint_steps:
             save_checkpoint(out, model, optimizer, scheduler, config, step)
 
         # The reduction after the last allowed one marks the final plateau.
@@ -327,6 +343,9 @@ def parse_configuration(argv=None):
     parser.add_argument("--gifs", action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument("--save-predictions", action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument("--dry-run", action="store_true", help="Print resolved settings without creating files or training")
+    parser.add_argument("--distributed", action="store_true",
+                        help="One of several processes (RANK, WORLD_SIZE, MASTER_ADDR/PORT in the environment); "
+                             "source data and --out only")
     args = parser.parse_args(argv)
 
     # Load the template, then apply explicit command-line overrides.
@@ -345,8 +364,10 @@ def parse_configuration(argv=None):
         # The data file and window fix the grid, frame count and coordinate bounds.
         if args.frames is not None or args.cycles is not None:
             parser.error("dce_moby takes its window from config['data'], not --frames/--cycles")
+        # An extracted file (data.file) or the source phase files (data.source_root, streamed).
+        resolve = moby_source.resolve_settings if "source_root" in config["data"] else moby.resolve_settings
         try:
-            config["data"], window = moby.resolve_settings(config["data"])
+            config["data"], window = resolve(config["data"])
         except (KeyError, OSError, ValueError) as error:
             parser.error(f"dce_moby data: {error}")
         config.update(window)
@@ -510,6 +531,49 @@ def parse_configuration(argv=None):
                 if isinstance(value, list) and len(value) != expected:
                     parser.error(f"{name}.{key} needs {expected} entries for 3D data")
 
+    # Streamed training reads the source h5 frame by frame, optionally over several processes
+    # (streaming.py): contiguous frame shards, optional frame groups per round.
+    streamed = measured and "source_root" in config["data"]
+    world_size = world_size_from_environment() if args.distributed else 1
+    if args.distributed and not streamed:
+        parser.error("--distributed requires source data (data.source_root)")
+    if args.distributed and args.out is None:
+        parser.error("--distributed requires --out, the same on every process")
+    if "frame_groups" in config and not streamed:
+        parser.error("frame_groups require source data (data.source_root)")
+    if streamed:
+        if held_out_split != "none":
+            parser.error("Source data are streamed for held_out_split none only")
+        if options["predictions"]:
+            parser.error("output.predictions is not supported for streamed source data")
+        if config["batch_size"] % world_size:
+            parser.error(f"batch_size must be divisible by the {world_size} processes")
+        try:
+            shards = frame_shards(config["frames"], world_size)
+        except ValueError as error:
+            parser.error(str(error))
+        config["data_parallel"] = dict(
+            world_size=world_size, batch_per_process=config["batch_size"] // world_size,
+            frame_shards=[[int(shard[0]), int(shard[-1]) + 1] for shard in shards],
+            shard_weights=[len(shard) / config["frames"] for shard in shards],
+            gradient="sum over processes of w_p * grad(batch mean loss of p), w_p = shard frames / frames")
+        groups = config.get("frame_groups")
+        if groups is not None:
+            keys = ("frames_per_group", "steps_per_group")
+            if (not isinstance(groups, dict) or set(groups) - {*keys, "groups_per_round", "rounds"}
+                    or any(type(groups.get(key)) is not int or groups[key] < 1 for key in keys)):
+                parser.error("frame_groups needs positive integers frames_per_group and steps_per_group")
+            try:
+                count = groups_per_round(shards, groups["frames_per_group"])
+            except ValueError as error:
+                parser.error(f"frame_groups: {error}")
+            if count > 1 and config["steps"] % (count * groups["steps_per_group"]):
+                parser.error(f"steps must be a whole number of rounds of {count} groups x "
+                             f"{groups['steps_per_group']} steps")
+            config["frame_groups"] = dict(
+                frames_per_group=groups["frames_per_group"], steps_per_group=groups["steps_per_group"],
+                groups_per_round=count, rounds=config["steps"] // (count * groups["steps_per_group"]) if count > 1 else 1)
+
     # Blocks are a separate protocol, with their own grid divisibility constraint.
     if config["evaluation_split"] == "blocks":
         config.setdefault("block_split", dict(block_shape=[8, 8, 2], test_fraction=.2, seed=0))
@@ -634,11 +698,142 @@ def execute(config, out):
             raise
 
 
+def execute_streamed(config, out, context):
+    """Train and score on source data streamed from h5 (streaming.py), on one or more processes.
+
+    Same record as execute() for the embedding protocol. Before training, one pass over
+    each process's frame shard finds the intensity scale (global maximum), the ROI and the
+    monitor's fixed samples (the same indices as for the in-memory pool), and the source
+    files are hashed. Process 0 writes every file; the others only compute.
+    """
+    root = Path(__file__).resolve().parent
+    initialize_run_metadata(config)
+    if context.is_root:
+        out.mkdir(parents=True, exist_ok=False)
+    with ExitStack() as stack:
+        if context.is_root:
+            log = stack.enter_context((out / "run.log").open("w"))
+            stack.enter_context(redirect_stdout(Tee(sys.stdout, log)))
+            stack.enter_context(redirect_stderr(Tee(sys.stderr, log)))
+        try:
+            if context.is_root:
+                config["code_provenance"] = snapshot_source(root, out)
+                write_json(out / "config.json", config)
+                print(f"Phantom: {config['phantom']} (source files, streamed) | box: {config['data']['box_start']} "
+                      f"+ {config['data']['box_shape']} | frames: {config['frames']} | processes: "
+                      f"{context.world_size} | time: {config['time_bounds']}", flush=True)
+            torch.set_num_threads(config["threads"])
+            torch.manual_seed(config["seed"])
+            data, device = config["data"], torch_device(config)
+            window = moby.window_frames(data)
+            frame_count = len(window)
+            shards = frame_shards(frame_count, context.world_size)
+            shard = shards[context.rank]
+            context.weight = len(shard) / frame_count  # w_p, this process's share of the points
+            with moby_source.open_source(data) as source:
+                spatial_shape = (source.shape[1], source.shape[0], source.shape[2])  # (y, x, z)
+                voxels = int(np.prod(spatial_shape))
+                times = source.times[window]
+
+                # One pass over this shard: scale, positive voxels (ROI), monitor values.
+                hashes = source.sha256(source.paths[context.rank::context.world_size])
+                monitor_indices = fixed_indices(voxels * frame_count, config["monitor_samples"],
+                                                np.random.default_rng(config["monitor_seed"]))
+                maximum, positive, raw_values = scan_shard(lambda k: source.read_raw(window[k]), shard,
+                                                           frame_count, monitor_indices)
+                if data["intensity_scale"] == "global_maximum":
+                    # One fixed scale for the whole series (moby.py): frames outside the window count too.
+                    outside = np.setdiff1d(np.arange(source.frame_count), window)
+                    for frame in outside[context.rank::context.world_size]:
+                        maximum = max(maximum, float(source.read_raw(frame).max()))
+                if context.parallel:
+                    hashes = {name: digest for part in context.all_gather(hashes) for name, digest in part.items()}
+                    maximum, positive = context.maximum(maximum), context.any(positive)
+                    raw_values = context.sum_array(raw_values)  # each sample comes from one process
+                if data["intensity_scale"] == "global_maximum":
+                    data["intensity_scale_value"] = maximum
+                scale = data["intensity_scale_value"]
+                data["source_sha256"] = dict(sorted(hashes.items()))
+                roi = roi_from_mask(positive)
+                config["training_data"] = ("streamed from the source h5 files: frame shards per process"
+                                           + (", frame groups per round" if "frame_groups" in config else ""))
+                config["data_parallel"]["batch_generators"] = (
+                    "process 0: the torch default generator after torch.manual_seed(seed), as one process; "
+                    "process p > 0: torch.Generator seeded with SeedSequence([seed, p]); "
+                    "group partitions: numpy default_rng([seed, p])")
+                if data["intensity_scale"] == "global_maximum":
+                    data["intensity_scale_scope"] = "maximum over every source frame of the region (whole series)"
+                monitor_subset = None
+                if context.is_root:
+                    grid = CoordinateGrid(source.x, source.y, times, source.z)
+                    monitor_subset = (grid[monitor_indices],
+                                      torch.as_tensor(raw_values / np.float32(scale), dtype=torch.float32),
+                                      monitor_indices)
+                    write_json(out / "config.json", config)
+
+                # Optimize; every process starts from process 0's initial weights.
+                model = build_model(config)
+                if context.parallel:
+                    model.to(device)
+                    context.broadcast_parameters(model)
+                groups = config.get("frame_groups", {})
+                generator = None  # process 0 draws from the default generator, as one process does
+                if context.rank > 0:
+                    generator = torch.Generator().manual_seed(
+                        int(np.random.SeedSequence([config["seed"], context.rank]).generate_state(1)[0]))
+                sampler = StreamedSampler(
+                    lambda k: source.read(window[k], scale), shard, (source.x, source.y, source.z), times,
+                    config["batch_size"] // context.world_size, groups.get("groups_per_round", 1),
+                    groups.get("steps_per_group"), generator,
+                    np.random.default_rng([config["seed"], context.rank]), device)
+                _, seconds, _ = train(model, None, None, config, out=out if context.is_root else None,
+                                      sampler=sampler, context=context, monitor_subset=monitor_subset)
+                sampler = None  # release the loaded frames before scoring
+                if context.is_root:
+                    torch.save(dict(config=config, step=config["steps"], state_dict=cpu_state(model)),
+                               out / "model.pt")
+
+                # Score every window frame: each process its shard, then process 0 combines.
+                model.eval()
+                truth = StreamedTruth(lambda k: source.read(window[k], scale), spatial_shape, frame_count)
+                entry = dict(x=source.x, y=source.y, z=source.z, t=times)
+                partial = streamed_embedding_partials(model, entry, truth, (int(shard[0]), int(shard[-1]) + 1), roi)
+                partials = context.all_gather(partial) if context.parallel else [partial]
+            if context.is_root:
+                report = streamed_embedding_report(model, config, seconds, partials, truth.shape, times, roi)
+                save_metrics(out / "metrics.json", report)
+                selected = report["image"]["all_window_frames"]
+                print(f"All-frame (embedding) image RRMSE={selected['rrmse']:.4%}, SSIM={selected['ssim']}",
+                      flush=True)
+                config.update(status="complete", finished_at=utc_now())
+                write_json(out / "config.json", config)
+                update_summary(out.parent)
+                print(f"Saved results: {out}", flush=True)
+        except BaseException as error:
+            if context.is_root:
+                config.update(status="failed", finished_at=utc_now(), error=f"{type(error).__name__}: {error}")
+                write_json(out / "config.json", config)
+                traceback.print_exc()
+                try:
+                    update_summary(out.parent)
+                except Exception:
+                    traceback.print_exc()
+            raise
+
+
 def main(argv=None):
     args, config, out = parse_configuration(argv)
     if args.dry_run:
         print(json.dumps(config, indent=2))
         return config
+    if config["phantom"] == moby.NAME and "source_root" in config["data"]:
+        context = distributed.initialize(config.get("device", "cpu")) if args.distributed else Context()
+        try:
+            context.barrier()  # every process has checked the settings before process 0 creates `out`
+            execute_streamed(config, out, context)
+        finally:
+            distributed.finalize(context)
+        return
     execute(config, out)
 
 

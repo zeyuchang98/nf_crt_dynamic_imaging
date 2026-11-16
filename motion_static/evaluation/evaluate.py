@@ -5,7 +5,8 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from .metrics import evaluate_sequence, evaluate_sequence_in_blocks, error_metrics, save_metrics
+from .metrics import (evaluate_sequence, evaluate_sequence_in_blocks, error_metrics, save_metrics,
+                      sequence_block_partials, sequence_report_from_partials)
 from ..phantoms.data import coordinate_grid, entry_coordinates, get_phantom
 
 
@@ -43,7 +44,11 @@ def predict_entry(model, entry):
 
 
 def bounding_roi(volumes):
-    mask = np.logical_or.reduce([np.any(volume > 0, axis=-1) for volume in volumes])
+    return roi_from_mask(np.logical_or.reduce([np.any(volume > 0, axis=-1) for volume in volumes]))
+
+
+def roi_from_mask(mask):
+    """The bounding box of the voxels positive in any frame, 2 voxels wider on each side."""
     indices = np.nonzero(mask)
     return tuple(slice(max(0, int(axis.min()) - 2), min(size, int(axis.max()) + 3))
                  for axis, size in zip(indices, mask.shape))
@@ -249,6 +254,10 @@ def image_only_report(model, data, config, training_seconds):
         predictions = {split: predict_entry(model, entry) for split, entry in data.items()}
         image = scalar_report(None, "image", data, {s: d["truth"] for s, d in data.items()}, predictions,
                               points={}, splits=splits)
+    return _image_report(model, config, training_seconds, image, splits), predictions
+
+
+def _image_report(model, config, training_seconds, image, splits):
     report = dict(schema_version=1, evaluation_split="midpoints",
                   evaluation_scope="image only; no true motion or reference intensity",
                   parameters=sum(p.numel() for p in model.parameters()),
@@ -257,7 +266,23 @@ def image_only_report(model, data, config, training_seconds):
         report["held_out_split"] = config["held_out_split"]
         if "early_stopping" in config:
             report["early_stopping"] = config["early_stopping"]
-    return report, predictions
+    return report
+
+
+def streamed_embedding_partials(model, entry, truth, frame_range, roi):
+    """One process's sums for the embedding report: window frames [first, stop) of a 3D
+    window whose truth is read on demand (streaming.StreamedTruth; entry gives the axes)."""
+    def predict_frames(frames):
+        return predict(model, entry_coordinates(entry, frames)).reshape(*truth.shape[:-1], -1)
+
+    return sequence_block_partials(truth, predict_frames, data_range=1, roi=roi, frame_range=frame_range)
+
+
+def streamed_embedding_report(model, config, training_seconds, partials, truth_shape, times, roi):
+    """image_only_report of the embedding protocol from the processes' partial sums."""
+    image = {label: sequence_report_from_partials(partials, truth_shape, data_range=1, times=times, roi=roi)
+             for _, label in EMBEDDING_SPLITS}
+    return _image_report(model, config, training_seconds, image, EMBEDDING_SPLITS)
 
 
 def evaluate_image_only(model, data, config, out, training_seconds):

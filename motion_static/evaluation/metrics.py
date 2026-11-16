@@ -254,19 +254,35 @@ def evaluate_sequence_in_blocks(truth, predict_frames, *, data_range, times, roi
     - whole-array SSIM by the time-chunk scheme of _time_chunked_ssim: the local SSIM
       map of a block's kept frames, computed from inputs with pad-frame halos.
     The values equal evaluate_sequence up to floating-point rounding (summation order).
+    The same sums over separate frame ranges (sequence_block_partials, e.g. one range per
+    process) combine into the same report with sequence_report_from_partials.
     """
+    partial = sequence_block_partials(truth, predict_frames, data_range=data_range, roi=roi,
+                                      ssim_win_size=ssim_win_size, block_frames=block_frames)
+    return sequence_report_from_partials([partial], truth.shape, data_range=data_range, times=times, roi=roi,
+                                         ssim_win_size=ssim_win_size, block_frames=block_frames)
+
+
+def _block_settings(truth_shape, data_range, ssim_win_size, block_frames):
     _check_range(data_range)
-    if truth.ndim not in (3, 4):
+    if len(truth_shape) not in (3, 4):
         raise ValueError("Expected a scalar 2D+t or 3D+t sequence")
     if not isinstance(ssim_win_size, (int, np.integer)) or ssim_win_size < 3 or ssim_win_size % 2 != 1:
         raise ValueError("ssim_win_size must be an odd integer >= 3")
+    return block_frames or max(1, SSIM_CHUNK_VOXELS // math.prod(truth_shape[:-1]))
+
+
+def sequence_block_partials(truth, predict_frames, *, data_range, roi=None, ssim_win_size=7,
+                            block_frames=None, frame_range=None):
+    """The sums of evaluate_sequence_in_blocks over the frames [first, stop) of frame_range
+    (default all): blocks start at `first`, and the SSIM halos may read frames outside the
+    range. Returns sums per region, per-frame scores and the ROI curve values, in frame order."""
+    block_frames = _block_settings(truth.shape, data_range, ssim_win_size, block_frames)
     count, spatial_shape = truth.shape[-1], truth.shape[:-1]
-    times = np.asarray(times, dtype=float)
-    if times.shape != (count,) or not np.isfinite(times).all() or np.any(np.diff(times) <= 0):
-        raise ValueError("times must be finite, strictly increasing, and match frame count")
+    first, stop_all = (0, count) if frame_range is None else frame_range
+    if not 0 <= first < stop_all <= count:
+        raise ValueError(f"Frame range {first}:{stop_all} is outside 0:{count}")
     pad = (ssim_win_size - 1) // 2
-    voxels = math.prod(spatial_shape)
-    block_frames = block_frames or max(1, SSIM_CHUNK_VOXELS // voxels)
     regions = {"full": tuple(slice(None) for _ in spatial_shape)}
     if roi is not None:
         regions["roi"] = _normalize_roi(roi, spatial_shape)
@@ -278,8 +294,8 @@ def evaluate_sequence_in_blocks(truth, predict_frames, *, data_range, times, roi
     spatial_axes = tuple(range(len(spatial_shape)))
     crop = (slice(pad, -pad),) * len(spatial_shape)
 
-    for start in range(0, count, block_frames):
-        stop = min(start + block_frames, count)
+    for start in range(first, stop_all, block_frames):
+        stop = min(start + block_frames, stop_all)
         low, high = max(0, start - pad), min(count, stop + pad)  # with SSIM halos
         observed, predicted = _pair(truth[..., low:high], predict_frames(slice(low, high)))
         inner = slice(start - low, stop - low)
@@ -305,9 +321,31 @@ def evaluate_sequence_in_blocks(truth, predict_frames, *, data_range, times, roi
             if name == "roi":
                 curves["truth"] += (t_inner.sum(axis=spatial_axes) / math.prod(t.shape[:-1])).tolist()
                 curves["prediction"] += (p_inner.sum(axis=spatial_axes) / math.prod(t.shape[:-1])).tolist()
+    return dict(frame_range=[first, stop_all], totals=totals, frames=frames, curves=curves)
+
+
+def sequence_report_from_partials(partials, truth_shape, *, data_range, times, roi=None, ssim_win_size=7,
+                                  block_frames=None):
+    """evaluate_sequence_in_blocks' report from partial sums whose frame ranges cover every
+    frame once, in order. One partial over all frames gives exactly the single-pass values;
+    several give them up to floating-point rounding (summation order)."""
+    block_frames = _block_settings(truth_shape, data_range, ssim_win_size, block_frames)
+    count, spatial_shape = truth_shape[-1], truth_shape[:-1]
+    times = np.asarray(times, dtype=float)
+    if times.shape != (count,) or not np.isfinite(times).all() or np.any(np.diff(times) <= 0):
+        raise ValueError("times must be finite, strictly increasing, and match frame count")
+    ranges = [partial["frame_range"] for partial in partials]
+    if ranges[0][0] != 0 or ranges[-1][1] != count or any(a[1] != b[0] for a, b in zip(ranges, ranges[1:])):
+        raise ValueError(f"Partial frame ranges {ranges} do not cover 0:{count} once, in order")
+    pad = (ssim_win_size - 1) // 2
+    regions = ["full"] + (["roi"] if roi is not None else [])
 
     def report(name):
-        total = totals[name]
+        parts = [partial["totals"][name] for partial in partials]
+        total = {key: sum(part[key] for part in parts) for key in ("squared_error", "squared_truth", "samples",
+                                                                    "ssim_sum", "ssim_count")}
+        total["max_abs_error"] = max(part["max_abs_error"] for part in parts)
+        frames = [frame for partial in partials for frame in partial["frames"][name]]
         mse = total["squared_error"] / total["samples"]
         rrmse = (float(np.sqrt(total["squared_error"] / total["squared_truth"])) if total["squared_truth"]
                  else float("nan"))
@@ -315,22 +353,29 @@ def evaluate_sequence_in_blocks(truth, predict_frames, *, data_range, times, roi
                   "psnr_db": float(20 * np.log10(data_range) - 10 * np.log10(mse)) if mse else float("inf"),
                   "max_abs_error": total["max_abs_error"],
                   "ssim": total["ssim_sum"] / total["ssim_count"] if total["ssim_count"] else None}
-        for key in frames[name][0]:
-            result[f"per_frame_{key}"] = [frame[key] for frame in frames[name]]
+        for key in frames[0]:
+            result[f"per_frame_{key}"] = [frame[key] for frame in frames]
         return result
 
     result = report("full")
     result["times"] = times.tolist()
-    result["settings"] = _sequence_settings(truth.shape, truth.ndim - 1, data_range, ssim_win_size, truth.size)
+    result["settings"] = _sequence_settings(truth_shape, len(truth_shape) - 1, data_range, ssim_win_size,
+                                            math.prod(truth_shape))
     result["settings"]["computation"] = (
         f"streamed in blocks of {block_frames} frames with {pad}-frame halos: pooled sums, per-frame scores "
         f"and the time-chunked SSIM; equal to the whole-array evaluation up to rounding")
-    if roi is not None:
-        result["settings"]["roi"] = [[s.start, s.stop] for s in regions["roi"]]
+    if len(partials) > 1:
+        result["settings"]["computation"] += (
+            f"; summed over {len(partials)} frame ranges {ranges}, blocks starting at each range's first frame")
+    if "roi" in regions:
+        roi = _normalize_roi(roi, spatial_shape)
+        curves = {key: [value for partial in partials for value in partial["curves"][key]]
+                  for key in ("truth", "prediction")}
+        result["settings"]["roi"] = [[s.start, s.stop] for s in roi]
         result["roi"] = report("roi")
         result["activity_curve"] = {
             "mask_kind": "fixed spatial mask",
-            "pixel_counts": [math.prod(s.stop - s.start for s in regions["roi"])] * count,
+            "pixel_counts": [math.prod(s.stop - s.start for s in roi)] * count,
             "truth": curves["truth"], "prediction": curves["prediction"],
             **error_metrics(curves["truth"], curves["prediction"], data_range=data_range),
         }

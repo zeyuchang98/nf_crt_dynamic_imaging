@@ -29,6 +29,7 @@ losses, coordinate conventions, model architectures or metric definitions.
 | Fixed losses, learning rates and curves | [training_monitor.py](training_monitor.py) |
 | Run log, metadata and summary index | [run_records.py](run_records.py) |
 | Data and sampling | [phantoms/data.py](phantoms/data.py), [phantoms/complex.py](phantoms/complex.py) |
+| DCE-MOBY source files, streamed batches, several processes | [phantoms/moby_source.py](phantoms/moby_source.py), [streaming.py](streaming.py), [distributed.py](distributed.py) |
 | Metrics and optional visualization | [evaluation/README.md](evaluation/README.md) |
 | Focused validation | [tests/](tests/) |
 
