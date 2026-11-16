@@ -23,7 +23,8 @@ from .models.low_rank_intensity import LowRankIntensity
 from .models.oracle_branches import PHANTOM_REFERENCE_TIME, TrueMotion, TrueReferenceIntensity
 from .models.time_grid import TimeGridField
 from .phantoms import moby, moby_source
-from .phantoms.data import DEFAULT_PHANTOM, DEFAULT_SAMPLING, CoordinateGrid, coordinate_rows, make_pair, sample
+from .phantoms.data import (DEFAULT_PHANTOM, DEFAULT_SAMPLING, CoordinateGrid, VoxelSubsetGrid, coordinate_rows,
+                            make_pair, sample)
 from .splits import block_split
 from .evaluation.evaluate import (evaluate, evaluate_image_only, roi_from_mask, streamed_embedding_partials,
                                   streamed_embedding_report)
@@ -541,6 +542,10 @@ def parse_configuration(argv=None):
         parser.error("--distributed requires --out, the same on every process")
     if "frame_groups" in config and not streamed:
         parser.error("frame_groups require source data (data.source_root)")
+    if "support_mask" in config and not streamed:
+        parser.error("support_mask requires source data (data.source_root)")
+    if type(config.get("support_mask", False)) is not bool:
+        parser.error("support_mask must be true or false")
     if streamed:
         if held_out_split != "none":
             parser.error("Source data are streamed for held_out_split none only")
@@ -736,9 +741,13 @@ def execute_streamed(config, out, context):
                 times = source.times[window]
 
                 # One pass over this shard: scale, positive voxels (ROI), monitor values.
+                # With the support mask the monitor's pool (mask voxels x frames) is known only
+                # after this pass, so a second pass reads the monitor values.
+                support = config.get("support_mask", False)
                 hashes = source.sha256(source.paths[context.rank::context.world_size])
-                monitor_indices = fixed_indices(voxels * frame_count, config["monitor_samples"],
-                                                np.random.default_rng(config["monitor_seed"]))
+                monitor_rng = np.random.default_rng(config["monitor_seed"])
+                monitor_indices = (np.zeros(0, dtype=np.int64) if support else
+                                   fixed_indices(voxels * frame_count, config["monitor_samples"], monitor_rng))
                 maximum, positive, raw_values = scan_shard(lambda k: source.read_raw(window[k]), shard,
                                                            frame_count, monitor_indices)
                 if data["intensity_scale"] == "global_maximum":
@@ -749,6 +758,15 @@ def execute_streamed(config, out, context):
                 if context.parallel:
                     hashes = {name: digest for part in context.all_gather(hashes) for name, digest in part.items()}
                     maximum, positive = context.maximum(maximum), context.any(positive)
+                mask_voxels = None
+                if support:
+                    # The voxels with p0 > 0 in any window frame (streaming.py, "Support mask").
+                    mask_voxels = np.flatnonzero(positive.reshape(-1))
+                    monitor_indices = fixed_indices(len(mask_voxels) * frame_count, config["monitor_samples"],
+                                                    monitor_rng)
+                    _, _, raw_values = scan_shard(lambda k: source.read_raw(window[k]), shard, frame_count,
+                                                  monitor_indices, mask_voxels)
+                if context.parallel:
                     raw_values = context.sum_array(raw_values)  # each sample comes from one process
                 if data["intensity_scale"] == "global_maximum":
                     data["intensity_scale_value"] = maximum
@@ -763,9 +781,19 @@ def execute_streamed(config, out, context):
                     "group partitions: numpy default_rng([seed, p])")
                 if data["intensity_scale"] == "global_maximum":
                     data["intensity_scale_scope"] = "maximum over every source frame of the region (whole series)"
+                if support:
+                    config["support_mask_details"] = dict(
+                        definition="voxels with p0 > 0 in any window frame (union over time)",
+                        voxels=int(len(mask_voxels)), fraction=len(mask_voxels) / voxels, file="support_mask.npz",
+                        training="batches drawn from the mask voxels' points only",
+                        monitor="fixed samples drawn from the mask voxels' points",
+                        evaluation="prediction 0 outside the mask, then every metric as without a mask")
                 monitor_subset = None
                 if context.is_root:
-                    grid = CoordinateGrid(source.x, source.y, times, source.z)
+                    if support:
+                        np.savez_compressed(out / "support_mask.npz", mask=positive, axes="y, x, z")
+                    grid = (CoordinateGrid(source.x, source.y, times, source.z) if mask_voxels is None else
+                            VoxelSubsetGrid(source.x, source.y, times, source.z, mask_voxels))
                     monitor_subset = (grid[monitor_indices],
                                       torch.as_tensor(raw_values / np.float32(scale), dtype=torch.float32),
                                       monitor_indices)
@@ -785,7 +813,7 @@ def execute_streamed(config, out, context):
                     lambda k: source.read(window[k], scale), shard, (source.x, source.y, source.z), times,
                     config["batch_size"] // context.world_size, groups.get("groups_per_round", 1),
                     groups.get("steps_per_group"), generator,
-                    np.random.default_rng([config["seed"], context.rank]), device)
+                    np.random.default_rng([config["seed"], context.rank]), device, voxels=mask_voxels)
                 _, seconds, _ = train(model, None, None, config, out=out if context.is_root else None,
                                       sampler=sampler, context=context, monitor_subset=monitor_subset)
                 sampler = None  # release the loaded frames before scoring
@@ -797,7 +825,8 @@ def execute_streamed(config, out, context):
                 model.eval()
                 truth = StreamedTruth(lambda k: source.read(window[k], scale), spatial_shape, frame_count)
                 entry = dict(x=source.x, y=source.y, z=source.z, t=times)
-                partial = streamed_embedding_partials(model, entry, truth, (int(shard[0]), int(shard[-1]) + 1), roi)
+                partial = streamed_embedding_partials(model, entry, truth, (int(shard[0]), int(shard[-1]) + 1), roi,
+                                                      voxels=mask_voxels)
                 partials = context.all_gather(partial) if context.parallel else [partial]
             if context.is_root:
                 report = streamed_embedding_report(model, config, seconds, partials, truth.shape, times, roi)

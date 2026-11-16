@@ -28,7 +28,7 @@ at the end of this file.
   (midpoints, alternate_validation_test, none), plateau schedule, SS(r) baseline,
   embedding figures, branch GIFs (with frame subsets), whole-series data checks,
   time-chunked SSIM, Vista job scripts, lesion activity curves, streamed source data over several processes
-  (2026-11-16). 171 tests pass (2026-11-16) in this machine's `nf-crt` conda
+  (2026-11-16), optional support mask. 177 tests pass (2026-11-16) in this machine's `nf-crt` conda
   environment (Python 3.11, torch 2.14.0, numpy 1.26.4, h5py 3.16.0); 136 passed earlier
   in the second machine's `.venv-hash-sweep` and Vista's `$WORK/envs/nf-crt`.
 - **Local only on the second machine (not on GitHub):** `model.pt` of the DCE-MOBY runs
@@ -2397,8 +2397,9 @@ fast-forwarded to `c5912a6`): job 1147432, same command with the name
 `dce_moby_box64_source_check_20261116_2node_try2`, pending (Priority) at submission.
 The failed run's folder `dce_moby_box64_source_check_20261116_2node` stays on Vista.
 
-Support mask for the whole volume, decided by the user (2026-11-16), not implemented:
-the mask is the voxels with p0 > 0 in any frame of the series (the indicator files hold
+Support mask for the whole volume, decided by the user (2026-11-16), implemented the same
+day as `"support_mask": true` (default false; plan approved by the user): the mask is the
+voxels with p0 > 0 in any frame of the window (the whole series for a full-series run) (the indicator files hold
 only four tissues and `phantom_anatomy_0.h5` only phase 0, so neither is used); training
 samples only inside the mask; the model is unchanged; evaluation sets the prediction to 0
 outside the mask and then computes every metric as now (whole volume, ROI, per frame,
@@ -2407,6 +2408,17 @@ on this machine: 39.5% of the whole volume is positive in some frame of the two 
 phases (145 frames; the union over all 200 phases is not known yet), 76.8% of the 64^3 box
 over the test window; 56 of the 64 source chunks per frame contain positive voxels, so
 reading barely shrinks. Default off: existing runs are unchanged.
+Code: `phantoms/data.VoxelSubsetGrid` (the coordinate rows of the mask voxels, in
+CoordinateGrid's order); `StreamedSampler(voxels=...)` keeps only mask voxels in the loaded
+values; a second pass reads the monitor's fixed samples, drawn with the usual rule from the
+mask voxels' points; `streamed_embedding_partials(voxels=...)` queries the model only on
+mask voxels and fills 0 elsewhere; the run saves `support_mask.npz` and
+`support_mask_details` in `config.json`. Validated (177 tests pass): a mask holding every
+voxel reproduces the unmasked run bit for bit (`loss.csv`, weights, `metrics.json`); on data
+with a background slab the run finds the expected mask, its monitor samples lie in the
+masked pool, and its scores equal the unmasked evaluation of the prediction set to 0
+outside the mask (relative 1e-6); two masked gloo processes with frame groups complete with
+the same mask.
 
 Open: resume; reading speed on Lustre (set aside by the user); post-hoc
 tools that call `prepare_data` load a source-data window into memory (fine for the box,

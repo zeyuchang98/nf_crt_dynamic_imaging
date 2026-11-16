@@ -17,6 +17,7 @@ import torch
 from motion_static.evaluation.metrics import (evaluate_sequence_in_blocks, sequence_block_partials,
                                               sequence_report_from_partials)
 from motion_static.phantoms import moby, moby_source
+from motion_static.phantoms.data import CoordinateGrid, VoxelSubsetGrid
 from motion_static.phantoms.moby_slice import INDICATOR_TISSUES, extract_box
 from motion_static.run import build_model, main
 from motion_static.streaming import (StreamedSampler, StreamedTruth, frame_shards, groups_per_round,
@@ -33,13 +34,17 @@ GEOMETRY = dict(fov=np.array([[0, 3.0], [0, 3.0], [1.0, 2.8]]), spacing=np.array
 WINDOW = dict(first_frame=0, cycles=5, frames_per_cycle=4)  # 21 of the 24 frames
 
 
-def write_source(root):
-    """Phase files in the real layout; phase p is 0.05 p s later, frames 10 s apart, so they interlace."""
+def write_source(root, zero_x=0):
+    """Phase files in the real layout; phase p is 0.05 p s later, frames 10 s apart, so they interlace.
+
+    Without zero_x almost every voxel is positive in some frame; with it, source x < zero_x
+    is 0 in every frame (background outside a support mask)."""
     rng = np.random.default_rng(0)
     (root / "p0").mkdir()
     (root / "indicator").mkdir()
     for phase in range(PHASES):
         p0 = (rng.random((*SHAPE, FRAMES_PER_PHASE), dtype=np.float32) - 0.1).clip(0) * 0.4
+        p0[:zero_x] = 0
         with h5py.File(root / "p0" / f"p0_{phase:05d}.h5", "w") as f:
             f.create_dataset("p0", data=p0, chunks=CHUNKS, compression="lzf")
             f["time"] = -36 + 0.05 * phase + 10.0 * np.arange(FRAMES_PER_PHASE)
@@ -201,6 +206,32 @@ class ShardAndGroupTests(unittest.TestCase):
         for first in (0, 3):
             np.testing.assert_array_equal(np.sort(np.concatenate(loaded[first:first + 3])), np.arange(9))
 
+    def test_voxel_subset_rows_are_the_grid_rows_of_those_voxels(self):
+        x, y, z, t = np.arange(3.), np.arange(2.) + 10, np.arange(4.) + 20, np.linspace(0, 1, 5)
+        grid = CoordinateGrid(x, y, t, z)
+        voxels = np.array([1, 4, 5, 11, 23])
+        subset = VoxelSubsetGrid(x, y, t, z, voxels)
+        self.assertEqual(len(subset), 5 * len(t))
+        rows = torch.arange(len(subset))
+        expected = (torch.as_tensor(voxels)[rows // len(t)] * len(t) + rows % len(t))
+        self.assertTrue(torch.equal(subset[rows], grid[expected]))
+        everything = VoxelSubsetGrid(x, y, t, z, np.arange(24))
+        self.assertTrue(torch.equal(everything[torch.arange(len(grid))], grid[torch.arange(len(grid))]))
+
+    def test_masked_sampler_draws_only_mask_voxels(self):
+        x, y, z = np.arange(3.), np.arange(2.), np.arange(2.)
+        voxels = np.array([0, 3, 7, 10])  # flat (y, x, z) indices
+        # Frame k holds 100 k + voxel index, so a target names its voxel and frame.
+        frames = lambda k: (100. * k + np.arange(12, dtype=np.float32)).reshape(2, 3, 2)
+        sampler = StreamedSampler(frames, np.arange(4), (x, y, z), np.linspace(0, 1, 4), 200, 1, None,
+                                  torch.Generator().manual_seed(0), np.random.default_rng(0), "cpu", voxels=voxels)
+        coordinates, targets = sampler.batch(1)
+        self.assertEqual(tuple(sampler.values.shape), (4, 4))
+        voxel, frame = targets.long() % 100, targets.long() // 100
+        self.assertTrue(set(voxel.tolist()) <= set(voxels.tolist()))
+        grid = CoordinateGrid(x, y, np.linspace(0, 1, 4), z)
+        self.assertTrue(torch.equal(coordinates, grid[voxel * 4 + frame]))
+
     def test_scan_finds_the_maximum_positive_voxels_and_sample_values(self):
         rng = np.random.default_rng(1)
         frames = (rng.random((5, 3, 4, 2), dtype=np.float32) - 0.5).clip(0)  # (x, y, z, frame)
@@ -210,6 +241,12 @@ class ShardAndGroupTests(unittest.TestCase):
         self.assertEqual(maximum, float(frames.max()))
         np.testing.assert_array_equal(positive, np.transpose(frames, (1, 0, 2, 3)).max(axis=-1) > 0)
         np.testing.assert_array_equal(values, pool[indices])
+        # Samples of a masked pool: index v * F + position names mask voxel voxels[v].
+        voxels = np.flatnonzero(positive.reshape(-1))
+        masked = pool.reshape(-1, 2)[voxels].reshape(-1)
+        indices = rng.choice(masked.size, 10, replace=False)
+        _, _, values = scan_shard(lambda k: frames[..., k], [0, 1], 2, indices, voxels)
+        np.testing.assert_array_equal(values, masked[indices])
 
 
 class PartialEvaluationTests(unittest.TestCase):
@@ -321,6 +358,20 @@ class StreamedRunTests(unittest.TestCase):
             np.testing.assert_allclose(image[key], single[key], rtol=1e-10)
         self.assertEqual(image["per_frame_rrmse"], single["per_frame_rrmse"])
 
+    def test_mask_of_every_voxel_reproduces_the_unmasked_run(self):
+        expected = self.run_config(source_config(self.root), "plain")
+        out = self.run_config(source_config(self.root, support_mask=True), "masked")
+        details = json.loads((out / "config.json").read_text())["support_mask_details"]
+        self.assertEqual(details["voxels"], int(np.prod(BOX_SHAPE)))
+        self.assertEqual(self.read_loss(out), self.read_loss(expected))
+        state, old_state = (torch.load(path / "model.pt")["state_dict"] for path in (out, expected))
+        for name in old_state:
+            self.assertTrue(torch.equal(state[name], old_state[name]), name)
+        metrics, old_metrics = (json.loads((path / "metrics.json").read_text()) for path in (out, expected))
+        for report in (metrics, old_metrics):
+            report.pop("training_seconds")
+        self.assertEqual(metrics, old_metrics)
+
     def test_configuration_errors(self):
         cases = [
             (dict(held_out_split="midpoints"), "held_out_split none"),
@@ -331,7 +382,9 @@ class StreamedRunTests(unittest.TestCase):
         config = config_3d(box)
         config["data"] = dict(WINDOW, file=str(box))
         cases += [(config, "--distributed requires source data"),
-                  (dict(config, frame_groups=dict(frames_per_group=4, steps_per_group=1)), "require source data")]
+                  (dict(config, frame_groups=dict(frames_per_group=4, steps_per_group=1)), "require source data"),
+                  (dict(config, support_mask=True), "support_mask requires source data"),
+                  (source_config(self.root, support_mask="yes"), "true or false")]
         for k, (changes, message) in enumerate(cases):
             path = self.root / f"bad{k}.json"
             path.write_text(json.dumps(changes if "data" in changes else source_config(self.root, **changes)))
@@ -339,6 +392,56 @@ class StreamedRunTests(unittest.TestCase):
             with captured_stderr() as errors, self.assertRaises(SystemExit):
                 main(arguments + (["--distributed"] if "distributed" in message else []))
             self.assertIn(message, errors.getvalue())
+
+
+class SupportMaskRunTests(unittest.TestCase):
+    """Source data whose box has a background slab: the first 4 box columns (source x 3..6) are 0."""
+
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory()
+        self.root = Path(self.folder.name)
+        write_source(self.root, zero_x=7)
+        self.expected_mask = np.ones((BOX_SHAPE[1], BOX_SHAPE[0], BOX_SHAPE[2]), dtype=bool)  # (y, x, z)
+        self.expected_mask[:, :4, :] = False
+
+    def tearDown(self):
+        self.folder.cleanup()
+
+    def run_masked(self, name, distributed=False, **changes):
+        return StreamedRunTests.run_config(self, source_config(self.root, support_mask=True, **changes), name,
+                                           distributed=distributed)
+
+    def test_masked_run_trains_inside_the_mask_and_scores_with_zero_outside(self):
+        out = self.run_masked("masked")
+        saved = json.loads((out / "config.json").read_text())
+        count = int(self.expected_mask.sum())
+        self.assertEqual(saved["support_mask_details"]["voxels"], count)
+        np.testing.assert_array_equal(np.load(out / "support_mask.npz")["mask"], self.expected_mask)
+        frames = len(moby.window_frames(saved["data"]))
+        self.assertLess(int(np.load(out / "monitor_samples.npz")["training_indices"].max()), count * frames)
+
+        # The saved scores equal the unmasked evaluation of the prediction set to 0 outside the mask.
+        from motion_static.evaluation.evaluate import bounding_roi, predict_entry
+        from motion_static.evaluation.moby_embedding_figures import load_model
+        entry = moby.read_window_entry(saved["data"])
+        prediction = predict_entry(load_model(out), entry)
+        prediction[~self.expected_mask] = 0
+        reference = evaluate_sequence_in_blocks(entry["truth"], lambda f: prediction[..., f], data_range=1,
+                                                times=entry["t"], roi=bounding_roi([entry["truth"]]))
+        image = json.loads((out / "metrics.json").read_text())["image"]["all_window_frames"]
+        for key in ("mse", "rrmse", "psnr_db", "ssim", "max_abs_error"):
+            np.testing.assert_allclose(image[key], reference[key], rtol=1e-6)
+        np.testing.assert_allclose(image["per_frame_rrmse"], reference["per_frame_rrmse"], rtol=1e-6)
+        np.testing.assert_allclose(image["activity_curve"]["prediction"], reference["activity_curve"]["prediction"],
+                                   rtol=1e-6)
+
+    def test_two_masked_processes_with_frame_groups_complete(self):
+        out = self.run_masked("two", distributed=True, steps=6,
+                              frame_groups=dict(frames_per_group=4, steps_per_group=1))
+        saved = json.loads((out / "config.json").read_text())
+        self.assertEqual(saved["status"], "complete")
+        self.assertEqual(saved["support_mask_details"]["voxels"], int(self.expected_mask.sum()))
+        np.testing.assert_array_equal(np.load(out / "support_mask.npz")["mask"], self.expected_mask)
 
 
 class DistributedTests(unittest.TestCase):

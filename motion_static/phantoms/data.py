@@ -66,6 +66,31 @@ class CoordinateGrid:
         return torch.stack([values[1], values[0], *values[2:]], dim=-1)  # columns x, y[, z], t
 
 
+class VoxelSubsetGrid:
+    """The rows of CoordinateGrid(x, y, t, z) whose voxel is in `voxels` (flat (y, x, z) indices,
+    ascending), in the same order: row r is voxel voxels[r // T] at time t[r % T].
+
+    With every voxel in `voxels` it equals CoordinateGrid row for row.
+    """
+
+    def __init__(self, x, y, t, z, voxels):
+        self.grid = CoordinateGrid(x, y, t, z)
+        self.voxels = torch.as_tensor(np.asarray(voxels), dtype=torch.long)
+        self.frames = len(t)
+
+    def __len__(self):
+        return len(self.voxels) * self.frames
+
+    def to(self, device):
+        moved = copy.copy(self)
+        moved.grid, moved.voxels = self.grid.to(device), self.voxels.to(device)
+        return moved
+
+    def __getitem__(self, indices):
+        indices = torch.as_tensor(indices, dtype=torch.long, device=self.voxels.device)
+        return self.grid[self.voxels[indices // self.frames] * self.frames + indices % self.frames]
+
+
 def coordinate_rows(entry):
     """Rows (x, y[, z], t) of an entry's whole grid, in entry["truth"].reshape(-1) order.
 

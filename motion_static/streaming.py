@@ -21,13 +21,18 @@ With n = 1 the step gradient is unbiased, with a variance no larger than one pro
 
 One process with the whole window loaded reproduces InMemorySampler draw for draw:
 same buffer order (frame fastest), same random indices, same batches.
+
+Support mask (optional): the points are only the mask voxels times the frames; the
+mask is the voxels with p0 > 0 in any window frame, so the objective is the mean over
+these points, and the buffers and batches hold mask voxels only. With every voxel in the
+mask nothing changes.
 """
 import math
 
 import numpy as np
 import torch
 
-from .phantoms.data import CoordinateGrid
+from .phantoms.data import CoordinateGrid, VoxelSubsetGrid
 
 
 class InMemorySampler:
@@ -82,12 +87,16 @@ class StreamedSampler:
     pool's order (frame fastest) and CoordinateGrid gives the coordinates directly.
     generator: torch generator for the batch indices (None: the default generator).
     group_generator: numpy generator for the round partitions.
+    voxels: flat (y, x, z) indices of the support mask, ascending (None: every voxel); row v
+    of the loaded values is then mask voxel voxels[v].
     """
 
     def __init__(self, read_frame, shard, axes, times, batch_size, groups, steps_per_group,
-                 generator, group_generator, device):
+                 generator, group_generator, device, voxels=None):
         self.read_frame, self.shard = read_frame, np.asarray(shard)
         self.x, self.y, self.z = axes
+        self.voxels = None if voxels is None else np.asarray(voxels)
+        self.voxel_count = len(self.x) * len(self.y) * len(self.z) if voxels is None else len(self.voxels)
         self.times = np.asarray(times)
         self.batch_size, self.groups, self.steps_per_group = batch_size, groups, steps_per_group
         self.generator, self.group_generator, self.device = generator, group_generator, device
@@ -97,12 +106,15 @@ class StreamedSampler:
     def load(self, group):
         """Read the group's frames into memory, one frame at a time."""
         self.values = None  # release the previous group before allocating the next
-        values = torch.empty((len(self.x) * len(self.y) * len(self.z), len(group)), dtype=torch.float32,
-                             device=self.device)
+        values = torch.empty((self.voxel_count, len(group)), dtype=torch.float32, device=self.device)
         for j, position in enumerate(group):
-            values[:, j] = torch.from_numpy(np.ascontiguousarray(self.read_frame(position)).reshape(-1))
+            frame = np.ascontiguousarray(self.read_frame(position)).reshape(-1)
+            values[:, j] = torch.from_numpy(frame if self.voxels is None else frame[self.voxels])
         self.values, self.loaded = values, np.asarray(group)
-        self.coordinates = CoordinateGrid(self.x, self.y, self.times[group], self.z).to(self.device)
+        if self.voxels is None:
+            self.coordinates = CoordinateGrid(self.x, self.y, self.times[group], self.z).to(self.device)
+        else:
+            self.coordinates = VoxelSubsetGrid(self.x, self.y, self.times[group], self.z, self.voxels).to(self.device)
 
     def batch(self, step):
         """Batch of 1-based optimizer step `step`; switches to the next group when it is due."""
@@ -115,16 +127,19 @@ class StreamedSampler:
         return self.coordinates[indices], self.values[indices // frames, indices % frames]
 
 
-def scan_shard(read_raw, positions, frame_count, sample_indices):
+def scan_shard(read_raw, positions, frame_count, sample_indices, voxels=None):
     """One pass over a shard's frames before training.
 
     read_raw(position) returns window frame `position` as stored, (x, y, z).
     Returns the maximum over these frames, the (y, x, z) voxels positive in any of them,
     and the raw values of the fixed samples (flat indices v * F + position of the in-memory
-    pool) that fall in these frames, zero elsewhere.
+    pool, v the voxel or, with `voxels`, the mask voxel voxels[v]) that fall in these
+    frames, zero elsewhere.
     """
-    sample_indices = np.asarray(sample_indices)
+    sample_indices = np.asarray(sample_indices, dtype=np.int64)
     sample_frame, sample_voxel = sample_indices % frame_count, sample_indices // frame_count
+    if voxels is not None:
+        sample_voxel = np.asarray(voxels)[sample_voxel]
     maximum, positive = -np.inf, None
     values = np.zeros(len(sample_indices), dtype=np.float32)
     for position in positions:

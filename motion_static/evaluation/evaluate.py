@@ -7,7 +7,7 @@ import torch
 
 from .metrics import (evaluate_sequence, evaluate_sequence_in_blocks, error_metrics, save_metrics,
                       sequence_block_partials, sequence_report_from_partials)
-from ..phantoms.data import coordinate_grid, entry_coordinates, get_phantom
+from ..phantoms.data import VoxelSubsetGrid, coordinate_grid, entry_coordinates, get_phantom
 
 
 def module_device(module):
@@ -269,11 +269,25 @@ def _image_report(model, config, training_seconds, image, splits):
     return report
 
 
-def streamed_embedding_partials(model, entry, truth, frame_range, roi):
+def streamed_embedding_partials(model, entry, truth, frame_range, roi, voxels=None):
     """One process's sums for the embedding report: window frames [first, stop) of a 3D
-    window whose truth is read on demand (streaming.StreamedTruth; entry gives the axes)."""
+    window whose truth is read on demand (streaming.StreamedTruth; entry gives the axes).
+
+    voxels: flat (y, x, z) indices of a support mask. The model is then queried only there
+    and the image is 0 elsewhere, which equals setting the prediction to 0 outside the
+    mask; every metric is then computed exactly as without a mask.
+    """
+    spatial = truth.shape[:-1]
+
     def predict_frames(frames):
-        return predict(model, entry_coordinates(entry, frames)).reshape(*truth.shape[:-1], -1)
+        if voxels is None:
+            return predict(model, entry_coordinates(entry, frames)).reshape(*spatial, -1)
+        times = entry["t"][frames]
+        grid = VoxelSubsetGrid(entry["x"], entry["y"], times, entry["z"], voxels)
+        inside = predict(model, grid[np.arange(len(grid))].numpy()).reshape(len(voxels), len(times))
+        image = np.zeros((math.prod(spatial), len(times)), dtype=inside.dtype)
+        image[voxels] = inside
+        return image.reshape(*spatial, len(times))
 
     return sequence_block_partials(truth, predict_frames, data_range=1, roi=roi, frame_range=frame_range)
 

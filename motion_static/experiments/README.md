@@ -108,6 +108,11 @@ Training and sampling ([streaming.py](../streaming.py), [distributed.py](../dist
   most), and each group is trained for K steps; `steps` must be a whole number of rounds.
   Without `frame_groups` each process keeps its whole shard. See streaming.py for the
   sampling math (unbiased over a round, not per step, with groups).
+- `"support_mask": true` (default false) restricts the points to the voxels with p0 > 0 in
+  any window frame (the union over time, saved as `support_mask.npz`): batches and the
+  monitor's fixed samples come from these voxels only, and the evaluation queries the model
+  only there and sets the image to 0 elsewhere, then computes every metric as without a
+  mask. The model is unchanged. A mask that holds every voxel changes nothing.
 - One process without `frame_groups` reproduces the in-memory run of the extracted file
   (same batches, weights and metrics; `tests/test_streamed_training.py`).
 - Evaluation: each process scores its own frames from h5 and process 0 combines the sums;
