@@ -2391,6 +2391,12 @@ contiguity check to every reduction. The test that lists `experiments/` now incl
 check input (it failed after `f39dffe`, which added the input without rerunning the
 suite). 172 tests pass.
 
+Resubmitted 2026-11-16 with the user's OK (Vista's `results/summary.csv`, which the
+failed run had extended by one row, restored to the committed content first; Vista
+fast-forwarded to `c5912a6`): job 1147432, same command with the name
+`dce_moby_box64_source_check_20261116_2node_try2`, pending (Priority) at submission.
+The failed run's folder `dce_moby_box64_source_check_20261116_2node` stays on Vista.
+
 Support mask for the whole volume, decided by the user (2026-11-16), not implemented:
 the mask is the voxels with p0 > 0 in any frame of the series (the indicator files hold
 only four tissues and `phantom_anatomy_0.h5` only phase 0, so neither is used); training
