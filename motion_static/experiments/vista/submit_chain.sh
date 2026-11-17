@@ -28,7 +28,14 @@ for k in $(seq 1 "$jobs"); do
     if [ -n "$previous" ]; then
         dependency=(--dependency="afterok:$previous")
     fi
+    # Vista's submit filter prints a banner on stdout before the job id: keep the last line
+    # (--parsable gives "id" or "id;cluster").
     previous=$(sbatch --parsable -p gh -N "$nodes" -t "$limit" "${dependency[@]}" \
-        motion_static/experiments/vista/train_multinode.sbatch "$@" --continue --segment-minutes "$minutes")
+        motion_static/experiments/vista/train_multinode.sbatch "$@" --continue --segment-minutes "$minutes" \
+        | tail -n 1 | cut -d ';' -f 1)
+    if ! [[ "$previous" =~ ^[0-9]+$ ]]; then
+        echo "could not read the job id of segment $k: '$previous'" >&2
+        exit 1
+    fi
     echo "segment $k of $jobs: job $previous"
 done

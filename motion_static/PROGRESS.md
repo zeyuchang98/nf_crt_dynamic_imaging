@@ -2480,6 +2480,18 @@ Queue waits, as the user asked to record (Slurm submit to start):
 | 1147351 (check, failed) | 2, 45 min, gh-dev | 11-16 14:19:07 | 11-16 14:28:42 | 9 min 35 s |
 | 1147432 (check) | 2, 45 min, gh-dev | 11-16 15:31:08 | 11-16 17:49:04 | 2 h 18 min |
 | 1148080 (formal) | 32, 5 h, gh | 11-17 00:12:12 | pending | |
+| 1149828 (formal chain, segment 1) | 32, 2 h, gh | 11-17 15:25:37 | pending | |
+| 1149832-1149834 (segments 2-4) | 32, 2 h, gh, each afterok on the one before | 11-17 15:26:00-01 | pending | |
+
+The same run as a chain of short jobs, submitted alongside 1148080 at the user's request
+(2026-11-17) to compare how fast each finishes: `submit_chain.sh 4 32 02:00:00 100`, same
+input, out `dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain`, from code `9e06f0d`
+in a second Vista checkout (`$WORK/nf_crt_dynamic_imaging_chain`, a detached git
+worktree) so that 1148080 still starts from `b22dbdd` in the first. Three segments of 100
+minutes cover the upper estimate (about 4.4 h) with little margin, so a fourth was queued;
+it exits at once if the run is already complete. At submission 1148080 had priority 1879
+and 1149828 1562 (the difference is 1148080's 15 h of age); segments 2-4 accrue no age
+until the one before ends. Measured from submission: when each run is complete.
 
 ## Resume over segments (2026-11-17): implemented, tested locally
 
@@ -2511,4 +2523,12 @@ after step 1, then 2 steps, then the rest) give the same `loss.csv` (apart from 
 time), weights and `metrics.json` (apart from training time) as the run without breaks,
 bit for bit; the refusals above. Not run on Vista yet. The formal job 1148080 was
 submitted before this change and runs without segments.
+
+First use on Vista (2026-11-17, the formal chain above): `submit_chain.sh` read the job
+id wrongly, since Vista's submit filter prints a banner on stdout before `--parsable`'s
+id, so only segment 1 was submitted and segment 2 was refused (bad dependency). Segments
+2-4 were then submitted by hand with the same command; the script now keeps the last line
+of sbatch's output and stops if it is not a job id (tested with a stand-in sbatch that
+prints a banner, and one that fails). The chain checkout keeps `9e06f0d` until the chain
+ends, because each segment checks the code.
 
