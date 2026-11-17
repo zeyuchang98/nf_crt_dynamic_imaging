@@ -67,7 +67,8 @@ at the end of this file.
   table 2^21, 6.6 M parameters, about 29 h on one node); its job queued 22.5 h on `gh`
   and was cancelled. Streamed training is now implemented (2026-11-16): the source phase
   files are read directly, frame by frame (box or whole volume), with frame shards over
-  processes and frame groups per round; tested locally (gloo), not yet on Vista (NCCL).
+  processes and frame groups per round; tested locally (gloo) and checked on 2 Vista nodes
+  (NCCL, job 1147432, 2026-11-16): about 51 ms per step at batch 65,536.
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -2396,6 +2397,28 @@ failed run had extended by one row, restored to the committed content first; Vis
 fast-forwarded to `c5912a6`): job 1147432, same command with the name
 `dce_moby_box64_source_check_20261116_2node_try2`, pending (Priority) at submission.
 The failed run's folder `dce_moby_box64_source_check_20261116_2node` stays on Vista.
+
+Result: job 1147432 completed (2026-11-16 17:49-18:08, 19 min 44 s, nodes c642-[002,011],
+both processes exit 0, peak host memory 5.1 GB each), code `c5912a6`. Records:
+[results/dce_moby_box64_source_check_20261116_2node_try2/](results/dce_moby_box64_source_check_20261116_2node_try2/)
+(`config.json`, `metrics.json`, `loss.csv`, `loss.png`, `run.log`, `monitor_samples.npz`,
+`source.zip`, the Slurm log and the GPU record, copied with rsync; `model.pt` stays on
+Vista). Every pass criterion holds:
+- the run completed: NCCL worked across the two nodes and all 21 parameter checks (steps
+  1, 100, ..., 2000) passed;
+- `intensity_scale_value` is 0.4674420654773712, the full-series box file's value;
+- `source_sha256` lists the 200 source files.
+Step time on 2 nodes (32,768 points per process): median 51.1 ms over the 100-step
+intervals (47.9-55.6 ms), except 92.0 ms for steps 200-300, which include the first switch
+to a frame group not read before (read cold from Lustre). Not a clean speed comparison:
+single-node runs of similar models took 84.3 ms (10k trial, motion table 2^17) and 90-95 ms
+(window runs); this model (motion 2^21) was not timed on one node. Training took 120 s;
+about 17 of the 19.7 minutes went to hashing the source files and the pre-training scan
+(GPU idle in 18 of the 20 per-minute samples). The scores (all-frame RRMSE 8.22%, SSIM
+0.99860, PSNR 50.86 dB on the 151-frame window after 2,000 steps) are a by-product of the
+check, not a result; they are not comparable with the window-file runs (whole-series
+scale, embedding protocol). Vista's `results/summary.csv` holds this run's row again,
+like the committed one now; check it before the next pull there.
 
 Support mask for the whole volume, decided by the user (2026-11-16), implemented the same
 day as `"support_mask": true` (default false; plan approved by the user): the mask is the

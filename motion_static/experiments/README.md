@@ -221,9 +221,8 @@ node; choose the node count with `-N`:
 sbatch -p gh -N 4 -t 02:00:00 motion_static/experiments/vista/train_multinode.sbatch CONFIG NAME
 ```
 
-Not yet run on Vista: NCCL between nodes is untested there (2026-11-16).
-[dce_moby_box64_source_check.json](dce_moby_box64_source_check.json) is the planned 2-node
-check: the formal full-series model on the 64^3 box read from the source files, test
+[dce_moby_box64_source_check.json](dce_moby_box64_source_check.json) is the 2-node check
+(passed on Vista, job 1147432, 2026-11-16; see PROGRESS.md): the formal full-series model on the 64^3 box read from the source files, test
 window 1250-1400 (151 frames), 2,000 steps, frame groups of 40 frames for 250 steps
 (2 groups per round, 4 rounds), no checkpoints.
 
