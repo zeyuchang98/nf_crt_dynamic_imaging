@@ -4,6 +4,7 @@ from contextlib import ExitStack, redirect_stdout, redirect_stderr
 import copy
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import sys
 import traceback
@@ -39,6 +40,8 @@ from .run_records import (
     Tee,
     initialize_run_metadata,
     save_checkpoint,
+    save_resume_checkpoint,
+    source_hashes,
     snapshot_source,
     update_summary,
     utc_now,
@@ -183,8 +186,23 @@ def build_optimizer(model, config):
     return torch.optim.Adam(groups)
 
 
+class Segment:
+    """When a job hands the run over to the next job (run.py --continue): at the first log
+    step after `steps` optimizer steps of this job, or once `minutes` have passed since the
+    process started (`started`, time.time()). The final step always completes the run."""
+
+    def __init__(self, steps=None, minutes=None, started=None):
+        self.steps = steps
+        self.deadline = None if minutes is None else started + 60. * minutes
+        self.stopped_at = None
+
+    def due(self, step, first_step):
+        by_steps = self.steps is not None and step - first_step + 1 >= self.steps
+        return by_steps or (self.deadline is not None and time.time() >= self.deadline)
+
+
 def train(model, coordinates, intensities, config, *, out=None, validation=None, selection=None,
-          sampler=None, context=None, monitor_subset=None):
+          sampler=None, context=None, monitor_subset=None, resume=None, segment=None):
     """One step = one random batch and one joint optimizer update.
 
     Loss definitions live in losses.compute_training_losses. Validation is used
@@ -197,6 +215,10 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None,
     Streamed training (run.execute_streamed) passes a `sampler` instead of the pool, a
     distributed `context` (weighted gradients summed over processes, see streaming.py)
     and the monitor's precomputed fixed samples; only process 0 writes files or prints.
+    `resume` (a resume checkpoint, run_records.save_resume_checkpoint) continues after its
+    step with its optimizer and schedule; the model, sampler and random generators are
+    restored by the caller. With a `segment`, training stops when it is due, saves a resume
+    checkpoint and sets segment.stopped_at; the returned seconds include earlier segments.
     """
     device = torch_device(config)
     model.to(device)
@@ -215,6 +237,15 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None,
         reduction_steps = []
     else:
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["steps"])
+    first_step, elapsed_offset = 1, 0.
+    if resume is not None:
+        if plateau:
+            raise ValueError("Resuming is not supported with the plateau schedule")
+        optimizer.load_state_dict(resume["optimizer"])
+        scheduler.load_state_dict(resume["scheduler"])
+        first_step, elapsed_offset = resume["step"] + 1, resume["training_seconds"]
+    if segment is not None and not hasattr(sampler, "state"):
+        raise ValueError("Segments need a streamed sampler, whose state can be saved")
     stopped_by = "step limit"
     if sampler is None:
         sampler = InMemorySampler(coordinates, intensities, config["batch_size"], device)
@@ -229,10 +260,11 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None,
     monitor = None
     if out is not None and context.is_root:
         monitor = TrainingMonitor(out, coordinates, intensities, validation, config, optimizer,
-                                  training=monitor_subset)
-        monitor.record(model, optimizer, 0, time.perf_counter() - start)
+                                  training=monitor_subset, resume=resume is not None)
+        if resume is None:
+            monitor.record(model, optimizer, 0, time.perf_counter() - start)
 
-    for step in range(1, config["steps"] + 1):
+    for step in range(first_step, config["steps"] + 1):
         # 1. Sample observed space-time points, with replacement.
         batch_coordinates, batch_targets = sampler.batch(step)
 
@@ -284,7 +316,7 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None,
                 if selection_mse is not None:
                     logged["validation_frames_mse"] = selection_mse
                 row = monitor.record(
-                    model, optimizer, step, time.perf_counter() - start,
+                    model, optimizer, step, time.perf_counter() - start + elapsed_offset,
                     batch_losses=logged,
                 )
                 monitoring_text = (
@@ -305,13 +337,24 @@ def train(model, coordinates, intensities, config, *, out=None, validation=None,
         if out is not None and context.is_root and step in checkpoint_steps:
             save_checkpoint(out, model, optimizer, scheduler, config, step)
 
+        # End of this job's segment: save what the next job needs, on process 0.
+        if (segment is not None and should_log and step < config["steps"]
+                and context.decide(segment.due(step, first_step))):
+            states = sampler.state()
+            states = context.all_gather(states) if context.parallel else [states]
+            elapsed = time.perf_counter() - start + elapsed_offset
+            if out is not None and context.is_root:
+                save_resume_checkpoint(out, model, optimizer, scheduler, config, step, states, elapsed)
+            segment.stopped_at = step
+            return history, elapsed, None
+
         # The reduction after the last allowed one marks the final plateau.
         if plateau and len(reduction_steps) > settings["max_reductions"]:
             stopped_by = "plateau"
             break
 
     if not plateau:
-        return history, time.perf_counter() - start, None
+        return history, time.perf_counter() - start + elapsed_offset, None
     model.load_state_dict(best["state"])
     summary = dict(best_step=best["step"], best_validation_frames_mse=best["mse"], stop_step=step,
                    stopped_by=stopped_by, rate_reduction_steps=reduction_steps[:settings["max_reductions"]])
@@ -347,6 +390,12 @@ def parse_configuration(argv=None):
     parser.add_argument("--distributed", action="store_true",
                         help="One of several processes (RANK, WORLD_SIZE, MASTER_ADDR/PORT in the environment); "
                              "source data and --out only")
+    parser.add_argument("--continue", dest="continue_run", action="store_true",
+                        help="Start the run in --out, or continue it if it is paused (source data only)")
+    parser.add_argument("--segment-minutes", type=float,
+                        help="With --continue: pause at the first log step after this many minutes")
+    parser.add_argument("--segment-steps", type=int,
+                        help="With --continue: pause at the first log step after this many steps")
     args = parser.parse_args(argv)
 
     # Load the template, then apply explicit command-line overrides.
@@ -586,6 +635,22 @@ def parse_configuration(argv=None):
         if any(n % b for n, b in zip(shape, config["block_split"]["block_shape"])):
             parser.error("Block holdout requires each grid size divisible by its block size; choose explicit compatible settings")
 
+    # Segments: a run continued over several jobs (run.py --continue, streamed data only).
+    if (args.segment_minutes is not None or args.segment_steps is not None) and not args.continue_run:
+        parser.error("--segment-minutes and --segment-steps require --continue")
+    if args.segment_minutes is not None and not (np.isfinite(args.segment_minutes) and args.segment_minutes >= 0):
+        parser.error("--segment-minutes must be finite and nonnegative")
+    if args.segment_steps is not None and args.segment_steps < 1:
+        parser.error("--segment-steps must be positive")
+    if args.continue_run:
+        if not streamed:
+            parser.error("--continue requires source data (data.source_root)")
+        if args.out is None:
+            parser.error("--continue requires --out")
+        if args.out.exists():
+            return args, continued_configuration(parser, config, args.out), args.out
+        return args, config, args.out
+
     # Never overwrite a run, including an incomplete one.
     name = args.name or f"{config['model']}_seed{config['seed']}"
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", name):
@@ -595,6 +660,48 @@ def parse_configuration(argv=None):
     if out.exists():
         parser.error("Output already exists; choose a new --out")
     return args, config, out
+
+
+def first_difference(fresh, saved, path=""):
+    """The first setting of `fresh` that `saved` lacks or holds differently, or None."""
+    if isinstance(fresh, dict):
+        if not isinstance(saved, dict):
+            return path.rstrip(".") or "<all settings>"
+        for key, value in fresh.items():
+            if key not in saved:
+                return f"{path}{key}"
+            difference = first_difference(value, saved[key], f"{path}{key}.")
+            if difference is not None:
+                return difference
+        return None
+    return None if fresh == saved else path.rstrip(".")
+
+
+def continued_configuration(parser, config, out):
+    """The saved configuration of the run in `out`, checked against this invocation's settings.
+
+    Every setting resolved from the given template and options (process count and shards
+    included) must equal the saved one; the saved run adds what it found at run time (scale,
+    source hashes, segments). A paused run also needs the same code as when it started.
+    """
+    path = out / "config.json"
+    if not path.exists():
+        parser.error(f"--continue: {out} exists but holds no config.json")
+    saved = json.loads(path.read_text())
+    status = saved.get("status")
+    if status not in ("paused", "complete"):
+        parser.error(f"--continue: the run in {out} is {status!r}; only a paused run can continue")
+    difference = first_difference(json.loads(json.dumps(config)), saved)
+    if difference is not None:
+        parser.error(f"--continue: setting {difference!r} differs from the run saved in {out}")
+    if status == "paused":
+        if saved["code_provenance"]["source_sha256"] != source_hashes():
+            parser.error(f"--continue: the code differs from the code that started the run in {out}")
+        # The first segment's scan is reused, so the source files must be unchanged (no new hashing).
+        with moby_source.open_source(saved["data"]) as source:
+            if source_file_stats(source) != saved["data"]["source_files"]:
+                parser.error("--continue: the source files changed (size or modification time) since the run started")
+    return saved
 
 
 def prepare_data(config):
@@ -703,30 +810,94 @@ def execute(config, out):
             raise
 
 
-def execute_streamed(config, out, context):
+def source_file_stats(source):
+    """Size and modification time of every source file, checked again by a continued run."""
+    return {path.name: [path.stat().st_size, path.stat().st_mtime_ns] for path in source.paths}
+
+
+def scan_source(source, window, shard, config, context, out):
+    """Before training: hash the source files, scan this process's shard and combine.
+
+    One pass over the shard finds the scale (global maximum; frames outside the window
+    count too), the voxels positive in any window frame (ROI, support mask) and the
+    monitor's fixed-sample values (the same indices as for the in-memory pool). With the
+    support mask the monitor's pool (mask voxels x frames) is known only after this pass,
+    so a second pass reads the monitor values. Process 0 saves scan.npz for later segments.
+    Returns (positive voxels, raw monitor values, monitor indices).
+    """
+    data, frame_count = config["data"], len(window)
+    voxels = source.shape[0] * source.shape[1] * source.shape[2]
+    support = config.get("support_mask", False)
+    read_raw = lambda k: source.read_raw(window[k])
+    hashes = source.sha256(source.paths[context.rank::context.world_size])
+    monitor_rng = np.random.default_rng(config["monitor_seed"])
+    monitor_indices = (np.zeros(0, dtype=np.int64) if support else
+                       fixed_indices(voxels * frame_count, config["monitor_samples"], monitor_rng))
+    maximum, positive, raw_values = scan_shard(read_raw, shard, frame_count, monitor_indices)
+    if data["intensity_scale"] == "global_maximum":
+        # One fixed scale for the whole series (moby.py): frames outside the window count too.
+        outside = np.setdiff1d(np.arange(source.frame_count), window)
+        for frame in outside[context.rank::context.world_size]:
+            maximum = max(maximum, float(source.read_raw(frame).max()))
+    if context.parallel:
+        hashes = {name: digest for part in context.all_gather(hashes) for name, digest in part.items()}
+        maximum, positive = context.maximum(maximum), context.any(positive)
+    if support:
+        # The voxels with p0 > 0 in any window frame (streaming.py, "Support mask").
+        mask_voxels = np.flatnonzero(positive.reshape(-1))
+        monitor_indices = fixed_indices(len(mask_voxels) * frame_count, config["monitor_samples"], monitor_rng)
+        _, _, raw_values = scan_shard(read_raw, shard, frame_count, monitor_indices, mask_voxels)
+    if context.parallel:
+        raw_values = context.sum_array(raw_values)  # each sample comes from one process
+    if data["intensity_scale"] == "global_maximum":
+        data["intensity_scale_value"] = maximum
+        data["intensity_scale_scope"] = "maximum over every source frame of the region (whole series)"
+    data["source_sha256"] = dict(sorted(hashes.items()))
+    data["source_files"] = source_file_stats(source)
+    if context.is_root:
+        np.savez_compressed(out / "scan.npz", positive=positive, monitor_raw_values=raw_values,
+                            monitor_indices=monitor_indices, axes="positive: y, x, z")
+    return positive, raw_values, monitor_indices
+
+
+def load_scan(out):
+    """A continued run's scan: scan.npz of the first segment (continued_configuration has
+    checked that every source file still has the size and modification time recorded then)."""
+    with np.load(out / "scan.npz") as scan:
+        return scan["positive"], scan["monitor_raw_values"], scan["monitor_indices"]
+
+
+def execute_streamed(config, out, context, resume=False, segment=None):
     """Train and score on source data streamed from h5 (streaming.py), on one or more processes.
 
-    Same record as execute() for the embedding protocol. Before training, one pass over
-    each process's frame shard finds the intensity scale (global maximum), the ROI and the
-    monitor's fixed samples (the same indices as for the in-memory pool), and the source
-    files are hashed. Process 0 writes every file; the others only compute.
+    Same record as execute() for the embedding protocol. Before training, scan_source finds
+    the scale, the ROI and the monitor's fixed samples; process 0 writes every file. With a
+    `segment` (run.py --continue) the job may stop early: it saves a resume checkpoint,
+    marks the run paused and leaves the scoring to the job that finishes the run. `resume`
+    continues a paused run from its checkpoint and scan.npz.
     """
     root = Path(__file__).resolve().parent
-    initialize_run_metadata(config)
-    if context.is_root:
-        out.mkdir(parents=True, exist_ok=False)
+    if not resume:
+        initialize_run_metadata(config)
+        if context.is_root:
+            out.mkdir(parents=True, exist_ok=False)
+    config["status"] = "running"
     with ExitStack() as stack:
         if context.is_root:
-            log = stack.enter_context((out / "run.log").open("w"))
+            log = stack.enter_context((out / "run.log").open("a" if resume else "w"))
             stack.enter_context(redirect_stdout(Tee(sys.stdout, log)))
             stack.enter_context(redirect_stderr(Tee(sys.stderr, log)))
         try:
             if context.is_root:
-                config["code_provenance"] = snapshot_source(root, out)
+                if not resume:
+                    config["code_provenance"] = snapshot_source(root, out)
+                config.setdefault("segments", []).append(
+                    dict(job=os.environ.get("SLURM_JOB_ID"), processes=context.world_size, started_at=utc_now()))
                 write_json(out / "config.json", config)
                 print(f"Phantom: {config['phantom']} (source files, streamed) | box: {config['data']['box_start']} "
                       f"+ {config['data']['box_shape']} | frames: {config['frames']} | processes: "
-                      f"{context.world_size} | time: {config['time_bounds']}", flush=True)
+                      f"{context.world_size} | time: {config['time_bounds']}"
+                      + (" | continuing" if resume else ""), flush=True)
             torch.set_num_threads(config["threads"])
             torch.manual_seed(config["seed"])
             data, device = config["data"], torch_device(config)
@@ -739,39 +910,13 @@ def execute_streamed(config, out, context):
                 spatial_shape = (source.shape[1], source.shape[0], source.shape[2])  # (y, x, z)
                 voxels = int(np.prod(spatial_shape))
                 times = source.times[window]
-
-                # One pass over this shard: scale, positive voxels (ROI), monitor values.
-                # With the support mask the monitor's pool (mask voxels x frames) is known only
-                # after this pass, so a second pass reads the monitor values.
+                if resume:
+                    positive, raw_values, monitor_indices = load_scan(out)
+                else:
+                    positive, raw_values, monitor_indices = scan_source(source, window, shard, config, context, out)
                 support = config.get("support_mask", False)
-                hashes = source.sha256(source.paths[context.rank::context.world_size])
-                monitor_rng = np.random.default_rng(config["monitor_seed"])
-                monitor_indices = (np.zeros(0, dtype=np.int64) if support else
-                                   fixed_indices(voxels * frame_count, config["monitor_samples"], monitor_rng))
-                maximum, positive, raw_values = scan_shard(lambda k: source.read_raw(window[k]), shard,
-                                                           frame_count, monitor_indices)
-                if data["intensity_scale"] == "global_maximum":
-                    # One fixed scale for the whole series (moby.py): frames outside the window count too.
-                    outside = np.setdiff1d(np.arange(source.frame_count), window)
-                    for frame in outside[context.rank::context.world_size]:
-                        maximum = max(maximum, float(source.read_raw(frame).max()))
-                if context.parallel:
-                    hashes = {name: digest for part in context.all_gather(hashes) for name, digest in part.items()}
-                    maximum, positive = context.maximum(maximum), context.any(positive)
-                mask_voxels = None
-                if support:
-                    # The voxels with p0 > 0 in any window frame (streaming.py, "Support mask").
-                    mask_voxels = np.flatnonzero(positive.reshape(-1))
-                    monitor_indices = fixed_indices(len(mask_voxels) * frame_count, config["monitor_samples"],
-                                                    monitor_rng)
-                    _, _, raw_values = scan_shard(lambda k: source.read_raw(window[k]), shard, frame_count,
-                                                  monitor_indices, mask_voxels)
-                if context.parallel:
-                    raw_values = context.sum_array(raw_values)  # each sample comes from one process
-                if data["intensity_scale"] == "global_maximum":
-                    data["intensity_scale_value"] = maximum
+                mask_voxels = np.flatnonzero(positive.reshape(-1)) if support else None
                 scale = data["intensity_scale_value"]
-                data["source_sha256"] = dict(sorted(hashes.items()))
                 roi = roi_from_mask(positive)
                 config["training_data"] = ("streamed from the source h5 files: frame shards per process"
                                            + (", frame groups per round" if "frame_groups" in config else ""))
@@ -779,8 +924,6 @@ def execute_streamed(config, out, context):
                     "process 0: the torch default generator after torch.manual_seed(seed), as one process; "
                     "process p > 0: torch.Generator seeded with SeedSequence([seed, p]); "
                     "group partitions: numpy default_rng([seed, p])")
-                if data["intensity_scale"] == "global_maximum":
-                    data["intensity_scale_scope"] = "maximum over every source frame of the region (whole series)"
                 if support:
                     config["support_mask_details"] = dict(
                         definition="voxels with p0 > 0 in any window frame (union over time)",
@@ -790,7 +933,7 @@ def execute_streamed(config, out, context):
                         evaluation="prediction 0 outside the mask, then every metric as without a mask")
                 monitor_subset = None
                 if context.is_root:
-                    if support:
+                    if support and not resume:
                         np.savez_compressed(out / "support_mask.npz", mask=positive, axes="y, x, z")
                     grid = (CoordinateGrid(source.x, source.y, times, source.z) if mask_voxels is None else
                             VoxelSubsetGrid(source.x, source.y, times, source.z, mask_voxels))
@@ -799,9 +942,14 @@ def execute_streamed(config, out, context):
                                       monitor_indices)
                     write_json(out / "config.json", config)
 
-                # Optimize; every process starts from process 0's initial weights.
+                # Optimize; every process starts from process 0's initial weights or the checkpoint.
                 model = build_model(config)
-                if context.parallel:
+                checkpoint = None
+                if resume:
+                    checkpoint = torch.load(out / "checkpoints" / "resume.pt", map_location="cpu", weights_only=False)
+                    model.load_state_dict(checkpoint["state_dict"])
+                    model.to(device)
+                elif context.parallel:
                     model.to(device)
                     context.broadcast_parameters(model)
                 groups = config.get("frame_groups", {})
@@ -814,9 +962,25 @@ def execute_streamed(config, out, context):
                     config["batch_size"] // context.world_size, groups.get("groups_per_round", 1),
                     groups.get("steps_per_group"), generator,
                     np.random.default_rng([config["seed"], context.rank]), device, voxels=mask_voxels)
+                if resume:
+                    sampler.restore(checkpoint["sampler_states"][context.rank])
+                    torch.set_rng_state(checkpoint["torch_rng_state"])  # process 0's batch generator
+                first_step = 1 if checkpoint is None else checkpoint["step"] + 1
+                if context.is_root:
+                    config["segments"][-1]["first_step"] = first_step
                 _, seconds, _ = train(model, None, None, config, out=out if context.is_root else None,
-                                      sampler=sampler, context=context, monitor_subset=monitor_subset)
+                                      sampler=sampler, context=context, monitor_subset=monitor_subset,
+                                      resume=checkpoint, segment=segment)
                 sampler = None  # release the loaded frames before scoring
+                if segment is not None and segment.stopped_at is not None:
+                    if context.is_root:
+                        config["segments"][-1].update(last_step=segment.stopped_at, finished_at=utc_now(),
+                                                      stopped_by="segment limit")
+                        config.update(status="paused", training_seconds_so_far=seconds)
+                        write_json(out / "config.json", config)
+                        update_summary(out.parent)
+                        print(f"Paused after step {segment.stopped_at}; continue with --continue", flush=True)
+                    return
                 if context.is_root:
                     torch.save(dict(config=config, step=config["steps"], state_dict=cpu_state(model)),
                                out / "model.pt")
@@ -834,6 +998,9 @@ def execute_streamed(config, out, context):
                 selected = report["image"]["all_window_frames"]
                 print(f"All-frame (embedding) image RRMSE={selected['rrmse']:.4%}, SSIM={selected['ssim']}",
                       flush=True)
+                config["segments"][-1].update(last_step=config["steps"], finished_at=utc_now(),
+                                              stopped_by="step limit")
+                config.pop("training_seconds_so_far", None)
                 config.update(status="complete", finished_at=utc_now())
                 write_json(out / "config.json", config)
                 update_summary(out.parent)
@@ -851,15 +1018,23 @@ def execute_streamed(config, out, context):
 
 
 def main(argv=None):
+    started = time.time()  # a segment's time limit counts from here
     args, config, out = parse_configuration(argv)
     if args.dry_run:
         print(json.dumps(config, indent=2))
         return config
     if config["phantom"] == moby.NAME and "source_root" in config["data"]:
+        if args.continue_run and config.get("status") == "complete":
+            print(f"{out}: the run is already complete; nothing to continue", flush=True)
+            return
+        segment = None
+        if args.segment_steps is not None or args.segment_minutes is not None:
+            segment = Segment(args.segment_steps, args.segment_minutes, started)
+        resume = args.continue_run and config.get("status") == "paused"
         context = distributed.initialize(config.get("device", "cpu")) if args.distributed else Context()
         try:
             context.barrier()  # every process has checked the settings before process 0 creates `out`
-            execute_streamed(config, out, context)
+            execute_streamed(config, out, context, resume=resume, segment=segment)
         finally:
             distributed.finalize(context)
         return

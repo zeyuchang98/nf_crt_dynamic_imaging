@@ -28,7 +28,8 @@ at the end of this file.
   (midpoints, alternate_validation_test, none), plateau schedule, SS(r) baseline,
   embedding figures, branch GIFs (with frame subsets), whole-series data checks,
   time-chunked SSIM, Vista job scripts, lesion activity curves, streamed source data over several processes
-  (2026-11-16), optional support mask. 177 tests pass (2026-11-16) in this machine's `nf-crt` conda
+  (2026-11-16), optional support mask, resume over segments (2026-11-17). 181 tests pass
+  (2026-11-17) in this machine's `nf-crt` conda
   environment (Python 3.11, torch 2.14.0, numpy 1.26.4, h5py 3.16.0); 136 passed earlier
   in the second machine's `.venv-hash-sweep` and Vista's `$WORK/envs/nf-crt`.
 - **Local only on the second machine (not on GitHub):** `model.pt` of the DCE-MOBY runs
@@ -2479,4 +2480,35 @@ Queue waits, as the user asked to record (Slurm submit to start):
 | 1147351 (check, failed) | 2, 45 min, gh-dev | 11-16 14:19:07 | 11-16 14:28:42 | 9 min 35 s |
 | 1147432 (check) | 2, 45 min, gh-dev | 11-16 15:31:08 | 11-16 17:49:04 | 2 h 18 min |
 | 1148080 (formal) | 32, 5 h, gh | 11-17 00:12:12 | pending | |
+
+## Resume over segments (2026-11-17): implemented, tested locally
+
+Asked by the user (2026-11-17), since a shorter requested wall time queues faster on
+Vista: split a run into short jobs that continue one another. Plan approved by the user,
+with later segments reusing the first segment's scan instead of hashing the source files
+again. Streamed source-data runs only; runs from extracted files are unchanged.
+- `run.py --continue --out OUT` starts the run in OUT or continues it when it is paused;
+  `--segment-minutes M` (from the process start) or `--segment-steps N` pauses it at the
+  first log step after the limit (process 0 decides, every process stops at the same
+  step). The final step always finishes the run, which is then scored.
+- `checkpoints/resume.pt` (run_records.save_resume_checkpoint, replaced atomically): weights,
+  Adam state, cosine schedule, step, training seconds, process 0's default torch generator
+  and every process's sampler state (its batch generator, its group partition generator,
+  the remaining groups of the round and the loaded group, `StreamedSampler.state`).
+- The first segment saves `scan.npz` (positive voxels, monitor indices and raw values) and
+  the source files' sizes and modification times (`data.source_files`); a continued
+  segment reuses them. `loss.csv` and `run.log` are appended; `config.json` lists the
+  segments (job, processes, first and last step, times, why it stopped).
+- Refused (the run stays paused): other settings or process count (every setting resolved
+  from this invocation must equal the saved one), other code (source hashes), changed
+  source files; a failed run is refused, a complete one left alone.
+- [experiments/vista/submit_chain.sh](experiments/vista/submit_chain.sh) submits K jobs
+  with afterok dependencies, each `--continue --segment-minutes M`.
+
+Validated (181 tests pass): for one process, two gloo processes with frame groups (pauses
+in the middle of a round) and a masked run, three segments (a passed time limit pausing
+after step 1, then 2 steps, then the rest) give the same `loss.csv` (apart from elapsed
+time), weights and `metrics.json` (apart from training time) as the run without breaks,
+bit for bit; the refusals above. Not run on Vista yet. The formal job 1148080 was
+submitted before this change and runs without segments.
 

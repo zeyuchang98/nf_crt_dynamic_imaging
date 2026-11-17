@@ -69,6 +69,14 @@ class Context:
         if low.item() != high.item():
             raise RuntimeError(f"Process parameters diverged (checksums {low.item()!r} to {high.item()!r})")
 
+    def decide(self, flag):
+        """Process 0's yes/no decision, the same on every process."""
+        if not self.parallel:
+            return bool(flag)
+        tensor = torch.tensor([float(flag) if self.is_root else 0.], dtype=torch.float64, device=self._device())
+        dist.all_reduce(tensor, op=dist.ReduceOp.MAX)
+        return tensor.item() > 0
+
     def maximum(self, value):
         tensor = torch.tensor([value], dtype=torch.float64, device=self._device())
         dist.all_reduce(tensor, op=dist.ReduceOp.MAX)

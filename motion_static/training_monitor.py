@@ -38,9 +38,10 @@ def fixed_mse(model, coordinates, values):
 
 
 class TrainingMonitor:
-    def __init__(self, out, coordinates, intensities, validation, config, optimizer, training=None):
+    def __init__(self, out, coordinates, intensities, validation, config, optimizer, training=None, resume=False):
         """`training`: the fixed training samples (coordinates, values, indices) when the pool is
-        not in memory (streamed training draws the same indices with fixed_indices first)."""
+        not in memory (streamed training draws the same indices with fixed_indices first).
+        `resume`: a continued run keeps its loss.csv and monitor_samples.npz and appends rows."""
         self.out = Path(out)
         # This generator is separate from the torch generator used for batches.
         rng = np.random.default_rng(config.get("monitor_seed", 2026))
@@ -49,10 +50,6 @@ class TrainingMonitor:
             raise ValueError("Precomputed training samples are supported without held-out samples only")
         self.training = fixed_subset(coordinates, intensities, count, rng) if training is None else training
         self.validation = None if validation is None else fixed_subset(*validation, count, rng)
-        indices = {"training_indices": self.training[2]}
-        if self.validation is not None:
-            indices["validation_indices"] = self.validation[2]
-        np.savez_compressed(self.out / "monitor_samples.npz", **indices)
         self.lr_names = [f"next_lr_{group.get('name', i)}" for i, group in enumerate(optimizer.param_groups)]
         self.columns = ["step", "batch_mse", "temporal_l2", "total_loss",
                         "fixed_training_mse", "fixed_validation_mse", "elapsed_seconds", *self.lr_names]
@@ -60,6 +57,17 @@ class TrainingMonitor:
             # MSE on all validation frames, the quantity that steers the plateau schedule.
             self.columns.insert(self.columns.index("elapsed_seconds"), "validation_frames_mse")
         self.rows = []
+        if resume:
+            with (self.out / "loss.csv").open(newline="") as stream:
+                reader = csv.DictReader(stream)
+                if reader.fieldnames != self.columns:
+                    raise ValueError("loss.csv does not have this run's columns")
+                self.rows = [{key: float(value) for key, value in row.items() if value != ""} for row in reader]
+            return
+        indices = {"training_indices": self.training[2]}
+        if self.validation is not None:
+            indices["validation_indices"] = self.validation[2]
+        np.savez_compressed(self.out / "monitor_samples.npz", **indices)
         with (self.out / "loss.csv").open("w", newline="") as stream:
             csv.DictWriter(stream, fieldnames=self.columns).writeheader()
 

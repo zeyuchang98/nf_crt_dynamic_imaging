@@ -116,6 +116,24 @@ class StreamedSampler:
         else:
             self.coordinates = VoxelSubsetGrid(self.x, self.y, self.times[group], self.z, self.voxels).to(self.device)
 
+    def state(self):
+        """What a continued run needs to draw the same batches (run.py --continue)."""
+        return dict(generator=None if self.generator is None else self.generator.get_state(),
+                    group_generator=self.group_generator.bit_generator.state,
+                    pending=[np.asarray(group).tolist() for group in self.pending],
+                    loaded=None if self.loaded is None else self.loaded.tolist())
+
+    def restore(self, state):
+        """Continue from state(): the same generators, remaining groups and loaded frames."""
+        if (self.generator is None) != (state["generator"] is None):
+            raise ValueError("The saved sampler state belongs to another process")
+        if self.generator is not None:
+            self.generator.set_state(state["generator"])
+        self.group_generator.bit_generator.state = state["group_generator"]
+        self.pending = [np.asarray(group) for group in state["pending"]]
+        if state["loaded"] is not None:
+            self.load(np.asarray(state["loaded"]))
+
     def batch(self, step):
         """Batch of 1-based optimizer step `step`; switches to the next group when it is due."""
         if self.loaded is None or (self.groups > 1 and (step - 1) % self.steps_per_group == 0):

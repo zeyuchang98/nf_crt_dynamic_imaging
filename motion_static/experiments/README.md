@@ -113,6 +113,16 @@ Training and sampling ([streaming.py](../streaming.py), [distributed.py](../dist
   monitor's fixed samples come from these voxels only, and the evaluation queries the model
   only there and sets the image to 0 elsewhere, then computes every metric as without a
   mask. The model is unchanged. A mask that holds every voxel changes nothing.
+- Segments (`run.py --continue --out OUT`, with `--segment-minutes M` or `--segment-steps N`):
+  the job starts the run in OUT, or continues it if it is paused, and pauses at the first
+  log step after M minutes (from the process start) or N steps, saving
+  `checkpoints/resume.pt` (weights, Adam, schedule, every process's random generators and
+  frame groups); a continued run equals the run without breaks. Later segments reuse the
+  first one's `scan.npz` (positive voxels, monitor values) and check the source files'
+  sizes and modification times instead of hashing them again. A paused run continues only
+  with the same settings, process count and code; a complete run is left alone, a failed
+  one is refused. Scoring happens in the job that finishes the run; `config.json` lists
+  the segments (`segments`).
 - One process without `frame_groups` reproduces the in-memory run of the extracted file
   (same batches, weights and metrics; `tests/test_streamed_training.py`).
 - Evaluation: each process scores its own frames from h5 and process 0 combines the sums;
@@ -226,6 +236,14 @@ node; choose the node count with `-N`:
 
 ```bash
 sbatch -p gh -N 4 -t 02:00:00 motion_static/experiments/vista/train_multinode.sbatch CONFIG NAME
+```
+
+[vista/submit_chain.sh](vista/submit_chain.sh) submits a streamed run as a chain of short
+`gh` jobs (afterok dependencies), each one `--continue --segment-minutes MINUTES`; MINUTES
+must leave time in each job for the checkpoint and, in the last one, for the scoring:
+
+```bash
+motion_static/experiments/vista/submit_chain.sh JOBS NODES TIME MINUTES CONFIG NAME
 ```
 
 [dce_moby_box64_source_check.json](dce_moby_box64_source_check.json) is the 2-node check

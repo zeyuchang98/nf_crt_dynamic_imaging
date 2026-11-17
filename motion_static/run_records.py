@@ -156,6 +156,30 @@ def save_checkpoint(out, model, optimizer, scheduler, config, step):
     torch.save(checkpoint, checkpoint_dir / f"step_{step:06d}.pt")
 
 
+def save_resume_checkpoint(out, model, optimizer, scheduler, config, step, sampler_states, training_seconds):
+    """Everything run.py --continue needs to go on from `step` as if never stopped.
+
+    One file, checkpoints/resume.pt, replaced atomically, so a job killed while writing
+    leaves the previous one intact. sampler_states holds every process's batch-sampler
+    state (streaming.StreamedSampler.state); torch_rng_state is process 0's default
+    generator, which draws process 0's batches.
+    """
+    checkpoint_dir = Path(out) / "checkpoints"
+    checkpoint_dir.mkdir(exist_ok=True)
+    temporary = checkpoint_dir / "resume.pt.tmp"
+    torch.save({
+        "config": config,
+        "step": step,
+        "state_dict": {name: value.detach().cpu() for name, value in model.state_dict().items()},
+        "optimizer": optimizer.state_dict(),
+        "scheduler": scheduler.state_dict(),
+        "torch_rng_state": torch.get_rng_state(),
+        "sampler_states": sampler_states,
+        "training_seconds": training_seconds,
+    }, temporary)
+    os.replace(temporary, checkpoint_dir / "resume.pt")
+
+
 SUMMARY_FIELDS = (
     'run', 'status', 'phantom', 'model', 'oracle_branch', 'evaluation_split', 'size', 'cycles', 'frames',
     'rank', 'steps', 'seed', 'motion_levels', 'motion_min_resolution', 'motion_max_resolution',

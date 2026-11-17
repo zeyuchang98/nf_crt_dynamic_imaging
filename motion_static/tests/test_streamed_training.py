@@ -444,6 +444,108 @@ class SupportMaskRunTests(unittest.TestCase):
         np.testing.assert_array_equal(np.load(out / "support_mask.npz")["mask"], self.expected_mask)
 
 
+class ResumeTests(unittest.TestCase):
+    """A run split into segments (run.py --continue) equals the same run without breaks."""
+
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory()
+        self.root = Path(self.folder.name)
+
+    def tearDown(self):
+        self.folder.cleanup()
+
+    def write(self, config, name):
+        path = self.root / f"{name}.json"
+        path.write_text(json.dumps(config))
+        return path
+
+    def segment(self, path, out, options, distributed=False):
+        arguments = ["--config", str(path), "--out", str(out), "--continue", *options]
+        if distributed:
+            run_processes(["-m", "motion_static.run", "--distributed", *arguments])
+        else:
+            main(arguments)
+        return json.loads((out / "config.json").read_text())
+
+    def assert_same_run(self, out, expected):
+        self.assertEqual(StreamedRunTests.read_loss(out), StreamedRunTests.read_loss(expected))
+        state, old_state = (torch.load(path / "model.pt")["state_dict"] for path in (out, expected))
+        for name in old_state:
+            self.assertTrue(torch.equal(state[name], old_state[name]), name)
+        metrics, old_metrics = (json.loads((path / "metrics.json").read_text()) for path in (out, expected))
+        for report in (metrics, old_metrics):
+            report.pop("training_seconds")
+        self.assertEqual(metrics, old_metrics)
+
+    def check_segments(self, config, distributed=False):
+        path = self.write(config, "run")
+        expected = self.root / "results" / "whole"
+        if distributed:
+            run_processes(["-m", "motion_static.run", "--distributed", "--config", str(path), "--out", str(expected)])
+        else:
+            main(["--config", str(path), "--out", str(expected)])
+        out = self.root / "results" / "segments"
+        # A time limit already passed pauses after step 1; then two steps; then the rest.
+        saved = self.segment(path, out, ["--segment-minutes", "0"], distributed)
+        self.assertEqual((saved["status"], saved["segments"][-1]["last_step"]), ("paused", 1))
+        self.assertFalse((out / "metrics.json").exists())
+        self.assertTrue((out / "checkpoints" / "resume.pt").exists() and (out / "scan.npz").exists())
+        saved = self.segment(path, out, ["--segment-steps", "2"], distributed)
+        self.assertEqual((saved["status"], saved["segments"][-1]["last_step"]), ("paused", 3))
+        saved = self.segment(path, out, [], distributed)
+        self.assertEqual(saved["status"], "complete")
+        self.assertEqual([(s["first_step"], s["last_step"]) for s in saved["segments"]], [(1, 1), (2, 3), (4, 6)])
+        self.assert_same_run(out, expected)
+        # A complete run is left as it is.
+        before = (out / "config.json").read_text()
+        self.segment(path, out, [], distributed)
+        self.assertEqual((out / "config.json").read_text(), before)
+
+    def test_one_process_segments_reproduce_the_whole_run(self):
+        write_source(self.root)
+        self.check_segments(source_config(self.root, steps=6))
+
+    def test_two_processes_with_frame_groups_resume_mid_round(self):
+        write_source(self.root)
+        # Shards of 11 and 10 frames, 3 groups per round of 3 steps: pauses after steps 1 and 3.
+        groups = dict(frames_per_group=4, steps_per_group=1)
+        self.check_segments(source_config(self.root, steps=6, frame_groups=groups), distributed=True)
+
+    def test_masked_run_resumes_from_its_saved_scan(self):
+        write_source(self.root, zero_x=7)
+        self.check_segments(source_config(self.root, steps=6, support_mask=True))
+
+    def test_continue_refuses_changed_settings_code_status_and_source_files(self):
+        write_source(self.root)
+        path = self.write(source_config(self.root, steps=6), "run")
+        out = self.root / "results" / "segments"
+        self.segment(path, out, ["--segment-steps", "2"])
+        config_path = out / "config.json"
+        saved = json.loads(config_path.read_text())
+
+        def refused(arguments, message):
+            with captured_stderr() as errors, self.assertRaises(SystemExit):
+                main(arguments)
+            self.assertIn(message, errors.getvalue())
+
+        base = ["--config", str(path), "--out", str(out)]
+        refused(base + ["--continue", "--steps", "8"], "'steps' differs")
+        refused(base + ["--segment-steps", "2"], "require --continue")
+        refused(["--config", str(path), "--continue"], "requires --out")
+        changed = json.loads(json.dumps(saved))
+        name = next(iter(changed["code_provenance"]["source_sha256"]))
+        changed["code_provenance"]["source_sha256"][name] = "0" * 64
+        config_path.write_text(json.dumps(changed))
+        refused(base + ["--continue"], "code differs")
+        config_path.write_text(json.dumps(dict(saved, status="failed")))
+        refused(base + ["--continue"], "only a paused run")
+        config_path.write_text(json.dumps(saved))
+        source = self.root / "p0" / "p0_00001.h5"
+        os.utime(source, ns=(source.stat().st_atime_ns, source.stat().st_mtime_ns + 10 ** 9))
+        refused(base + ["--continue"], "source files changed")
+        self.assertEqual(json.loads(config_path.read_text())["status"], "paused")  # still continuable
+
+
 class DistributedTests(unittest.TestCase):
     def setUp(self):
         self.folder = tempfile.TemporaryDirectory()
