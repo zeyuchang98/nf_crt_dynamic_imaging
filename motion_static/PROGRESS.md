@@ -2446,3 +2446,37 @@ the same mask.
 Open: resume; reading speed on Lustre (set aside by the user); post-hoc
 tools that call `prepare_data` load a source-data window into memory (fine for the box,
 not for the whole volume).
+
+## Formal 3D full-series run on 32 nodes (2026-11-17)
+
+Decided by the user (2026-11-17): run the formal full series with multi-node data
+parallelism, minimizing the wall time: 32 nodes and a 5 h limit, no timing test first
+(4- and 8-node timing jobs 1148078 and 1148079 were submitted and cancelled before they
+started, at the user's request). The input
+[experiments/dce_moby_box64_full_series.json](experiments/dce_moby_box64_full_series.json)
+keeps every agreed setting (1,220,000 steps, batch 65,536, motion table 2^21, 6,615,461
+parameters, checkpoints at 400,000 and 800,000) and now reads the same box and frames from
+the source files (`data.source_root`, commit `b22dbdd`); no frame groups (each process
+holds its 450-451 frames), no support mask; 2,048 points per process and step.
+
+Estimate (not measured): T(P) = T0 + cB / P with cB of about 85 ms from the 2-node check
+(51.1 ms per step) and an assumed fixed cost T0 of 5-10 ms gives 8-13 ms per step on 32
+nodes, 2.6-4.3 h of training and about 2.7-4.4 h in all (about 110 SU). The 5 h limit
+leaves little margin, and the checkpoints cannot be resumed from.
+
+Submitted 2026-11-17 00:12:12 (Vista time) from code `b22dbdd` (Vista's
+`results/summary.csv` restored first, as agreed; the pull also wrote the committed copies
+of the 2-node check's records over identical files): job 1148080, `sbatch -p gh -N 32 -t
+05:00:00 motion_static/experiments/vista/train_multinode.sbatch
+motion_static/experiments/dce_moby_box64_full_series.json
+dce_moby_box64_full_20261117_1220k_r3_s0_32node`, pending (Priority) at submission; gh had
+568 nodes allocated and 475 jobs pending a few minutes earlier.
+
+Queue waits, as the user asked to record (Slurm submit to start):
+| Job | Nodes, limit, queue | Submitted | Started | Wait |
+|---|---|---|---|---|
+| 1139396 (formal, cancelled) | 1, 36 h, gh | 2026-11-12 | never | over 22.5 h, cancelled |
+| 1147351 (check, failed) | 2, 45 min, gh-dev | 11-16 14:19:07 | 11-16 14:28:42 | 9 min 35 s |
+| 1147432 (check) | 2, 45 min, gh-dev | 11-16 15:31:08 | 11-16 17:49:04 | 2 h 18 min |
+| 1148080 (formal) | 32, 5 h, gh | 11-17 00:12:12 | pending | |
+
