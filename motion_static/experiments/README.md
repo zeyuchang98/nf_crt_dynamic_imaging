@@ -183,7 +183,14 @@ cells per axis (2^19), motion 2-8 cells per spatial axis and 384-1536 in time. S
 2026-11-12 it is the formal run's input (agreed with the user): 1,220,000 steps (e01's
 21 samples per point), motion table 2^21 so every motion level is dense, checkpoints at
 steps 400,000 and 800,000; the 10,000-step throughput trial used motion 2^17 and no
-checkpoints (its `config.json` keeps them). Submit it on `gh` with `-t 36:00:00`.
+checkpoints (its `config.json` keeps them). Since 2026-11-17 it reads the source files
+(`data.source_root`, the same box and frames; the 2-node check found the same scale as the
+box file) so that it runs on several nodes, without frame groups or a support mask; the
+user chose 32 nodes and a 5 h limit:
+
+```bash
+sbatch -p gh -N 32 -t 05:00:00 motion_static/experiments/vista/train_multinode.sbatch motion_static/experiments/dce_moby_box64_full_series.json NAME
+```
 3D box data take `"held_out_split": "none"` (embedding) or `"midpoints"` (even window
 frames observed, odd frames only scored, as on the slice); the alternate split and the
 plateau schedule are not implemented for 3D.

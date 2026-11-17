@@ -49,7 +49,17 @@
     ]
   },
   "data": {
-    "file": "/work/11803/zc7665/vista/moby_box/moby_box64_full.h5",
+    "source_root": "/work/03453/villa13/vista/proj/moby-data",
+    "box_start": [
+      93,
+      161,
+      65
+    ],
+    "box_shape": [
+      64,
+      64,
+      64
+    ],
     "first_frame": 0,
     "cycles": 288,
     "frames_per_cycle": 50,
