@@ -1,0 +1,13 @@
+Inverse (proximal) | model pou_net | frames 151 | 5 outer x 100 inner steps | regularizer {'type': 'squared_gradient', 'weight': 200.0}
+/Users/zeyuchang/Research/nf_crt_dynamic_imaging/motion_static/inverse/warm_start.py:88: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /Users/runner/work/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:821.)
+  return nodes, float(loss)
+Warm start: [{'frames': [0, 35], 'views': 360, 'iterations': 7, 'stop_reason': 1, 'residual_norm': 16.582041052017708, 'atol': 0.0, 'btol': 0.12802755734298746}, {'frames': [36, 71], 'views': 360, 'iterations': 7, 'stop_reason': 1, 'residual_norm': 16.587800741851694, 'atol': 0.0, 'btol': 0.12615755692913774}, {'frames': [72, 107], 'views': 360, 'iterations': 7, 'stop_reason': 1, 'residual_norm': 16.840589236970857, 'atol': 0.0, 'btol': 0.12409496063802099}, {'frames': [108, 143], 'views': 360, 'iterations': 7, 'stop_reason': 1, 'residual_norm': 16.724964637936058, 'atol': 0.0, 'btol': 0.12229824845480226}]
+proximal/pou_net outer 1: tau 0.0001156, data fidelity before 1.05134, inner loss 9.984e-07 -> 9.855e-07, CG 9 it, data fidelity after 0.986767, truth RRMSE 48.3238%
+proximal/pou_net outer 2: tau 0.0001409, data fidelity before 0.986767, inner loss 1.218e-06 -> 1.199e-06, CG 9 it, data fidelity after 0.968326, truth RRMSE 48.1365%
+proximal/pou_net outer 3: tau 9.011e-05, data fidelity before 0.968326, inner loss 4.797e-07 -> 4.736e-07, CG 9 it, data fidelity after 0.963087, truth RRMSE 48.0711%
+proximal/pou_net outer 4: tau 7.452e-05, data fidelity before 0.963087, inner loss 3.331e-07 -> 3.27e-07, CG 9 it, data fidelity after 0.942418, truth RRMSE 48.0310%
+proximal/pou_net outer 5: tau 7.997e-05, data fidelity before 0.942418, inner loss 3.695e-07 -> 3.686e-07, CG 9 it, data fidelity after 0.933921, truth RRMSE 48.0085%
+Final all-frame data fidelity 0.933921
+All-frame (embedding) image RRMSE=48.0085%, SSIM=0.943754232722545
+Saved results: motion_static/results/inverse_smoke_20261118_proximal_pou

@@ -1,0 +1,15 @@
+Inverse (direct) | model pou_net | frames 151 | 4 frames per step | regularizer {'type': 'tv', 'weight': 27.0, 'epsilon': 1e-05}
+/Users/zeyuchang/Research/nf_crt_dynamic_imaging/motion_static/inverse/warm_start.py:88: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /Users/runner/work/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:821.)
+  return nodes, float(loss)
+Warm start: [{'frames': [0, 35], 'views': 360, 'iterations': 7, 'stop_reason': 1, 'residual_norm': 16.582041052017708, 'atol': 0.0, 'btol': 0.12802755734298746}, {'frames': [36, 71], 'views': 360, 'iterations': 7, 'stop_reason': 1, 'residual_norm': 16.587800741851694, 'atol': 0.0, 'btol': 0.12615755692913774}, {'frames': [72, 107], 'views': 360, 'iterations': 7, 'stop_reason': 1, 'residual_norm': 16.840589236970857, 'atol': 0.0, 'btol': 0.12409496063802099}, {'frames': [108, 143], 'views': 360, 'iterations': 7, 'stop_reason': 1, 'residual_norm': 16.724964637936058, 'atol': 0.0, 'btol': 0.12229824845480226}]
+direct/pou_net step 1: data fidelity 1.02955, R 0.00677511, total 0.697703, all-frame data fidelity 1.27637, truth RRMSE 45.4365%
+direct/pou_net step 50: data fidelity 1.47176, R 0.00246702, total 0.80249, all-frame data fidelity 1.30635, truth RRMSE 41.7297%
+direct/pou_net step 100: data fidelity 1.38336, R 0.00222825, total 0.751842, all-frame data fidelity 1.31876, truth RRMSE 41.2285%
+direct/pou_net step 150: data fidelity 1.26638, R 0.00209545, total 0.689769, all-frame data fidelity 1.29813, truth RRMSE 40.9985%
+direct/pou_net step 200: data fidelity 1.31356, R 0.00194499, total 0.709295, all-frame data fidelity 1.28549, truth RRMSE 40.3667%
+direct/pou_net step 250: data fidelity 1.18697, R 0.00182989, total 0.642894, all-frame data fidelity 1.2473, truth RRMSE 40.0061%
+direct/pou_net step 300: data fidelity 1.13357, R 0.00183054, total 0.616209, all-frame data fidelity 1.21281, truth RRMSE 39.9569%
+Final all-frame data fidelity 1.21281
+All-frame (embedding) image RRMSE=39.9569%, SSIM=0.9755951586961007
+Saved results: motion_static/results/inverse_smoke_20261118_direct_pou

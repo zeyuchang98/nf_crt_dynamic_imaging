@@ -1,0 +1,9 @@
+Inverse (proximal) | model nested_low_rank_hash_nf | frames 151 | 5 outer x 100 inner steps | regularizer {'type': 'none', 'weight': 0.0}
+proximal/nested_low_rank_hash_nf outer 1: tau 5.723e-05, data fidelity before 19.8951, inner loss 2.642e-05 -> 9.34e-06, data fidelity after 9.6268, truth RRMSE 80.4956%
+proximal/nested_low_rank_hash_nf outer 2: tau 5.65e-05, data fidelity before 9.6268, inner loss 1.163e-05 -> 2.665e-06, data fidelity after 3.92424, truth RRMSE 76.1927%
+proximal/nested_low_rank_hash_nf outer 3: tau 6.22e-05, data fidelity before 3.92424, inner loss 3.85e-06 -> 1.597e-06, data fidelity after 2.68446, truth RRMSE 74.5089%
+proximal/nested_low_rank_hash_nf outer 4: tau 7.551e-05, data fidelity before 2.68446, inner loss 2.716e-06 -> 1.579e-06, data fidelity after 2.30569, truth RRMSE 73.4132%
+proximal/nested_low_rank_hash_nf outer 5: tau 7.226e-05, data fidelity before 2.30569, inner loss 1.849e-06 -> 1.246e-06, data fidelity after 2.09949, truth RRMSE 72.6405%
+Final all-frame data fidelity 2.09949
+All-frame (embedding) image RRMSE=72.6405%, SSIM=0.7875446605373864
+Saved results: motion_static/results/inverse_smoke_20261118_proximal_nested

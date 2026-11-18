@@ -78,7 +78,9 @@ at the end of this file.
   backpropagation, POUnet and its warm start (204 tests pass; 10-step checks of both models
   on MPS). Warm-start LSQR stops at the noise level (user's choice). Stage 3 done:
   proximal splitting for any model, ProxNF's CG coefficient update for POUnet (212 tests).
-  Next: smoke runs of the four combinations on the window, then the longest frame range.
+  Stage 4 done: smoke runs of all four combinations on the window run and record completely
+  (untuned; not a method comparison). Next: throughput and memory here, then the longest
+  frame range.
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -2736,3 +2738,40 @@ total). POUnet after the discrepancy warm start begins at data fidelity 1.05 and
 after two outer iterations (CG 9 iterations each): POUnet has 615,040 coefficients for 530,010
 measurements, so it can fit below the noise level, and the penalty decides how far it does.
 Nested model: 19.9 -> 7.9 in two outer iterations.
+
+### Stage 4 (2026-11-18): smoke runs of the four combinations on the window
+
+Purpose agreed in the plan: check the pipeline and records on real data with a few hundred
+steps. Budgets, rates and penalty weights are untuned, and the four runs differ in all of
+them, so the numbers below are not a comparison of the methods. Inputs: the four files in
+`experiments/inverse/`, MPS, seed 0, the window measurement file above (sigma 0.04823).
+
+| Run | Model, parameters | Budget | Penalty (untuned) | Data fidelity: start -> end | Image RRMSE / PSNR / SSIM | Training |
+|---|---|---|---|---:|---:|---:|
+| direct, nested | J5-type nested low rank (window embedding e01), 776,062 | 300 steps, 4 frames per step | none | 19.9 -> 1.105 | 44.64% / 40.29 dB / 0.9661 | 216 s |
+| direct, POUnet | 10 partitions, 695,690 | 300 steps, 4 frames per step | TV 27 | 1.051 -> 1.213 | 39.96% / 41.26 dB / 0.9756 | 10 s |
+| proximal, nested | as above | 5 outer x 100 inner, 16,384 points | none | 19.9 -> 2.099 | 72.64% / 36.06 dB / 0.7875 | 132 s |
+| proximal, POUnet | as above | 5 outer x 100 inner, 10^4 points, CG | squared gradient 200 | 1.051 -> 0.934 | 48.01% / 39.66 dB / 0.9438 | 20 s |
+
+Data fidelity is mean(((P f - d) / sigma)^2) over all 151 frames (1 = noise level); "start"
+is step 0, after POUnet's discrepancy warm start (group LSQR 7 iterations each). Image metrics
+from `metrics.json` (all frames, as the embedding protocol scores).
+
+Checked: every run completed with config, loss.csv, loss.png, metrics.json, monitor frames,
+run.log and source.zip (proximal runs also inner_loss.csv with 500 rows); the proximal
+"data fidelity before" of outer k + 1 equals the "after" of outer k; POUnet's CG took 9
+iterations per outer iteration. A truth-versus-reconstruction figure of frames 1250, 1325 and
+1400, `results/inverse_smoke_20261118_comparison.png`:
+- both direct runs already show the anatomy (organs, vessels, lesion ring); direct POUnet
+  (TV) is smoother, with some streaks at frame 1325;
+- proximal POUnet is noisy in the body and background: it fits below the noise level (0.93),
+  so a squared-gradient weight of 200 is too weak for it;
+- proximal nested is blurred and shows folded, warped structures: five outer iterations from a
+  random start are about five steepest-descent steps of the data term in image space, and
+  the motion branch may cause the folds (not examined).
+Not concluded: any ranking of models or methods, and the right budgets and weights.
+
+Cost on this machine (MPS, including one monitor pass of all 151 frames per log row): direct
+nested about 0.65 s per step (4 frames, 246,016 points), direct POUnet 30 ms, proximal nested
+0.24 s per inner step, proximal POUnet 40 ms. Peak resident memory 1.9 GB (nested) and 3.7 GB
+(POUnet, which also holds the LSQR warm start). Stage 5 measures these without the monitor.

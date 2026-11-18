@@ -1,0 +1,11 @@
+Inverse (direct) | model nested_low_rank_hash_nf | frames 151 | 4 frames per step | regularizer {'type': 'none', 'weight': 0.0}
+direct/nested_low_rank_hash_nf step 1: data fidelity 20.2882, R 0, total 10.1441, all-frame data fidelity 14.2992, truth RRMSE 88.7047%
+direct/nested_low_rank_hash_nf step 50: data fidelity 2.31844, R 0, total 1.15922, all-frame data fidelity 2.06273, truth RRMSE 59.1228%
+direct/nested_low_rank_hash_nf step 100: data fidelity 1.36473, R 0, total 0.682367, all-frame data fidelity 1.37165, truth RRMSE 50.7589%
+direct/nested_low_rank_hash_nf step 150: data fidelity 1.20515, R 0, total 0.602577, all-frame data fidelity 1.21287, truth RRMSE 46.6613%
+direct/nested_low_rank_hash_nf step 200: data fidelity 1.17653, R 0, total 0.588263, all-frame data fidelity 1.14072, truth RRMSE 44.9986%
+direct/nested_low_rank_hash_nf step 250: data fidelity 1.11873, R 0, total 0.559365, all-frame data fidelity 1.1104, truth RRMSE 44.6232%
+direct/nested_low_rank_hash_nf step 300: data fidelity 1.13435, R 0, total 0.567176, all-frame data fidelity 1.10505, truth RRMSE 44.6372%
+Final all-frame data fidelity 1.10505
+All-frame (embedding) image RRMSE=44.6372%, SSIM=0.9661442418073327
+Saved results: motion_static/results/inverse_smoke_20261118_direct_nested
