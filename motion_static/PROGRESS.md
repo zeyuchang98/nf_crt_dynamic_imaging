@@ -1,8 +1,8 @@
 # Motion and Intensity Separation: Current Progress
 
-Last updated: 2026-11-16.
+Last updated: 2026-11-18.
 
-## Current status (2026-11-16; 2D items from 2026-10-30)
+## Current status (2026-11-18; 2D items from 2026-10-30)
 
 Summary for continuing on another machine; details and links are in the dated sections
 at the end of this file.
@@ -70,6 +70,13 @@ at the end of this file.
   files are read directly, frame by frame (box or whole volume), with frame shards over
   processes and frame groups per round; tested locally (gloo) and checked on 2 Vista nodes
   (NCCL, job 1147432, 2026-11-16): about 51 ms per step at batch 65,536.
+- **2D inverse problem (started 2026-11-18):** plan agreed with the user (last section):
+  caSRT's circular Radon transform on the 248^2 grid, ProxNF's 2D geometry and noise
+  (R = 26.3 mm, 5 + 5 views per frame rotating 5 degrees, dr = 0.15 mm, sigma = 4% of
+  the maximum datum), direct backpropagation and ProxNF's proximal splitting, each with
+  POUnet and the nested model. Stage 1 done: operator, window measurements, 12 tests (193
+  in total pass). Next: direct backpropagation and POUnet, then splitting, smoke runs on
+  the window, then the longest frame range that runs on this machine.
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -77,8 +84,9 @@ at the end of this file.
 ## Goal and current baseline
 
 Represent real dynamic objects for PACT reconstruction, including both motion and
-genuine brightness changes. Current experiments fit toy images directly; no PACT
-acoustic forward operator or real measurements have been evaluated here.
+genuine brightness changes. Current experiments fit toy images directly. A 2D circular
+Radon transform operator and simulated measurements exist since 2026-11-18 (last
+section); no reconstruction from measurements has been run yet.
 
 The default data are the **complex 64x64 phantom, 3 complete cycles, 379 training
 frames**, time [-0.5, 2.5], 126 intervals per cycle, and 378 unseen midpoint frames.
@@ -2551,3 +2559,81 @@ of sbatch's output and stops if it is not a job id (tested with a stand-in sbatc
 prints a banner, and one that fails). The chain checkout keeps `9e06f0d` until the chain
 ends, because each segment checks the code.
 
+
+## 2D CRT inverse problem (2026-11-18): plan agreed, stage 1 (operator, measurements) done
+
+Asked by the user (2026-11-18): start the 2D PACT inverse problem on the DCE-MOBY window,
+with direct backpropagation through the operator as a baseline and ProxNF also run; the
+nested model gets the same treatment. Work on the window first; the final run uses the
+longest frame range that runs on this machine (Apple M4, 24 GB; MPS).
+
+References read: ProxNF's 2D code is `applications/proximal_splitting/image_reconstruction.py`
+(POUnet f(x,t) = sum_j psi_j(t) C[x,j]; per frame a gradient step on the data fidelity in
+image space, then fitting the NF to that target with a squared spatial-gradient penalty,
+C by CG and psi by Adam; warm start from LSQR of data averaged over two rotations). The
+2022 paper's code (`applications/self_supervised_training/`) backpropagates through the
+operator with TV. The caSRT clone (`../SRT_cylindrical_aperture`, `bd2a8b7`) holds only the
+operators, no training code; ProxNF's 3D/4D training code is not public there.
+
+Agreed by the user (2026-11-18):
+- Operator: caSRT `CircularRadonTransform`, unmodified; all 360 views at 1 degree; R =
+  sqrt(2)/2 L = 26.3 mm; ring spacing dr = 0.15 mm (the pixel size, 351 rings), because
+  0.2 mm (ProxNF's value on its 0.2 mm grid) leaves pixels with no circle in a frame
+  (21 of 133 on the sensor axis for one frame, measured in a scratch trial).
+- Frame schedule (ProxNF 2D): 5 sensors at 1 degree plus the opposite group, rotating 5
+  degrees per frame, tied to the source frame number (frame f starts at 5 f degrees).
+  With 0.05 s frames this rotates 100 degrees per second, 10 times ProxNF's physical rate.
+- Noise (ProxNF 2D): iid zero-mean Gaussian on the CRT data, sigma = 0.04 max(clean data of
+  the file); one saved draw shared by all methods. Inverse crime accepted (same operator
+  for data and reconstruction, as in ProxNF).
+- Methods: direct backpropagation and proximal splitting, both model-agnostic, with POUnet
+  (`nfCRT.pou.POU_Siren` imported, plus a pixel coefficient table) and the nested model.
+  Baselines keep their own regularizers (ProxNF: squared spatial gradient; 2022: TV); the
+  nested model has none by default. POUnet warm start: LSQR of four groups of 36 frames
+  (36 frames cover all 360 degrees). Two quirks of the ProxNF code are corrected and noted:
+  the CG warm start cast to int32 (line 277) and the averaged-data weight that is 10/9
+  of the mean (line 157).
+- Evaluation: protocol E1 (every frame has data and is scored against the truth). The
+  truth only monitors and scores; no schedule or selection uses it, so the cosine
+  schedule replaces the truth-driven plateau schedule. Budgets are set after smoke runs.
+- Code organization: `applications/` stays untouched as reference; the methods are
+  reimplemented in motion_static so all share data, metrics and run records.
+
+Stage 1 implemented (`inverse/crt_operator.py`, `inverse/measurements.py`):
+- `crt_operator` imports caSRT's CRT.py without CuPy (empty stand-in modules only during
+  the import), builds the full-view CSR matrix and saves it (.npz) with metadata (.json):
+  geometry, operator hash, caSRT commit and CRT.py hash, code commit and file hashes, and
+  the ring center in data coordinates. caSRT's grid is half a pixel off the symmetric
+  grid, so the ring center is at (18.525, 18.525) mm, not the FOV center 18.6 mm; the body
+  is at most 15 mm from the center, so nothing is cut. Loading checks the hash and, when
+  given, the expected geometry.
+- `measurements` reads the window with `moby.read_window_entry` (the run configuration's
+  `data` entry), computes P_k f_k per frame with the frame's 10 views, adds the noise and
+  saves noisy and clean data (float32, (frame, view, ring)), frames, times, views and
+  metadata with the file hash. `clean` is for diagnostics only.
+
+Validated: 12 new tests (193 in total pass, `nf-crt` environment):
+- row sums equal the arc length inside the image within 2 pixels;
+- a single asymmetric pixel responds only on circles through its square (within
+  sqrt(2)/2 pixel; a transposed image fails with 2.6 mm);
+- the frame views equal the ProxNF code's index formula for 75 frames;
+- each frame's data equal P_k applied to the transposed raw frame;
+- the sample noise std is within 5% of sigma, and the draw is reproducible by seed;
+- the hash and geometry checks reject changed files.
+
+Files (local, regenerable in seconds; not in git):
+- `results/inverse_data/crt_N248_fov37.2_R26.304_dr0.15_a1.npz`: 126,360 x 61,504 with
+  24,670,008 nonzeros, built in 5.4 s, operator sha256 `aae185e3...dbb3`.
+- `results/inverse_data/meas_z100_f1250-1400_rnl0.04_seed0.npz`: (151, 10, 351); clean
+  maximum 1.2059, sigma 0.04823, about half of the data above sigma; npz sha256
+  `9e68f6d6...5a86`.
+- Both regenerated with committed code `64b41b7`, giving the same bytes as before the
+  commit. A check figure, `results/inverse_data/meas_window_check.png` (truth, data,
+  back-projection of frame 1250, sensors at 130 and 310 degrees), looks as expected.
+
+Torch on MPS (checked 2026-11-18): COO sparse-dense products and their backward pass work,
+CSR does not; the training operator will use COO.
+
+Next (agreed stages): 2. direct backpropagation and the POUnet model; 3. proximal splitting;
+4. smoke runs of all four combinations on the window (a few hundred steps, pipeline and
+records only); 5. throughput and memory on this machine, then the longest frame range.
