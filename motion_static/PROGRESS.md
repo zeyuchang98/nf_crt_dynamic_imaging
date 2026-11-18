@@ -2492,8 +2492,9 @@ Queue waits, as the user asked to record (Slurm submit to start):
 | 1147351 (check, failed) | 2, 45 min, gh-dev | 11-16 14:19:07 | 11-16 14:28:42 | 9 min 35 s |
 | 1147432 (check) | 2, 45 min, gh-dev | 11-16 15:31:08 | 11-16 17:49:04 | 2 h 18 min |
 | 1148080 (formal, cancelled) | 32, 5 h, gh | 11-17 00:12:12 | 11-17 21:57:05 | 21 h 45 min |
-| 1149828 (formal chain, segment 1) | 32, 2 h, gh | 11-17 15:25:37 | pending | |
-| 1149832-1149834 (segments 2-4) | 32, 2 h, gh, each afterok on the one before | 11-17 15:26:00-01 | pending | |
+| 1149828 (formal chain, segment 1) | 32, 2 h, gh | 11-17 15:25:37 | 11-18 11:36:46 | 20 h 11 min |
+| 1149832 (segment 2) | 32, 2 h, gh, afterok on 1149828 | 11-17 15:26:00, eligible 11-18 13:17:38 | pending | |
+| 1149833-1149834 (segments 3-4) | 32, 2 h, gh, each afterok on the one before | 11-17 15:26:01 | pending | |
 | 1150575 (segment 5) | 32, 2 h, gh, afterok on 1149834 | 11-17 22:20:10 | pending | |
 
 The same run as a chain of short jobs, submitted alongside 1148080 at the user's request
@@ -2523,6 +2524,14 @@ after 25 min 37 s, last logged step 66,000 (1,391 s of training). Its records (n
 no scores; `config.json` still says running, since the job was killed) are in
 [results/dce_moby_box64_full_20261117_1220k_r3_s0_32node](results/dce_moby_box64_full_20261117_1220k_r3_s0_32node),
 with the Slurm and GPU logs. The formal run continues as the chain only.
+
+Segment 1 (1149828) ran 1 h 40 min 52 s and paused as planned after step 273,000 (status
+paused, `checkpoints/resume.pt` of 80 MB, `scan.npz` saved, exit code 0, so segment 2
+became eligible at 13:17:38). 5,899 s of training: 21.6 ms per step on average (21.2-22.5
+ms over 100,000-step stretches). The remaining 947,000 steps need about 5.7 h, so segments
+2-5 (about 270,000 steps each) suffice. The priority of the dependent segments did not
+rise while they waited (1545 at submission, 1518 at 11-18 15:02): each segment starts
+ageing only when the one before ends.
 
 ## Resume over segments (2026-11-17): implemented, tested locally
 
