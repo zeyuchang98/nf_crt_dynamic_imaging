@@ -2496,7 +2496,8 @@ Queue waits, as the user asked to record (Slurm submit to start):
 | 1149832 (segment 2) | 32, 2 h, gh, afterok on 1149828 | 11-17 15:26:00, eligible 11-18 13:17:38 | pending | |
 | 1149833-1149834 (segments 3-4) | 32, 2 h, gh, each afterok on the one before | 11-17 15:26:01 | pending | |
 | 1150575 (segment 5) | 32, 2 h, gh, afterok on 1149834 | 11-17 22:20:10 | pending | |
-| 1152425 (formal, one long continuation) | 32, 7 h, gh | 11-18 15:08:38 | pending | |
+| 1152425 (formal, one long continuation, replaced) | 32, 7 h, gh | 11-18 15:08:38 | never | cancelled after 2 min |
+| 1152427 (formal, one long continuation) | 32, 10 h, gh | 11-18 15:10:41 | pending | |
 
 The same run as a chain of short jobs, submitted alongside 1148080 at the user's request
 (2026-11-17) to compare how fast each finishes: `submit_chain.sh 4 32 02:00:00 100`, same
@@ -2548,6 +2549,9 @@ are about 5.7 h; the 390-minute limit pauses it, instead of Slurm killing it, if
 slower). Checked locally first (ad-hoc, not a kept test): a paused run copied with its
 modification times continues in the copy to the same loss, weights and metrics as the
 run without breaks, bit for bit; no setting records the folder name.
+The user then asked for 10 h, for margin: `scontrol update` did raise 1152425's limit, but
+its `--segment-minutes 390` could not change, so it was replaced by job 1152427 (same
+command with `-t 10:00:00 --segment-minutes 570`) and cancelled before it started.
 
 ## Resume over segments (2026-11-17): implemented, tested locally
 
