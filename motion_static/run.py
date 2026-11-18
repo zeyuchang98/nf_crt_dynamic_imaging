@@ -23,6 +23,8 @@ from .models.nested_low_rank_hash_nf import NestedLowRankHashNF
 from .models.low_rank_intensity import LowRankIntensity
 from .models.oracle_branches import PHANTOM_REFERENCE_TIME, TrueMotion, TrueReferenceIntensity
 from .models.time_grid import TimeGridField
+from .models.pou_net import POUNet
+from .inverse.execute import execute_inverse, validate_inverse
 from .phantoms import moby, moby_source
 from .phantoms.data import (DEFAULT_PHANTOM, DEFAULT_SAMPLING, CoordinateGrid, VoxelSubsetGrid, coordinate_rows,
                             make_pair, sample)
@@ -105,6 +107,10 @@ def build_model(config):
             **config["encoding"],
         )
         return apply_oracle_branch(model, config)
+    if config["model"] == "pou_net":
+        pou = config["pou"]
+        return POUNet(config["size"], bounds, pou["time_unit_s"], partitions=pou["partitions"],
+                      width=pou["width"], depth=pou["depth"])
     raise ValueError(f"Unknown model: {config['model']}")
 
 
@@ -131,6 +137,12 @@ def build_optimizer(model, config):
     The low-rank temporal MLP is separate from its spatial hash and MLP.
     """
     model_name = config["model"]
+    if model_name == "pou_net":
+        # The time network psi and the pixel coefficient table C.
+        return torch.optim.Adam([
+            {"params": model.psi.parameters(), "lr": config["pou_lr"], "name": "pou"},
+            {"params": [model.coefficients], "lr": config["coefficient_lr"], "name": "coefficients"},
+        ])
     if model_name in ("hash_nf", "low_rank_hash_nf"):
         fields = [("image", model)]
     elif model_name in ("nested_hash_nf", "nested_low_rank_hash_nf"):
@@ -372,7 +384,7 @@ def parse_configuration(argv=None):
     parser.add_argument("--config", type=Path, help="JSON template copy; defaults to experiments/template.json")
     parser.add_argument("--phantom", choices=("simple", "complex"), help="Explicitly override the template phantom")
     parser.add_argument("--model", choices=("hash_nf", "nested_mlp", "nested_hash_nf",
-                                           "low_rank_hash_nf", "nested_low_rank_hash_nf"))
+                                           "low_rank_hash_nf", "nested_low_rank_hash_nf", "pou_net"))
     parser.add_argument("--split", choices=("midpoints", "blocks"))
     parser.add_argument("--out", type=Path, help="New run directory; default is results/<UTC timestamp>_<name>")
     parser.add_argument("--name", help="Short run label for the automatic directory name")
@@ -580,6 +592,15 @@ def parse_configuration(argv=None):
                 expected = 3 if name == "encoding" else 4  # space (x, y, z); space-time (x, y, z, t)
                 if isinstance(value, list) and len(value) != expected:
                     parser.error(f"{name}.{key} needs {expected} entries for 3D data")
+
+    # Reconstruction from simulated CRT measurements (inverse/execute.py); POUnet exists only there.
+    if "inverse" in config:
+        try:
+            validate_inverse(config)
+        except (KeyError, OSError, ValueError) as error:
+            parser.error(f"inverse: {error}")
+    elif config["model"] == "pou_net":
+        parser.error("pou_net is implemented for inverse runs only")
 
     # Streamed training reads the source h5 frame by frame, optionally over several processes
     # (streaming.py): contiguous frame shards, optional frame groups per round.
@@ -1023,6 +1044,9 @@ def main(argv=None):
     if args.dry_run:
         print(json.dumps(config, indent=2))
         return config
+    if "inverse" in config:
+        execute_inverse(config, out)
+        return
     if config["phantom"] == moby.NAME and "source_root" in config["data"]:
         if args.continue_run and config.get("status") == "complete":
             print(f"{out}: the run is already complete; nothing to continue", flush=True)

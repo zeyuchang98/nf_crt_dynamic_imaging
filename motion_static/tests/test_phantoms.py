@@ -89,12 +89,12 @@ class PhantomTests(unittest.TestCase):
     def test_reusable_template_uses_the_approved_sampling(self):
         directory = Path(__file__).resolve().parents[1] / "experiments"
         # Besides the template: the agreed whole-series DCE-MOBY inputs (slice and 3D lesion
-        # box), the 2-node check of streamed source data, the 3D window tuning inputs and the
-        # Vista job scripts.
+        # box), the 2-node check of streamed source data, the 3D window tuning inputs, the
+        # 2D inverse-problem inputs and the Vista job scripts.
         self.assertEqual(sorted(p.name for p in directory.iterdir()),
                          ["README.md", "box64_window_tuning", "dce_moby_box64_full_series.json",
-                          "dce_moby_box64_source_check.json", "dce_moby_full_series.json", "template.json",
-                          "vista"])
+                          "dce_moby_box64_source_check.json", "dce_moby_full_series.json", "inverse",
+                          "template.json", "vista"])
         config = json.loads((directory / "template.json").read_text())
         self.assertEqual((config["phantom"], config["size"], config["cycles"], config["frames"]),
                          ("complex", 64, 3, 379))

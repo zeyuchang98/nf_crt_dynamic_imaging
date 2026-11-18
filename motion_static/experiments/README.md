@@ -147,6 +147,33 @@ and `metrics.json` record `early_stopping` (kept step, stop step, reduction step
 the summary row uses the test frames. Without `schedule` the cosine schedule and all
 outputs are unchanged.
 
+### Reconstruction from simulated CRT data (dce_moby slice, 2D)
+
+An `"inverse"` entry trains from measurements instead of images (inverse/; inputs in
+[inverse/](inverse/)). First build the operator and simulate the window's data:
+
+```bash
+python -m motion_static.inverse.crt_operator --data-file ~/Data/dce-moby/moby_z100.h5 --ring-spacing-mm 0.15
+python -m motion_static.inverse.measurements --file ~/Data/dce-moby/moby_z100.h5 --first-frame 1250 --cycles 3 \
+  --frames-per-cycle 50 --operator motion_static/results/inverse_data/crt_N248_fov37.2_R26.304_dr0.15_a1.npz
+```
+
+- `inverse.method`: `direct` (backpropagation through P_k; proximal splitting follows).
+- `inverse.measurements`: the file above; it must come from the same `data` window.
+- `inverse.frames_per_step`: K whole frames per step (P_k needs every pixel of a frame).
+- `inverse.regularizer`: `{"type": "none" | "squared_gradient" | "tv", "weight", "epsilon" (tv)}`.
+- `inverse.monitor_frames`: null (all frames) or a fixed number of frames for the monitor.
+- `inverse.warm_start` (pou_net only): `frames_per_group` (36), `lsqr_atol` (`"proxnf"`,
+  `"discrepancy"` or a number), `partition_steps` (10,000); null disables it.
+- `model: "pou_net"` (inverse runs only): `pou` `{partitions, width, depth}` (10, 140, 4) and
+  the rates `pou_lr`, `coefficient_lr`.
+
+Requires `held_out_split: "none"` (protocol E1: every frame has data and is scored) and the
+cosine schedule. `loss.csv`/`loss.png` record the batch objective, the normalized data
+fidelity on the monitor frames (about 1 at the noise level) and the truth RRMSE
+(monitoring only). The final all-frame data fidelity is in `config.json`
+(`inverse.final_all_frames`), the image metrics in `metrics.json` as for the embedding.
+
 ## Usage
 
 From the repository root, inspect the resolved configuration without training or

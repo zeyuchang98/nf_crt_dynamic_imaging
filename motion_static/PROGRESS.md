@@ -74,9 +74,10 @@ at the end of this file.
   caSRT's circular Radon transform on the 248^2 grid, ProxNF's 2D geometry and noise
   (R = 26.3 mm, 5 + 5 views per frame rotating 5 degrees, dr = 0.15 mm, sigma = 4% of
   the maximum datum), direct backpropagation and ProxNF's proximal splitting, each with
-  POUnet and the nested model. Stage 1 done: operator, window measurements, 12 tests (193
-  in total pass). Next: direct backpropagation and POUnet, then splitting, smoke runs on
-  the window, then the longest frame range that runs on this machine.
+  POUnet and the nested model. Stages 1-2 done: operator, window measurements, direct
+  backpropagation, POUnet and its warm start (204 tests pass; 10-step checks of both models
+  on MPS). Open: the warm start's LSQR stop (ProxNF's tolerance gives one iteration).
+  Next: splitting, smoke runs on the window, then the longest frame range on this machine.
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -2637,3 +2638,58 @@ CSR does not; the training operator will use COO.
 Next (agreed stages): 2. direct backpropagation and the POUnet model; 3. proximal splitting;
 4. smoke runs of all four combinations on the window (a few hundred steps, pipeline and
 records only); 5. throughput and memory on this machine, then the longest frame range.
+
+### Stage 2 (2026-11-18): direct backpropagation, POUnet and its warm start
+
+Implemented:
+- `inverse/frame_operator.py`: P_k as torch COO tensors, one per distinct view set (72 for
+  ProxNF's schedule), with an optional stored adjoint for the splitting stage. About 8 ms
+  for one frame's product and backward pass on CPU or MPS; within 1e-6 of scipy.
+- `inverse/problem.py`: loads the measurement file, checks that it comes from the run's
+  window (data file hash, frames, intensity scale) and that its operator file is the one it
+  names (hash), renders whole frames x-fastest, and scores the normalized data fidelity
+  mean(((P f - d) / sigma)^2) and the truth RRMSE. The truth is held apart and read only
+  by the monitor and the final scoring.
+- `losses.compute_measurement_losses`: 1/2 data fidelity + weight * R, with R
+  `squared_gradient` (ProxNF) or isotropic `tv` (2022) from forward pixel differences.
+- `inverse/direct.py`: each step draws K whole frames uniformly with replacement (CPU
+  generator), renders them, and backpropagates through P_k; Adam with the cosine schedule
+  and the existing optimizer groups.
+- `inverse/monitor.py`: `loss.csv`/`loss.png` with the batch objective, the data fidelity,
+  R and objective on the monitor frames (all by default) and the truth RRMSE (marked as
+  monitoring only), and the learning rates.
+- `models/pou_net.py`: f(x, y, t) = sum_j psi_j(t) C[pixel, j], psi = `nfCRT.pou.POU_Siren`
+  (imported unchanged, its hash recorded), time in sensor revolutions from the window
+  center as in ProxNF's code (3.6 s per unit here), rates `pou_lr` and `coefficient_lr`.
+- `inverse/warm_start.py`: group LSQR (36 frames per group, true per-view mean), psi fitted
+  to hat functions (10^4 Adam steps as in ProxNF), coefficients interpolated linearly in time
+  from the group centers to the partition nodes (ProxNF has one group per partition).
+- `inverse/execute.py` and run.py: an `inverse` entry dispatches to these; settings are
+  checked (E1 only, cosine only, measurement window, K, regularizer, warm start).
+  Example inputs: `experiments/inverse/window_direct_nested.json` (the window embedding
+  run e01's model) and `window_direct_pou.json` (TV weight 1.0, untuned; 300 steps).
+  Documented in experiments/README.md. `summary.csv` labels these runs
+  "reconstruction (direct), all frames" instead of "embedding, all frames".
+
+Validated (204 tests pass; 11 new): P_k against scipy and its adjoint; the torch path
+reproduces the stored clean data from the truth; POUnet's partition sums to 1 and its frame
+rendering equals its pointwise form; the autograd gradient of the objective equals
+P^T (P f - d) / (sigma^2 M); both regularizers on a ramp; the per-view group mean and the
+interpolation weights; LSQR's discrepancy stop on a static object; complete runs of both
+models record losses, metrics and hashes; changing the truth leaves the training losses
+identical (the truth is never read by training); invalid settings are refused.
+
+Real-data checks (10 steps each on MPS, pipeline only, not experiments;
+`results/inverse_check_20261118_direct_{nested,pou}_10steps`): both run. All-frame data
+fidelity after 10 steps 13.5 (nested) and 5.58 (POUnet); 73 s and 35 s in total, including
+loading and scoring.
+
+Finding, for the user to decide: ProxNF's warm-start tolerance atol = 2e2 sigma / cover is
+4.8 on our data; an atol above 1 always satisfies LSQR's second stopping test, so each group
+stops after one iteration (a back-projection scaled by an exact line search): truth RRMSE of
+the group images 76-77% against the groups' mean truth, data fidelity 8.9 and truth RRMSE
+79.7% at step 0. (Whether this also happened in ProxNF depends on their data scale, which
+we do not have.) LSQR on these data semi-converges: on group 1, 5 iterations give 36.9%, 300
+give 228% (noise fitted). The new option `lsqr_atol: "discrepancy"` stops at the expected
+noise norm of the averaged data: 7 iterations, 36-39% on the four groups. The default stays
+"proxnf" until the user decides.

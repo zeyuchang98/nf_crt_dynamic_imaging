@@ -229,7 +229,9 @@ def summary_row(run, config, report=None):
             motion_scores = report.get("motion", {}).get("foreground", {})
         elif "all_window_frames" in report["image"]:
             # Embedding protocol: fitted and scored on the same, complete set of frames.
-            row["evaluation_split"] = "embedding, all frames"
+            # A reconstruction (inverse/) fits CRT data of every frame and scores every frame (E1).
+            row["evaluation_split"] = (f"reconstruction ({config['inverse']['method']}), all frames"
+                                       if "inverse" in config else "embedding, all frames")
             image_scores = report["image"]["all_window_frames"]
             intensity_scores, motion_scores = {}, {}
         elif "test_midpoints" in report["image"]:
