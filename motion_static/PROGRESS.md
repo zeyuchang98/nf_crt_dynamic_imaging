@@ -2479,7 +2479,7 @@ Queue waits, as the user asked to record (Slurm submit to start):
 | 1139396 (formal, cancelled) | 1, 36 h, gh | 2026-11-12 | never | over 22.5 h, cancelled |
 | 1147351 (check, failed) | 2, 45 min, gh-dev | 11-16 14:19:07 | 11-16 14:28:42 | 9 min 35 s |
 | 1147432 (check) | 2, 45 min, gh-dev | 11-16 15:31:08 | 11-16 17:49:04 | 2 h 18 min |
-| 1148080 (formal) | 32, 5 h, gh | 11-17 00:12:12 | 11-17 21:57:05 | 21 h 45 min |
+| 1148080 (formal, cancelled) | 32, 5 h, gh | 11-17 00:12:12 | 11-17 21:57:05 | 21 h 45 min |
 | 1149828 (formal chain, segment 1) | 32, 2 h, gh | 11-17 15:25:37 | pending | |
 | 1149832-1149834 (segments 2-4) | 32, 2 h, gh, each afterok on the one before | 11-17 15:26:00-01 | pending | |
 | 1150575 (segment 5) | 32, 2 h, gh, afterok on 1149834 | 11-17 22:20:10 | pending | |
@@ -2505,6 +2505,12 @@ check's 51.1 ms the model T0 + cB / P gives T0 of about 18 ms and cB of about 66
 not the per-process batch, now sets the speed. The gradients are summed with one NCCL
 all-reduce per parameter tensor (`Context.all_reduce_gradients`); how much of T0 that is
 has not been measured.
+
+1148080 cancelled at the user's request (it could not finish) at 2026-11-17 22:22:42,
+after 25 min 37 s, last logged step 66,000 (1,391 s of training). Its records (no model,
+no scores; `config.json` still says running, since the job was killed) are in
+[results/dce_moby_box64_full_20261117_1220k_r3_s0_32node](results/dce_moby_box64_full_20261117_1220k_r3_s0_32node),
+with the Slurm and GPU logs. The formal run continues as the chain only.
 
 ## Resume over segments (2026-11-17): implemented, tested locally
 

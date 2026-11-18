@@ -1,0 +1,215 @@
+
+Lmod is automatically replacing "nvidia/24.7" with "gcc/15.1.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) openmpi/5.0.5
+
+The following have been reloaded with a version change:
+  1) nvpl/24.7 => nvpl/26.9
+
+[rank21]:[W1117 21:58:00.742089868 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank29]:[W1117 21:58:00.255780374 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank1]:[W1117 21:58:00.749300463 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank12]:[W1117 21:58:00.804136457 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank2]:[W1117 21:58:00.513046144 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank27]:[W1117 21:58:00.071922077 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank17]:[W1117 21:58:00.791853062 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank6]:[W1117 21:58:00.090911018 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank31]:[W1117 21:58:00.226899227 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank10]:[W1117 21:58:00.946609027 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank15]:[W1117 21:58:00.990730436 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank3]:[W1117 21:58:00.893276877 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank30]:[W1117 21:58:00.259878648 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank18]:[W1117 21:58:00.184115727 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank16]:[W1117 21:58:00.871813399 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank9]:[W1117 21:58:00.888938256 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank13]:[W1117 21:58:00.847090872 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank23]:[W1117 21:58:00.968385823 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank4]:[W1117 21:58:00.006732117 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank5]:[W1117 21:58:00.991685581 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank14]:[W1117 21:58:00.038114482 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank8]:[W1117 21:58:00.066418878 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank26]:[W1117 21:58:00.086150986 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank28]:[W1117 21:58:00.413874614 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank19]:[W1117 21:58:00.100369683 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank20]:[W1117 21:58:00.442195374 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank7]:[W1117 21:58:00.832691921 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank11]:[W1117 21:58:00.107786597 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank24]:[W1117 21:58:00.123669620 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank22]:[W1117 21:58:00.100931726 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank25]:[W1117 21:58:00.183723059 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+/work/11803/zc7665/vista/envs/nf-crt/lib/python3.11/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank0]:[W1117 21:58:00.619295749 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+Phantom: dce_moby (source files, streamed) | box: [93, 161, 65] + [64, 64, 64] | frames: 14401 | processes: 32 | time: [-36.0, 684.0]
+dce_moby/nested_low_rank_hash_nf step 1: MSE 0.00149201, temporal L2 0, total 0.00149201, fixed train 0.00111644, held-out nan
+dce_moby/nested_low_rank_hash_nf step 500: MSE 7.81758e-05, temporal L2 0, total 7.81758e-05, fixed train 6.54151e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 1000: MSE 5.59148e-05, temporal L2 0, total 5.59148e-05, fixed train 4.77294e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 1500: MSE 5.06209e-05, temporal L2 0, total 5.06209e-05, fixed train 4.33948e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 2000: MSE 3.57184e-05, temporal L2 0, total 3.57184e-05, fixed train 3.21631e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 2500: MSE 3.81679e-05, temporal L2 0, total 3.81679e-05, fixed train 3.03297e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 3000: MSE 3.36259e-05, temporal L2 0, total 3.36259e-05, fixed train 3.22557e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 3500: MSE 3.41218e-05, temporal L2 0, total 3.41218e-05, fixed train 3.1858e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 4000: MSE 2.88521e-05, temporal L2 0, total 2.88521e-05, fixed train 2.78359e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 4500: MSE 2.68085e-05, temporal L2 0, total 2.68085e-05, fixed train 2.41119e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 5000: MSE 2.63983e-05, temporal L2 0, total 2.63983e-05, fixed train 3.02155e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 5500: MSE 1.91971e-05, temporal L2 0, total 1.91971e-05, fixed train 2.10011e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 6000: MSE 2.66459e-05, temporal L2 0, total 2.66459e-05, fixed train 2.01687e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 6500: MSE 2.68513e-05, temporal L2 0, total 2.68513e-05, fixed train 2.21922e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 7000: MSE 1.80377e-05, temporal L2 0, total 1.80377e-05, fixed train 2.17548e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 7500: MSE 2.52764e-05, temporal L2 0, total 2.52764e-05, fixed train 2.35452e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 8000: MSE 1.97312e-05, temporal L2 0, total 1.97312e-05, fixed train 2.22972e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 8500: MSE 2.01672e-05, temporal L2 0, total 2.01672e-05, fixed train 1.83678e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 9000: MSE 1.80578e-05, temporal L2 0, total 1.80578e-05, fixed train 1.86572e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 9500: MSE 1.8916e-05, temporal L2 0, total 1.8916e-05, fixed train 2.22756e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 10000: MSE 1.73483e-05, temporal L2 0, total 1.73483e-05, fixed train 1.70343e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 10500: MSE 2.1691e-05, temporal L2 0, total 2.1691e-05, fixed train 1.93544e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 11000: MSE 1.76443e-05, temporal L2 0, total 1.76443e-05, fixed train 1.6315e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 11500: MSE 1.47339e-05, temporal L2 0, total 1.47339e-05, fixed train 1.91173e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 12000: MSE 1.94298e-05, temporal L2 0, total 1.94298e-05, fixed train 1.4852e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 12500: MSE 1.65464e-05, temporal L2 0, total 1.65464e-05, fixed train 1.96156e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 13000: MSE 1.9932e-05, temporal L2 0, total 1.9932e-05, fixed train 1.7887e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 13500: MSE 2.29323e-05, temporal L2 0, total 2.29323e-05, fixed train 2.00465e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 14000: MSE 2.42217e-05, temporal L2 0, total 2.42217e-05, fixed train 1.58056e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 14500: MSE 1.4672e-05, temporal L2 0, total 1.4672e-05, fixed train 1.31972e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 15000: MSE 1.93022e-05, temporal L2 0, total 1.93022e-05, fixed train 1.30693e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 15500: MSE 2.00695e-05, temporal L2 0, total 2.00695e-05, fixed train 1.58625e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 16000: MSE 1.77003e-05, temporal L2 0, total 1.77003e-05, fixed train 1.29967e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 16500: MSE 1.66826e-05, temporal L2 0, total 1.66826e-05, fixed train 1.2282e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 17000: MSE 1.68309e-05, temporal L2 0, total 1.68309e-05, fixed train 1.67452e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 17500: MSE 1.39136e-05, temporal L2 0, total 1.39136e-05, fixed train 1.22619e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 18000: MSE 1.54331e-05, temporal L2 0, total 1.54331e-05, fixed train 1.35705e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 18500: MSE 1.60713e-05, temporal L2 0, total 1.60713e-05, fixed train 1.49016e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 19000: MSE 1.4359e-05, temporal L2 0, total 1.4359e-05, fixed train 1.64194e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 19500: MSE 2.21151e-05, temporal L2 0, total 2.21151e-05, fixed train 1.83906e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 20000: MSE 1.29275e-05, temporal L2 0, total 1.29275e-05, fixed train 1.28856e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 20500: MSE 1.068e-05, temporal L2 0, total 1.068e-05, fixed train 1.30213e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 21000: MSE 1.45452e-05, temporal L2 0, total 1.45452e-05, fixed train 1.06451e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 21500: MSE 1.1838e-05, temporal L2 0, total 1.1838e-05, fixed train 1.2407e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 22000: MSE 2.10647e-05, temporal L2 0, total 2.10647e-05, fixed train 1.31928e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 22500: MSE 1.08305e-05, temporal L2 0, total 1.08305e-05, fixed train 1.21482e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 23000: MSE 1.3248e-05, temporal L2 0, total 1.3248e-05, fixed train 1.41332e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 23500: MSE 1.43834e-05, temporal L2 0, total 1.43834e-05, fixed train 1.24191e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 24000: MSE 1.31698e-05, temporal L2 0, total 1.31698e-05, fixed train 1.37974e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 24500: MSE 1.08485e-05, temporal L2 0, total 1.08485e-05, fixed train 1.35359e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 25000: MSE 1.08094e-05, temporal L2 0, total 1.08094e-05, fixed train 1.32926e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 25500: MSE 1.37063e-05, temporal L2 0, total 1.37063e-05, fixed train 1.00542e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 26000: MSE 1.63994e-05, temporal L2 0, total 1.63994e-05, fixed train 1.0348e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 26500: MSE 1.34328e-05, temporal L2 0, total 1.34328e-05, fixed train 1.03298e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 27000: MSE 1.56681e-05, temporal L2 0, total 1.56681e-05, fixed train 1.11912e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 27500: MSE 2.02948e-05, temporal L2 0, total 2.02948e-05, fixed train 1.21066e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 28000: MSE 1.25839e-05, temporal L2 0, total 1.25839e-05, fixed train 1.26537e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 28500: MSE 9.66599e-06, temporal L2 0, total 9.66599e-06, fixed train 1.16868e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 29000: MSE 1.31157e-05, temporal L2 0, total 1.31157e-05, fixed train 1.17323e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 29500: MSE 1.25769e-05, temporal L2 0, total 1.25769e-05, fixed train 1.19374e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 30000: MSE 1.19475e-05, temporal L2 0, total 1.19475e-05, fixed train 9.05588e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 30500: MSE 1.09617e-05, temporal L2 0, total 1.09617e-05, fixed train 1.15091e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 31000: MSE 1.07277e-05, temporal L2 0, total 1.07277e-05, fixed train 1.19958e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 31500: MSE 9.93968e-06, temporal L2 0, total 9.93968e-06, fixed train 1.28308e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 32000: MSE 1.75146e-05, temporal L2 0, total 1.75146e-05, fixed train 9.39117e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 32500: MSE 1.27119e-05, temporal L2 0, total 1.27119e-05, fixed train 1.28365e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 33000: MSE 1.00667e-05, temporal L2 0, total 1.00667e-05, fixed train 1.05199e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 33500: MSE 1.48306e-05, temporal L2 0, total 1.48306e-05, fixed train 1.16985e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 34000: MSE 1.18139e-05, temporal L2 0, total 1.18139e-05, fixed train 1.21053e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 34500: MSE 1.4202e-05, temporal L2 0, total 1.4202e-05, fixed train 1.08063e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 35000: MSE 8.35707e-06, temporal L2 0, total 8.35707e-06, fixed train 1.11445e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 35500: MSE 9.64872e-06, temporal L2 0, total 9.64872e-06, fixed train 8.26105e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 36000: MSE 1.3961e-05, temporal L2 0, total 1.3961e-05, fixed train 8.90925e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 36500: MSE 7.68582e-06, temporal L2 0, total 7.68582e-06, fixed train 8.95662e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 37000: MSE 1.34746e-05, temporal L2 0, total 1.34746e-05, fixed train 1.15939e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 37500: MSE 1.11361e-05, temporal L2 0, total 1.11361e-05, fixed train 1.04658e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 38000: MSE 9.79052e-06, temporal L2 0, total 9.79052e-06, fixed train 1.04162e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 38500: MSE 9.89735e-06, temporal L2 0, total 9.89735e-06, fixed train 9.0708e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 39000: MSE 1.10811e-05, temporal L2 0, total 1.10811e-05, fixed train 1.09051e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 39500: MSE 1.53752e-05, temporal L2 0, total 1.53752e-05, fixed train 9.65256e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 40000: MSE 7.91755e-06, temporal L2 0, total 7.91755e-06, fixed train 1.00847e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 40500: MSE 8.51394e-06, temporal L2 0, total 8.51394e-06, fixed train 8.92928e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 41000: MSE 1.14073e-05, temporal L2 0, total 1.14073e-05, fixed train 8.37983e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 41500: MSE 1.15307e-05, temporal L2 0, total 1.15307e-05, fixed train 1.11612e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 42000: MSE 7.6155e-06, temporal L2 0, total 7.6155e-06, fixed train 1.00687e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 42500: MSE 1.13805e-05, temporal L2 0, total 1.13805e-05, fixed train 8.84612e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 43000: MSE 9.25687e-06, temporal L2 0, total 9.25687e-06, fixed train 1.02678e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 43500: MSE 1.20095e-05, temporal L2 0, total 1.20095e-05, fixed train 1.27296e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 44000: MSE 8.58582e-06, temporal L2 0, total 8.58582e-06, fixed train 8.48493e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 44500: MSE 1.33939e-05, temporal L2 0, total 1.33939e-05, fixed train 1.06356e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 45000: MSE 7.93365e-06, temporal L2 0, total 7.93365e-06, fixed train 1.21685e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 45500: MSE 1.15407e-05, temporal L2 0, total 1.15407e-05, fixed train 1.016e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 46000: MSE 1.15524e-05, temporal L2 0, total 1.15524e-05, fixed train 9.398e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 46500: MSE 1.00931e-05, temporal L2 0, total 1.00931e-05, fixed train 1.07808e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 47000: MSE 1.56145e-05, temporal L2 0, total 1.56145e-05, fixed train 1.26101e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 47500: MSE 8.66395e-06, temporal L2 0, total 8.66395e-06, fixed train 7.36651e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 48000: MSE 1.28514e-05, temporal L2 0, total 1.28514e-05, fixed train 1.0293e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 48500: MSE 7.98385e-06, temporal L2 0, total 7.98385e-06, fixed train 8.62478e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 49000: MSE 1.16991e-05, temporal L2 0, total 1.16991e-05, fixed train 7.53044e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 49500: MSE 8.42665e-06, temporal L2 0, total 8.42665e-06, fixed train 8.1093e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 50000: MSE 7.70717e-06, temporal L2 0, total 7.70717e-06, fixed train 1.08632e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 50500: MSE 1.10105e-05, temporal L2 0, total 1.10105e-05, fixed train 8.58272e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 51000: MSE 1.34174e-05, temporal L2 0, total 1.34174e-05, fixed train 7.92841e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 51500: MSE 1.05249e-05, temporal L2 0, total 1.05249e-05, fixed train 9.15411e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 52000: MSE 1.06101e-05, temporal L2 0, total 1.06101e-05, fixed train 8.93985e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 52500: MSE 1.03169e-05, temporal L2 0, total 1.03169e-05, fixed train 7.74343e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 53000: MSE 1.14769e-05, temporal L2 0, total 1.14769e-05, fixed train 7.28215e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 53500: MSE 7.03885e-06, temporal L2 0, total 7.03885e-06, fixed train 9.0241e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 54000: MSE 1.23966e-05, temporal L2 0, total 1.23966e-05, fixed train 9.5907e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 54500: MSE 1.62509e-05, temporal L2 0, total 1.62509e-05, fixed train 7.65586e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 55000: MSE 1.01577e-05, temporal L2 0, total 1.01577e-05, fixed train 8.50053e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 55500: MSE 7.20286e-06, temporal L2 0, total 7.20286e-06, fixed train 8.67269e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 56000: MSE 1.02759e-05, temporal L2 0, total 1.02759e-05, fixed train 7.92079e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 56500: MSE 1.22117e-05, temporal L2 0, total 1.22117e-05, fixed train 7.94306e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 57000: MSE 1.30439e-05, temporal L2 0, total 1.30439e-05, fixed train 8.76254e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 57500: MSE 6.46972e-06, temporal L2 0, total 6.46972e-06, fixed train 8.62395e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 58000: MSE 8.81599e-06, temporal L2 0, total 8.81599e-06, fixed train 9.31009e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 58500: MSE 8.64158e-06, temporal L2 0, total 8.64158e-06, fixed train 6.49202e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 59000: MSE 7.04756e-06, temporal L2 0, total 7.04756e-06, fixed train 9.27206e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 59500: MSE 1.17201e-05, temporal L2 0, total 1.17201e-05, fixed train 1.03435e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 60000: MSE 1.06581e-05, temporal L2 0, total 1.06581e-05, fixed train 9.4191e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 60500: MSE 6.89571e-06, temporal L2 0, total 6.89571e-06, fixed train 8.76786e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 61000: MSE 7.60653e-06, temporal L2 0, total 7.60653e-06, fixed train 6.9739e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 61500: MSE 7.53885e-06, temporal L2 0, total 7.53885e-06, fixed train 8.8304e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 62000: MSE 1.3236e-05, temporal L2 0, total 1.3236e-05, fixed train 7.90244e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 62500: MSE 1.27584e-05, temporal L2 0, total 1.27584e-05, fixed train 7.60802e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 63000: MSE 7.42624e-06, temporal L2 0, total 7.42624e-06, fixed train 9.52705e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 63500: MSE 7.52236e-06, temporal L2 0, total 7.52236e-06, fixed train 7.41816e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 64000: MSE 8.4333e-06, temporal L2 0, total 8.4333e-06, fixed train 7.4727e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 64500: MSE 7.40161e-06, temporal L2 0, total 7.40161e-06, fixed train 6.15263e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 65000: MSE 1.08942e-05, temporal L2 0, total 1.08942e-05, fixed train 7.44783e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 65500: MSE 9.99501e-06, temporal L2 0, total 9.99501e-06, fixed train 7.84188e-06, held-out nan
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+srun: got SIGCONT
+slurmstepd: error: *** JOB 1148080 ON c608-031 CANCELLED AT 2026-11-17T22:22:42 ***
+srun: forcing job termination
+slurmstepd: error: *** STEP 1148080.0 ON c608-031 CANCELLED AT 2026-11-17T22:22:42 ***
+srun: error: c613-101: task 11: Terminated
+srun: Terminating StepId=1148080.0
+srun: error: c613-012: task 4: Terminated
+srun: error: c621-071: task 16: Terminated
+srun: error: c641-052: task 30: Terminated
+srun: error: c613-052: task 5: Terminated
+srun: error: c621-062: task 15: Terminated
+srun: error: c640-152: task 28: Terminated
+srun: error: c636-091: task 25: Terminated
+srun: error: c634-021: task 23: Terminated
+srun: error: c613-102: task 12: Terminated
+srun: error: c640-142: task 26: Terminated
+srun: error: c622-031: task 18: Terminated
+srun: error: c622-062: task 21: Terminated
+srun: error: c620-042: task 14: Terminated
+srun: error: c620-041: task 13: Terminated
+srun: error: c613-061: task 6: Terminated
+srun: error: c610-142: task 2: Terminated
+srun: error: c608-031: task 0: Terminated
+srun: error: c636-082: task 24: Terminated
+srun: error: c613-071: task 8: Terminated
+srun: error: c611-032: task 3: Terminated
+srun: error: c613-062: task 7: Terminated
+srun: error: c641-061: task 31: Terminated
+srun: error: c608-082: task 1: Terminated
+srun: error: c622-061: task 20: Terminated
+srun: error: c634-012: task 22: Terminated
+srun: error: c613-081: task 10: Terminated
+srun: error: c640-151: task 27: Terminated
+srun: error: c641-001: task 29: Terminated
+srun: error: c622-032: task 19: Terminated
+srun: error: c621-132: task 17: Terminated
+srun: error: c613-072: task 9: Terminated
