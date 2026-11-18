@@ -76,8 +76,9 @@ at the end of this file.
   the maximum datum), direct backpropagation and ProxNF's proximal splitting, each with
   POUnet and the nested model. Stages 1-2 done: operator, window measurements, direct
   backpropagation, POUnet and its warm start (204 tests pass; 10-step checks of both models
-  on MPS). Open: the warm start's LSQR stop (ProxNF's tolerance gives one iteration).
-  Next: splitting, smoke runs on the window, then the longest frame range on this machine.
+  on MPS). Warm-start LSQR stops at the noise level (user's choice). Stage 3 done:
+  proximal splitting for any model, ProxNF's CG coefficient update for POUnet (212 tests).
+  Next: smoke runs of the four combinations on the window, then the longest frame range.
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -2691,5 +2692,47 @@ the group images 76-77% against the groups' mean truth, data fidelity 8.9 and tr
 79.7% at step 0. (Whether this also happened in ProxNF depends on their data scale, which
 we do not have.) LSQR on these data semi-converges: on group 1, 5 iterations give 36.9%, 300
 give 228% (noise fitted). The new option `lsqr_atol: "discrepancy"` stops at the expected
-noise norm of the averaged data: 7 iterations, 36-39% on the four groups. The default stays
-"proxnf" until the user decides.
+noise norm of the averaged data: 7 iterations, 36-39% on the four groups. Decided by the
+user (2026-11-18): "discrepancy" is the default; "proxnf" remains selectable.
+
+### Stage 3 (2026-11-18): proximal splitting
+
+Decided by the user before this stage: the warm start's LSQR stops at the noise level
+(`lsqr_atol: "discrepancy"`, now the default).
+
+Implemented (`inverse/proximal.py`, `method: "proximal"`): the objective is the one of direct
+backpropagation, J = 1/2 mean(((P_k f_k - d_k) / sigma)^2) + w R, so one weight means one
+problem for both methods. Each outer iteration, as ProxNF's code:
+- forward step on every frame: g_k = P_k^T (P_k f_k - d_k) / sigma^2, tau = sigma^2 sum||g||^2 /
+  sum||P g||^2 (exact line search on the data term), targets z_k = f_k - tau g_k;
+- proximal step within the model: min 1/2 mean (f - z)^2 + tau (rows / pixels) w R, the prox of
+  tau M w R per space-time point, by Adam on random points (`batch_size` per step,
+  `inner_steps` steps), a fresh optimizer with constant rates per outer iteration (ProxNF);
+  R is estimated from the sampled points and their +x / +y neighbours;
+- POUnet (`coefficient_cg`, default 100 iterations, 1e-6, ProxNF's values): first the exact
+  minimizer over C with psi fixed, (I + 2 mu D^T D) C G = Z^T Psi with G = Psi^T Psi and
+  mu = tau rows w / (N (N - 1)), by CG from the current C (ProxNF's int32 cast of the start
+  is not reproduced); then Adam on psi alone. CG needs a quadratic penalty (none or
+  squared gradient). float32 throughout (MPS has no float64; ProxNF's system was float32 too).
+- Records: `loss.csv` per outer iteration (tau, gradient norm, data fidelity before and after,
+  CG iterations and residual, first and last inner loss, R, objective, truth RRMSE for
+  monitoring, constant rates), `inner_loss.csv` with every inner step, `loss.png`.
+- Example inputs `experiments/inverse/window_proximal_{nested,pou}.json` (5 outer x 100
+  inner; POUnet with ProxNF's psi rate 1e-5 and 10^4 points per step). Smoke weights, untuned:
+  squared gradient 200 and TV 27 (the direct POUnet input, previously 1.0), chosen so that
+  w R(truth) = 0.05, a tenth of the data term at the noise level (truth R: squared gradient
+  2.45e-4, TV 1.84e-3).
+
+Validated (212 tests pass; 8 new): the targets equal f - tau g with g from scipy, and tau
+minimizes the data term along -g; the image Laplacian is D^T D; CG solves a positive definite
+system; the CG coefficients make the gradient of the sum-form proximal objective vanish (to
+1e-3 relative in float32); the sampled R over every point equals the image mean R; complete
+runs of both models record outer and inner losses (CG only for POUnet, which then has no
+coefficient rate); training losses do not depend on the truth; invalid settings are refused.
+
+Real-data checks (2 outer x 20 inner on MPS, pipeline only;
+`results/inverse_check_20261118_proximal_{nested,pou}_2x20`): both run (94 s and 40 s in
+total). POUnet after the discrepancy warm start begins at data fidelity 1.05 and reaches 0.969
+after two outer iterations (CG 9 iterations each): POUnet has 615,040 coefficients for 530,010
+measurements, so it can fit below the noise level, and the penalty decides how far it does.
+Nested model: 19.9 -> 7.9 in two outer iterations.

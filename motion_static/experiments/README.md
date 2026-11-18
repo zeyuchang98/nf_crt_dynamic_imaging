@@ -158,13 +158,20 @@ python -m motion_static.inverse.measurements --file ~/Data/dce-moby/moby_z100.h5
   --frames-per-cycle 50 --operator motion_static/results/inverse_data/crt_N248_fov37.2_R26.304_dr0.15_a1.npz
 ```
 
-- `inverse.method`: `direct` (backpropagation through P_k; proximal splitting follows).
+- `inverse.method`: `direct` (backpropagation through P_k) or `proximal` (ProxNF's splitting:
+  a gradient step on the data term in image space with an exact line search, then fitting
+  the field to the result; inverse/proximal.py). Both minimize the same objective.
 - `inverse.measurements`: the file above; it must come from the same `data` window.
 - `inverse.frames_per_step`: K whole frames per step (P_k needs every pixel of a frame).
+- Proximal only: `inverse.outer_iterations`, `inverse.inner_steps` (Adam steps per proximal
+  fit, a fresh optimizer with constant rates as in ProxNF), `steps` = their product, and
+  `batch_size` random space-time points per inner step. POUnet: `inverse.coefficient_cg`
+  `{max_iterations, tolerance}` (100, 1e-6, ProxNF) solves C exactly with psi fixed, then
+  Adam updates psi alone; null updates both by Adam. `inner_loss.csv` holds every inner step.
 - `inverse.regularizer`: `{"type": "none" | "squared_gradient" | "tv", "weight", "epsilon" (tv)}`.
 - `inverse.monitor_frames`: null (all frames) or a fixed number of frames for the monitor.
 - `inverse.warm_start` (pou_net only): `frames_per_group` (36), `lsqr_atol` (`"proxnf"`,
-  `"discrepancy"` or a number), `partition_steps` (10,000); null disables it.
+  `"discrepancy"` (default, chosen 2026-11-18) or a number), `partition_steps` (10,000); null disables it.
 - `model: "pou_net"` (inverse runs only): `pou` `{partitions, width, depth}` (10, 140, 4) and
   the rates `pou_lr`, `coefficient_lr`.
 

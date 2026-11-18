@@ -32,7 +32,7 @@ losses, coordinate conventions, model architectures or metric definitions.
 | DCE-MOBY source files, streamed batches, several processes | [phantoms/moby_source.py](phantoms/moby_source.py), [streaming.py](streaming.py), [distributed.py](distributed.py) |
 | Metrics and optional visualization | [evaluation/README.md](evaluation/README.md) |
 | 2D CRT operator (caSRT) and simulated measurements | [inverse/crt_operator.py](inverse/crt_operator.py), [inverse/measurements.py](inverse/measurements.py) |
-| Reconstruction from CRT data: direct backpropagation, POUnet and its warm start | [inverse/execute.py](inverse/execute.py), [inverse/direct.py](inverse/direct.py), [inverse/warm_start.py](inverse/warm_start.py), [models/pou_net.py](models/pou_net.py) |
+| Reconstruction from CRT data: direct backpropagation, proximal splitting, POUnet and its warm start | [inverse/execute.py](inverse/execute.py), [inverse/direct.py](inverse/direct.py), [inverse/proximal.py](inverse/proximal.py), [inverse/warm_start.py](inverse/warm_start.py), [models/pou_net.py](models/pou_net.py) |
 | Focused validation | [tests/](tests/) |
 
 The nested model is `I(r,t) = phi_intensity(r + phi_motion(r,t), t)`. Motion is a

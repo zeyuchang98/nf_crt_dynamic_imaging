@@ -1,0 +1,53 @@
+{
+  "phantom": "dce_moby",
+  "model": "pou_net",
+  "seed": 0,
+  "steps": 500,
+  "batch_size": 10000,
+  "threads": 8,
+  "device": "mps",
+  "pou": {
+    "partitions": 10,
+    "width": 140,
+    "depth": 4
+  },
+  "pou_lr": 1e-05,
+  "coefficient_lr": 0.001,
+  "evaluation_split": "midpoints",
+  "monitor_samples": 65536,
+  "monitor_seed": 2026,
+  "log_interval": 50,
+  "checkpoint_steps": [],
+  "output": {
+    "gifs": false,
+    "predictions": false
+  },
+  "data": {
+    "file": "~/Data/dce-moby/moby_z100.h5",
+    "first_frame": 1250,
+    "cycles": 3,
+    "frames_per_cycle": 50,
+    "intensity_scale": "global_maximum"
+  },
+  "held_out_split": "none",
+  "inverse": {
+    "method": "proximal",
+    "measurements": "motion_static/results/inverse_data/meas_z100_f1250-1400_rnl0.04_seed0.npz",
+    "outer_iterations": 5,
+    "inner_steps": 100,
+    "regularizer": {
+      "type": "squared_gradient",
+      "weight": 200.0
+    },
+    "monitor_frames": null,
+    "warm_start": {
+      "frames_per_group": 36,
+      "lsqr_atol": "discrepancy",
+      "partition_steps": 10000
+    },
+    "coefficient_cg": {
+      "max_iterations": 100,
+      "tolerance": 1e-06
+    }
+  }
+}

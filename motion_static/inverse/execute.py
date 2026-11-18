@@ -19,10 +19,12 @@ from ..run_records import Tee, initialize_run_metadata, snapshot_source, update_
 from .crt_operator import file_sha256
 from .problem import check_measurements
 
-METHODS = ("direct",)
+METHODS = ("direct", "proximal")
 REGULARIZERS = ("none", "squared_gradient", "tv")
 POU_DEFAULTS = dict(partitions=10, width=140, depth=4)  # ProxNF's 2D code
-WARM_START_DEFAULTS = dict(frames_per_group=36, lsqr_atol="proxnf", partition_steps=10_000)
+# LSQR stop chosen by the user 2026-11-18 ("proxnf" stays selectable).
+WARM_START_DEFAULTS = dict(frames_per_group=36, lsqr_atol="discrepancy", partition_steps=10_000)
+CG_DEFAULTS = dict(max_iterations=100, tolerance=1e-6)  # ProxNF's coefficient_update
 REPOSITORY = Path(__file__).resolve().parents[2]
 
 
@@ -49,8 +51,15 @@ def validate_inverse(config):
     settings["measurements"] = str(path.resolve())
     metadata = json.loads(path.with_suffix(".json").read_text())
     check_measurements(metadata, config["data"])
-    if not positive_int(settings.get("frames_per_step")) or settings["frames_per_step"] > config["frames"]:
-        raise ValueError("inverse.frames_per_step must be a positive integer, at most the frame count")
+    if settings["method"] == "direct":
+        if not positive_int(settings.get("frames_per_step")) or settings["frames_per_step"] > config["frames"]:
+            raise ValueError("inverse.frames_per_step must be a positive integer, at most the frame count")
+    else:
+        if not (positive_int(settings.get("outer_iterations")) and positive_int(settings.get("inner_steps"))):
+            raise ValueError("proximal runs need positive integers inverse.outer_iterations and inner_steps")
+        # `steps` counts the inner optimizer steps of all outer iterations (run summary).
+        if config["steps"] != settings["outer_iterations"] * settings["inner_steps"]:
+            raise ValueError("proximal runs need steps = outer_iterations * inner_steps")
     regularizer = settings.setdefault("regularizer", dict(type="none", weight=0.))
     if regularizer.get("type") not in REGULARIZERS:
         raise ValueError(f"inverse.regularizer.type must be one of {REGULARIZERS}")
@@ -88,18 +97,35 @@ def validate_inverse(config):
     elif "warm_start" in settings and settings["warm_start"] is not None:
         raise ValueError("warm_start is implemented for pou_net only")
 
+    # ProxNF's exact coefficient update (POUnet, proximal only; the penalty must be quadratic).
+    if config["model"] == "pou_net" and settings["method"] == "proximal":
+        cg = settings.get("coefficient_cg", CG_DEFAULTS)
+        if cg is not None:
+            cg = {**CG_DEFAULTS, **cg}
+            if not positive_int(cg["max_iterations"]) or not cg["tolerance"] > 0:
+                raise ValueError("coefficient_cg needs a positive integer max_iterations and a positive tolerance")
+            if regularizer["type"] == "tv":
+                raise ValueError("coefficient_cg needs a quadratic penalty (none or squared_gradient)")
+        settings["coefficient_cg"] = cg
+    elif settings.get("coefficient_cg") is not None:
+        raise ValueError("coefficient_cg is implemented for pou_net with method proximal only")
+
 
 def execute_inverse(config, out):
     """Reconstruct from the measurement file and save a run record like run.execute."""
     from ..run import build_model, cpu_state, torch_device
     from .direct import train_direct
     from .problem import InverseProblem
+    from .proximal import train_proximal
     from .warm_start import warm_start_pou
 
     root = Path(__file__).resolve().parents[1]
     initialize_run_metadata(config)
-    config["loss"] = ("1/2 mean(((P_k f - d_k) / sigma)^2) over random whole frames + weight * R(f); "
-                      "the truth is used for monitoring and scoring only")
+    proximal = config["inverse"]["method"] == "proximal"
+    config["loss"] = ("J = 1/2 mean(((P_k f - d_k) / sigma)^2) + weight * R(f), "
+                      + ("by proximal splitting (inverse/proximal.py)" if proximal
+                         else "on random whole frames by direct backpropagation")
+                      + "; the truth is used for monitoring and scoring only")
     out.mkdir(parents=True, exist_ok=False)
     with ((out / "run.log").open("w") as log, redirect_stdout(Tee(sys.stdout, log)),
           redirect_stderr(Tee(sys.stderr, log))):
@@ -107,12 +133,14 @@ def execute_inverse(config, out):
             config["code_provenance"] = snapshot_source(root, out)
             write_json(out / "config.json", config)
             settings = config["inverse"]
+            budget = (f"{settings['outer_iterations']} outer x {settings['inner_steps']} inner steps" if proximal
+                      else f"{settings['frames_per_step']} frames per step")
             print(f"Inverse ({settings['method']}) | model {config['model']} | frames {config['frames']} | "
-                  f"{settings['frames_per_step']} frames per step | regularizer {settings['regularizer']}", flush=True)
+                  f"{budget} | regularizer {settings['regularizer']}", flush=True)
             torch.set_num_threads(config["threads"])
             torch.manual_seed(config["seed"])
             device = torch_device(config)
-            problem = InverseProblem(config, device)
+            problem = InverseProblem(config, device, adjoint=proximal)
             settings["problem"] = dict(frames=len(problem), rows_per_frame=problem.operator.rows_per_frame,
                                        distinct_view_sets=len(problem.operator.forward_blocks), sigma=problem.sigma,
                                        measurements_sha256=problem.metadata["npz_sha256"],
@@ -123,7 +151,7 @@ def execute_inverse(config, out):
                 print(f"Warm start: {settings['warm_start_result']['groups']}", flush=True)
             write_json(out / "config.json", config)
 
-            _, seconds = train_direct(model, problem, config, out)
+            _, seconds = (train_proximal if proximal else train_direct)(model, problem, config, out)
             torch.save(dict(config=config, step=config["steps"], state_dict=cpu_state(model)), out / "model.pt")
 
             model.eval()

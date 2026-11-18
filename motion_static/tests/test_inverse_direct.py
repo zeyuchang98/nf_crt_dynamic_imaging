@@ -177,7 +177,7 @@ class RunTests(InverseTestCase):
     def test_direct_runs_record_losses_metrics_and_provenance(self):
         cases = (("nested", self.config(NESTED)),
                  ("pou", self.config(POU, regularizer=dict(type="tv", weight=0.5, epsilon=1e-5),
-                                     warm_start=dict(frames_per_group=4, partition_steps=20))))
+                                     warm_start=dict(frames_per_group=4, partition_steps=20, lsqr_atol="proxnf"))))
         for name, config in cases:
             with self.subTest(name):
                 out, saved = self.run_config(config, name)

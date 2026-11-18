@@ -66,6 +66,10 @@ class InverseProblem:
         xy = self.xy.repeat(len(times), 1)
         return torch.cat([xy, times.repeat_interleave(len(self.xy))[:, None]], dim=1)
 
+    def points(self, frames, pixels):
+        """(B, 3) query points of window frames `frames` at flat pixels `pixels` (CPU tensors)."""
+        return torch.cat([self.xy[pixels.to(self.device)], self.times[frames.to(self.device)][:, None]], dim=1)
+
     def render(self, model, frames):
         """Model frames (K, size**2), with gradients; POUnet renders psi(t) C^T directly."""
         frames = np.asarray(frames).reshape(-1)
