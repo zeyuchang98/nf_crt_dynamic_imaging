@@ -2496,6 +2496,7 @@ Queue waits, as the user asked to record (Slurm submit to start):
 | 1149832 (segment 2) | 32, 2 h, gh, afterok on 1149828 | 11-17 15:26:00, eligible 11-18 13:17:38 | pending | |
 | 1149833-1149834 (segments 3-4) | 32, 2 h, gh, each afterok on the one before | 11-17 15:26:01 | pending | |
 | 1150575 (segment 5) | 32, 2 h, gh, afterok on 1149834 | 11-17 22:20:10 | pending | |
+| 1152425 (formal, one long continuation) | 32, 7 h, gh | 11-18 15:08:38 | pending | |
 
 The same run as a chain of short jobs, submitted alongside 1148080 at the user's request
 (2026-11-17) to compare how fast each finishes: `submit_chain.sh 4 32 02:00:00 100`, same
@@ -2532,6 +2533,21 @@ ms over 100,000-step stretches). The remaining 947,000 steps need about 5.7 h, s
 2-5 (about 270,000 steps each) suffice. The priority of the dependent segments did not
 rise while they waited (1545 at submission, 1518 at 11-18 15:02): each segment starts
 ageing only when the one before ends.
+
+Priority parts of segment 2 at 11-18 15:06 (`sprio`): partition 1500, age 37 after 1.8 h
+eligible (about 21 per hour), fairshare 16, job size 3; the requested time is not a
+part. 1148080 started near priority 2017 and segment 1 near 1940, both after about 20 h
+of age (two cases, so not a rule). If every segment waits that long, segments 2-5 would
+add about 80 h of queue. So, at the user's request (2026-11-18), the chain stays queued
+and one long job continues a copy of the paused run beside it: the chain folder after
+segment 1 copied with `cp -a` to `dce_moby_box64_full_20261117_1220k_r3_s0_32node_long`
+(`resume.pt` compared equal), job 1152425 from the chain checkout (`9e06f0d`), `sbatch -p
+gh -N 32 -t 07:00:00 train_multinode.sbatch dce_moby_box64_full_series.json
+..._32node_long --continue --segment-minutes 390` (remaining 947,000 steps at 21.6 ms
+are about 5.7 h; the 390-minute limit pauses it, instead of Slurm killing it, if it is
+slower). Checked locally first (ad-hoc, not a kept test): a paused run copied with its
+modification times continues in the copy to the same loss, weights and metrics as the
+run without breaks, bit for bit; no setting records the folder name.
 
 ## Resume over segments (2026-11-17): implemented, tested locally
 
