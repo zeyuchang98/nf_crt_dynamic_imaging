@@ -2873,3 +2873,36 @@ Before the whole-series run, to decide with the user: which combinations, budget
 outer and inner iterations), penalty weights, and the models' time resolution (the window
 settings resolve 151 frames: nested temporal grid 3-48 and motion time 4-16 cells; POUnet
 10 partitions over 12 min cannot follow breathing at about 2.5 s, 50 frames, per breath).
+
+### Whole-series reconstruction plan (agreed by the user 2026-11-18)
+
+All recommendations accepted:
+- All four combinations on the whole series (frames 0-14400, 720 s, 200 sensor revolutions),
+  measurement file `meas_z100_f0-14400_rnl0.04_seed0.npz` (sigma 0.0508, the maximum over the
+  whole series); geometry, noise, dr, E1 and inverse crime unchanged.
+- Nested model: the full-series embedding design (`experiments/dce_moby_full_series.json`:
+  R = 3, temporal grid 3-288, motion time 384-1536 cells, motion table 2^17; 1.31 M
+  parameters). POUnet: 20 partitions, about the same parameter count (1.31 M). Neither 20 nor
+  ProxNF's density (about 111) can follow breathing (about 2.5 s); that is a property of the
+  representation at these sizes.
+- POUnet warm start: one group per partition interval, 757 frames, 19 groups (as ProxNF:
+  one group per partition), LSQR stopped at the noise level. Nested warm start (option B,
+  new: `warm_start_field`): the nested model is fitted to the same 19 group LSQR images at
+  the group center times (5,000 steps, motion frozen at its initialization), the same start
+  for both methods.
+- Budgets: direct 76,000 steps of 4 frames (about 21 visits per frame, like the 21 samples
+  per point of the full-series embedding run); proximal POUnet ProxNF's 125 outer x (CG +
+  100 psi steps of 10^4 points at 1e-5); proximal nested 25 outer x 300 inner (16,384 points).
+  Estimated 0.8, 1.2, 10 and 8 h on MPS. Monitor: 151 fixed frames; direct logs every 2,000
+  steps.
+- Window checks first, none using the truth: POUnet penalty weights by the discrepancy
+  principle (final all-frame data fidelity closest to 1 from above; direct TV 3-300, proximal
+  squared gradient 200-3e4) at budgets matching the whole-series ones per frame; the
+  proximal nested inner rates (0.01/0.001 against 0.001/0.0001, by the final data
+  fidelity); direct and proximal nested with the warm start.
+- Long runs need the lid open and power (`caffeinate -i` against idle sleep).
+
+`warm_start_field` (inverse/warm_start.py): group LSQR images as for POUnet, fitted by
+run.train (random points, Adam, cosine) with the motion branch's parameters frozen and
+restored afterwards. Test: motion parameters unchanged, intensity changed, a complete run
+records the warm start; `fit_steps` is required (214 tests pass).

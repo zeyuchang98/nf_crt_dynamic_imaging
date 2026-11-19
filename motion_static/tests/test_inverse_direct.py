@@ -260,6 +260,30 @@ class RunTests(InverseTestCase):
         with self.assertRaises(SystemExit):  # predictions would need the whole prediction array
             self.resolved(dict(self.config(NESTED), output=dict(gifs=False, predictions=True)))
 
+    def test_nested_warm_start_fits_intensity_and_keeps_motion(self):
+        from motion_static.inverse.warm_start import warm_start_field
+        from motion_static.run import build_model
+
+        config = self.resolved(self.config(NESTED, warm_start=dict(frames_per_group=4, fit_steps=6)))
+        self.assertEqual(config["inverse"]["warm_start"]["lsqr_atol"], "discrepancy")
+        problem = InverseProblem(config, "cpu")
+        torch.manual_seed(0)
+        model = build_model(config)
+        motion = {key: value.clone() for key, value in model.motion.state_dict().items()}
+        intensity = {key: value.clone() for key, value in model.intensity.state_dict().items()}
+        record = warm_start_field(model, problem, config["inverse"]["warm_start"], config)
+        self.assertEqual(len(record["groups"]), 2)  # 9 frames, groups of 4
+        self.assertEqual(record["fit_points"], 2 * SIZE * SIZE)
+        for key, value in model.motion.state_dict().items():
+            self.assertTrue(torch.equal(value, motion[key]), key)
+        self.assertTrue(any(not torch.equal(value, intensity[key]) for key, value in model.intensity.state_dict().items()))
+        self.assertTrue(all(parameter.requires_grad for parameter in model.motion.parameters()))
+        out, saved = self.run_config(self.config(NESTED, warm_start=dict(frames_per_group=4, fit_steps=6)), "nested_ws")
+        self.assertEqual(saved["status"], "complete")
+        self.assertEqual(saved["inverse"]["warm_start_result"]["fit_steps"], 6)
+        with self.assertRaises(SystemExit):  # nested warm starts need fit_steps
+            self.resolved(self.config(NESTED, warm_start=dict(frames_per_group=4)))
+
     def test_training_never_reads_the_truth(self):
         histories = []
         for scale in (1., 5.):

@@ -106,7 +106,7 @@ def interpolation_weights(centers, nodes):
 
 def warm_start_pou(model, problem, settings):
     """Set POUnet's psi and coefficients from the measurements; returns a record for config.json."""
-    images, centers, record = grouped_lsqr(problem, settings["frames_per_group"], settings.get("lsqr_atol", "proxnf"),
+    images, centers, record = grouped_lsqr(problem, settings["frames_per_group"], settings.get("lsqr_atol", "discrepancy"),
                                            settings.get("cover", 2))
     nodes, partition_loss = fit_partitions(model, settings.get("partition_steps", 10_000))
     center_nodes = model.normalized_time(torch.as_tensor(centers)).numpy()
@@ -115,3 +115,29 @@ def warm_start_pou(model, problem, settings):
         model.coefficients.copy_(torch.as_tensor(images.T @ weights, dtype=torch.float32))
     return dict(record, group_centers_s=centers.tolist(), partition_nodes=nodes.cpu().tolist(),
                 partition_fit_loss=partition_loss, partition_steps=settings.get("partition_steps", 10_000))
+
+
+def warm_start_field(model, problem, settings, config):
+    """Other models (agreed 2026-11-18 for the nested model, option B): fit the field to the
+    group LSQR images at the group center times before reconstruction, by the image-fitting
+    loop (run.train: random points, Adam, cosine over `fit_steps`), the same start for direct
+    backpropagation and proximal splitting. A motion branch is frozen at its initialization
+    during the fit, so the start is a motion-free, slowly varying sequence."""
+    from ..run import train  # run.py imports this package; import here to avoid a cycle
+
+    images, centers, record = grouped_lsqr(problem, settings["frames_per_group"],
+                                           settings.get("lsqr_atol", "discrepancy"), settings.get("cover", 2))
+    xy = problem.xy.cpu().numpy()
+    coordinates = np.concatenate([np.column_stack([xy, np.full(len(xy), t)]) for t in centers]).astype(np.float32)
+    frozen = list(model.motion.parameters()) if hasattr(model, "motion") else []
+    for parameter in frozen:
+        parameter.requires_grad_(False)
+    fit = dict(config, steps=settings["fit_steps"], schedule="cosine", log_interval=max(1, settings["fit_steps"] // 5))
+    try:
+        history, seconds, _ = train(model, coordinates, images.reshape(-1).astype(np.float32), fit, out=None)
+    finally:
+        for parameter in frozen:
+            parameter.requires_grad_(True)
+    return dict(record, group_centers_s=centers.tolist(), fit_steps=settings["fit_steps"],
+                fit_points=len(coordinates), fit_last_batch_mse=history[-1][1], fit_seconds=seconds,
+                motion="frozen at its initialization during the fit" if frozen else "no motion branch")

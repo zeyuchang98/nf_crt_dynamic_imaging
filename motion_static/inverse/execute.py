@@ -97,8 +97,18 @@ def validate_inverse(config):
             if not (warm["lsqr_atol"] in ("proxnf", "discrepancy") or isinstance(warm["lsqr_atol"], (int, float))):
                 raise ValueError('warm_start.lsqr_atol must be "proxnf", "discrepancy" or a number')
         settings["warm_start"] = warm
-    elif "warm_start" in settings and settings["warm_start"] is not None:
-        raise ValueError("warm_start is implemented for pou_net only")
+    elif settings.get("warm_start") is not None:
+        # Other models: no default; the group LSQR images are fitted for `fit_steps` (warm_start_field).
+        warm = {**WARM_START_DEFAULTS, **settings["warm_start"]}
+        warm.pop("partition_steps")
+        warm["cover"] = 2 if metadata["schedule"]["opposite_groups"] else 1
+        if not positive_int(warm["frames_per_group"]) or warm["frames_per_group"] > config["frames"]:
+            raise ValueError("warm_start.frames_per_group must be a positive integer, at most the frame count")
+        if not positive_int(warm.get("fit_steps")):
+            raise ValueError("warm_start for this model needs a positive integer fit_steps")
+        if not (warm["lsqr_atol"] in ("proxnf", "discrepancy") or isinstance(warm["lsqr_atol"], (int, float))):
+            raise ValueError('warm_start.lsqr_atol must be "proxnf", "discrepancy" or a number')
+        settings["warm_start"] = warm
 
     # ProxNF's exact coefficient update (POUnet, proximal only; the penalty must be quadratic).
     if config["model"] == "pou_net" and settings["method"] == "proximal":
@@ -164,7 +174,7 @@ def execute_inverse(config, out):
     from .direct import train_direct
     from .problem import InverseProblem
     from .proximal import train_proximal
-    from .warm_start import warm_start_pou
+    from .warm_start import warm_start_field, warm_start_pou
 
     root = Path(__file__).resolve().parents[1]
     initialize_run_metadata(config)
@@ -193,9 +203,12 @@ def execute_inverse(config, out):
                                        measurements_sha256=problem.metadata["npz_sha256"],
                                        operator_sha256=problem.metadata["operator"]["operator_sha256"])
             model = build_model(config).to(device)
-            if config["model"] == "pou_net" and settings.get("warm_start") is not None:
-                settings["warm_start_result"] = warm_start_pou(model, problem, settings["warm_start"])
-                print(f"Warm start: {settings['warm_start_result']['groups']}", flush=True)
+            if settings.get("warm_start") is not None:
+                start = (warm_start_pou(model, problem, settings["warm_start"]) if config["model"] == "pou_net"
+                         else warm_start_field(model, problem, settings["warm_start"], config))
+                settings["warm_start_result"] = start
+                print(f"Warm start: {len(start['groups'])} groups, LSQR iterations "
+                      f"{[group['iterations'] for group in start['groups']]}", flush=True)
             write_json(out / "config.json", config)
 
             _, seconds = (train_proximal if proximal else train_direct)(model, problem, config, out)
