@@ -2872,4 +2872,4 @@ would be about 35 h). These are planning estimates, not decided budgets.
 Before the whole-series run, to decide with the user: which combinations, budgets (steps,
 outer and inner iterations), penalty weights, and the models' time resolution (the window
 settings resolve 151 frames: nested temporal grid 3-48 and motion time 4-16 cells; POUnet
-10 partitions over 7.2 min cannot follow breathing at about 1 s per cycle).
+10 partitions over 12 min cannot follow breathing at about 2.5 s, 50 frames, per breath).
