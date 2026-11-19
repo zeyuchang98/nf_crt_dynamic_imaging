@@ -1,0 +1,20 @@
+Inverse (direct) | model nested_low_rank_hash_nf | frames 151 | 4 frames per step | regularizer {'type': 'none', 'weight': 0.0}
+dce_moby/nested_low_rank_hash_nf step 1: MSE 0.000340937, temporal L2 0, total 0.000340937
+dce_moby/nested_low_rank_hash_nf step 1000: MSE 2.13014e-05, temporal L2 0, total 2.13014e-05
+dce_moby/nested_low_rank_hash_nf step 2000: MSE 1.92475e-05, temporal L2 0, total 1.92475e-05
+dce_moby/nested_low_rank_hash_nf step 3000: MSE 1.94584e-05, temporal L2 0, total 1.94584e-05
+dce_moby/nested_low_rank_hash_nf step 4000: MSE 2.00132e-05, temporal L2 0, total 2.00132e-05
+dce_moby/nested_low_rank_hash_nf step 5000: MSE 1.94686e-05, temporal L2 0, total 1.94686e-05
+Warm start: 4 groups, LSQR iterations [7, 7, 7, 7]
+direct/nested_low_rank_hash_nf step 1: data fidelity 1.16741, R 0, total 0.583704, all-frame data fidelity 9.77812, truth RRMSE 49.8127%
+direct/nested_low_rank_hash_nf step 100: data fidelity 1.09894, R 0, total 0.549468, all-frame data fidelity 1.07805, truth RRMSE 38.9363%
+direct/nested_low_rank_hash_nf step 200: data fidelity 1.04644, R 0, total 0.52322, all-frame data fidelity 0.972658, truth RRMSE 37.9988%
+direct/nested_low_rank_hash_nf step 300: data fidelity 0.814113, R 0, total 0.407056, all-frame data fidelity 0.902722, truth RRMSE 41.7304%
+direct/nested_low_rank_hash_nf step 400: data fidelity 0.807603, R 0, total 0.403801, all-frame data fidelity 0.859854, truth RRMSE 46.2618%
+direct/nested_low_rank_hash_nf step 500: data fidelity 0.759812, R 0, total 0.379906, all-frame data fidelity 0.786016, truth RRMSE 49.3017%
+direct/nested_low_rank_hash_nf step 600: data fidelity 0.875393, R 0, total 0.437696, all-frame data fidelity 0.752708, truth RRMSE 53.4701%
+direct/nested_low_rank_hash_nf step 700: data fidelity 0.763724, R 0, total 0.381862, all-frame data fidelity 0.738, truth RRMSE 55.0676%
+direct/nested_low_rank_hash_nf step 800: data fidelity 0.767119, R 0, total 0.38356, all-frame data fidelity 0.735756, truth RRMSE 55.3806%
+Final all-frame data fidelity 0.735756
+All-frame image RRMSE=55.3806%, SSIM=0.8822007801855265
+Saved results: motion_static/results/inverse_window_check_20261118_D_direct_nested_ws

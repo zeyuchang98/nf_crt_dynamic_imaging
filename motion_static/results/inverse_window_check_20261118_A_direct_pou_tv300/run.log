@@ -1,0 +1,17 @@
+Inverse (direct) | model pou_net | frames 151 | 4 frames per step | regularizer {'type': 'tv', 'weight': 300.0, 'epsilon': 1e-05}
+/Users/zeyuchang/Research/nf_crt_dynamic_imaging/motion_static/inverse/warm_start.py:97: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /Users/runner/work/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:821.)
+  return nodes, float(loss)
+Warm start: 4 groups, LSQR iterations [7, 7, 7, 7]
+direct/pou_net step 1: data fidelity 1.02955, R 0.00677511, total 2.54731, all-frame data fidelity 1.28246, truth RRMSE 44.1338%
+direct/pou_net step 100: data fidelity 1.49148, R 0.00111682, total 1.08079, all-frame data fidelity 1.40109, truth RRMSE 45.1466%
+direct/pou_net step 200: data fidelity 1.42152, R 0.00097875, total 1.00439, all-frame data fidelity 1.3974, truth RRMSE 45.4650%
+direct/pou_net step 300: data fidelity 1.32504, R 0.000958121, total 0.949954, all-frame data fidelity 1.40569, truth RRMSE 45.5882%
+direct/pou_net step 400: data fidelity 1.51936, R 0.000965057, total 1.0492, all-frame data fidelity 1.40091, truth RRMSE 45.5258%
+direct/pou_net step 500: data fidelity 1.27555, R 0.000873337, total 0.899778, all-frame data fidelity 1.39432, truth RRMSE 45.4572%
+direct/pou_net step 600: data fidelity 1.28657, R 0.00083866, total 0.894882, all-frame data fidelity 1.37872, truth RRMSE 45.3430%
+direct/pou_net step 700: data fidelity 1.26141, R 0.000837093, total 0.881832, all-frame data fidelity 1.3279, truth RRMSE 45.1709%
+direct/pou_net step 800: data fidelity 1.31073, R 0.00083558, total 0.906039, all-frame data fidelity 1.30381, truth RRMSE 45.0200%
+Final all-frame data fidelity 1.30381
+All-frame image RRMSE=45.0200%, SSIM=0.9643154741079077
+Saved results: motion_static/results/inverse_window_check_20261118_A_direct_pou_tv300

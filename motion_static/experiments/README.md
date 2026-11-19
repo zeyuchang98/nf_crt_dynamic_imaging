@@ -170,8 +170,10 @@ python -m motion_static.inverse.measurements --file ~/Data/dce-moby/moby_z100.h5
   Adam updates psi alone; null updates both by Adam. `inner_loss.csv` holds every inner step.
 - `inverse.regularizer`: `{"type": "none" | "squared_gradient" | "tv", "weight", "epsilon" (tv)}`.
 - `inverse.monitor_frames`: null (all frames) or a fixed number of frames for the monitor.
-- `inverse.warm_start` (pou_net only): `frames_per_group` (36), `lsqr_atol` (`"proxnf"`,
-  `"discrepancy"` (default, chosen 2026-11-18) or a number), `partition_steps` (10,000); null disables it.
+- `inverse.warm_start`: group LSQR images from `frames_per_group` consecutive frames (36),
+  `lsqr_atol` (`"proxnf"`, `"discrepancy"` (default, chosen 2026-11-18) or a number). POUnet:
+  `partition_steps` (10,000) for psi; null disables it. Other models (required `fit_steps`):
+  the field is fitted to the group images at the group center times, motion branch frozen.
 - `model: "pou_net"` (inverse runs only): `pou` `{partitions, width, depth}` (10, 140, 4) and
   the rates `pou_lr`, `coefficient_lr`.
 
@@ -184,6 +186,11 @@ come from one rendering pass, scored frame block by frame block (`output.predict
 supported). `python -m motion_static.inverse.benchmark --config C --out F.json` times the
 parts of a run. Long runs on a laptop need the lid open or power: macOS sleeps a closed
 laptop on battery, which pauses the run.
+
+Configs in [inverse/](inverse/): `window_*` are the smoke runs on frames 1250-1400;
+`full_*` are the whole-series runs (frames 0-14400, 2026-11-19), whose penalty weights and
+nested inner rates were chosen by the truth-free window checks (PROGRESS.md). Their
+measurements: `--first-frame 0 --cycles 288` in the command above.
 
 ## Usage
 

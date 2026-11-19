@@ -1,0 +1,76 @@
+{
+  "phantom": "dce_moby",
+  "model": "nested_low_rank_hash_nf",
+  "mlp_lr": 0.001,
+  "hash_lr": 0.01,
+  "rank": 3,
+  "head_width": 64,
+  "temporal_width": 32,
+  "encoding": {
+    "levels": 8,
+    "features": 2,
+    "log2_hash_size": 19,
+    "min_resolution": 8,
+    "max_resolution": 512
+  },
+  "motion_encoding": {
+    "levels": 8,
+    "features": 2,
+    "log2_hash_size": 17,
+    "min_resolution": [
+      2,
+      2,
+      384
+    ],
+    "max_resolution": [
+      8,
+      8,
+      1536
+    ]
+  },
+  "temporal_encoding": {
+    "levels": 6,
+    "features": 2,
+    "min_resolution": 3,
+    "max_resolution": 288
+  },
+  "intensity_coordinate_clipping": false,
+  "rank_definition": "Total spatial-temporal rank, including static intensity",
+  "seed": 0,
+  "threads": 8,
+  "device": "mps",
+  "evaluation_split": "midpoints",
+  "monitor_samples": 65536,
+  "monitor_seed": 2026,
+  "checkpoint_steps": [],
+  "output": {
+    "gifs": false,
+    "predictions": false
+  },
+  "data": {
+    "file": "~/Data/dce-moby/moby_z100.h5",
+    "first_frame": 0,
+    "cycles": 288,
+    "frames_per_cycle": 50,
+    "intensity_scale": "global_maximum"
+  },
+  "held_out_split": "none",
+  "steps": 76000,
+  "batch_size": 16384,
+  "log_interval": 2000,
+  "inverse": {
+    "method": "direct",
+    "measurements": "motion_static/results/inverse_data/meas_z100_f0-14400_rnl0.04_seed0.npz",
+    "frames_per_step": 4,
+    "regularizer": {
+      "type": "none",
+      "weight": 0.0
+    },
+    "monitor_frames": 151,
+    "warm_start": {
+      "frames_per_group": 757,
+      "lsqr_atol": "discrepancy",
+      "fit_steps": 5000
+    }
+  }
+}

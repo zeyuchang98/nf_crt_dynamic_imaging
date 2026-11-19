@@ -2906,3 +2906,53 @@ All recommendations accepted:
 run.train (random points, Adam, cosine) with the motion branch's parameters frozen and
 restored afterwards. Test: motion parameters unchanged, intensity changed, a complete run
 records the warm start; `fit_steps` is required (214 tests pass).
+
+### Window checks before the whole-series runs (2026-11-18/19): done, settings chosen
+
+13 runs on the window (frames 1250-1400), budgets matching the whole-series ones per frame,
+all with the warm start (4 groups of 36 frames, LSQR stopped at the noise level after 7
+iterations per group). Records: `results/inverse_window_check_20261118_<name>/` (model.pt not
+committed). Selection used only the final all-frame data fidelity (DF, about 1 at the noise
+level); the truth RRMSE is listed for information and was not used.
+
+| Check | Setting | Final DF | Truth RRMSE |
+|---|---|---|---|
+| A direct POUnet, TV, 800 steps of 4 frames | w = 3 | **1.049** | 45.6% |
+| | w = 10 | 1.121 | 39.8% |
+| | w = 30 | 1.167 | 38.2% |
+| | w = 100 | 1.220 | 40.4% |
+| | w = 300 | 1.304 | 45.0% |
+| B proximal POUnet, squared gradient, 125 x (CG + 100) | w = 200 | 0.635 | 54.2% |
+| | w = 1e3 | 0.815 | 46.5% |
+| | w = 3e3 | 0.971 | 46.1% |
+| | w = 1e4 | **1.132** | 49.5% |
+| | w = 3e4 | 1.257 | 54.9% |
+| C proximal nested, no penalty, 25 x 300 | rates 0.01 / 0.001 | **1.024** | 43.6% |
+| | rates 0.001 / 0.0001 | 1.094 | 40.4% |
+| D direct nested, no penalty, 800 steps of 4 frames | (flow check) | 0.736 | 55.4% |
+
+Chosen by the agreed rules: direct POUnet TV weight 3, proximal POUnet squared-gradient
+weight 1e4 (closest to 1 from above; 3e3 is closer but below 1), proximal nested inner rates
+0.01 / 0.001 (lower DF; the model's default rates).
+
+Observations (not acted on):
+- A: every weight ends above 1, so the rule picks the lowest grid point. DF here is limited
+  by the budget more than by the weight: the POUnet warm start already has DF 1.051, the
+  first Adam steps raise it to about 1.3 and it comes back down only as the cosine rate
+  anneals (w = 3: 1.19 at step 600, 1.049 at step 800).
+- In A, B and C the truth-free choice is not the one with the lowest truth RRMSE (A: w = 30,
+  38.2%; B: w = 3e3, 46.1%; C: 0.001 / 0.0001, 40.4%).
+- D (direct nested, no penalty) fits the noise: DF passes 1 near step 200 (0.973) and ends at
+  0.736, while the truth RRMSE is lowest near step 200 (38.0%) and then rises to 55.4%. The
+  whole-series direct nested run has the same visits per frame, so it may do the same; the
+  plan (no penalty for the nested model) is unchanged and the run goes last.
+- C: DF falls slowly and monotonically with the chosen rates (1.235 after the warm start,
+  1.024 after 25 outer iterations). The nested warm start uses the run's rates, so with
+  0.001 / 0.0001 it starts worse (DF 2.84).
+- Time and memory: A 49 s per run, B about 525 s, C 924 s, D 603 s; peak footprint at most
+  8.4 GiB.
+
+Whole-series configs: `experiments/inverse/full_{direct,proximal}_{pou,nested}.json`
+(settings of the plan above plus the chosen weights and rates; all pass `--dry-run`). Run
+order: direct POUnet, proximal POUnet, proximal nested, direct nested, outputs
+`results/inverse_full_20261119_<name>/`.
