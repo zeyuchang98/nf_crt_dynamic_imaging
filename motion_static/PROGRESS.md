@@ -1,6 +1,6 @@
 # Motion and Intensity Separation: Current Progress
 
-Last updated: 2026-11-18.
+Last updated: 2026-11-19.
 
 ## Current status (2026-11-18; 2D items from 2026-10-30)
 
@@ -70,6 +70,9 @@ at the end of this file.
   files are read directly, frame by frame (box or whole volume), with frame shards over
   processes and frame groups per round; tested locally (gloo) and checked on 2 Vista nodes
   (NCCL, job 1147432, 2026-11-16): about 51 ms per step at batch 65,536.
+  The formal box run (32 nodes, 20.9-21.6 ms per step) runs as a chain of 2 h segments and,
+  beside it, one long job continuing a copy (2026-11-17 to 11-19). A whole-volume run
+  (248 x 248 x 200, no mask, 72.7 M parameters, 64 nodes) was set up on 2026-11-19.
 - **2D inverse problem (started 2026-11-18):** plan agreed with the user (last section):
   caSRT's circular Radon transform on the 248^2 grid, ProxNF's 2D geometry and noise
   (R = 26.3 mm, 5 + 5 views per frame rotating 5 degrees, dr = 0.15 mm, sigma = 4% of
@@ -2601,6 +2604,40 @@ of sbatch's output and stops if it is not a job id (tested with a stand-in sbatc
 prints a banner, and one that fails). The chain checkout keeps `9e06f0d` until the chain
 ends, because each segment checks the code.
 
+
+## Whole-volume full-series run (2026-11-19): input agreed, local checks
+
+Asked for by the user (2026-11-19): the whole 248 x 248 x 200 volume over all 14,401 frames,
+from the source files, with no support mask (the user's choice after the cost and metric
+notes below). Settings agreed with the user in
+[experiments/dce_moby_whole_full_series.json](experiments/dce_moby_whole_full_series.json)
+(everything else as the box's formal input):
+- Resolution kept per mm: the encodings count cells per axis of the data's bounds (37.2 x
+  37.2 x 30 mm, the box 9.6 mm), so the box's cells are scaled by 3.875 in x and y and 3.125
+  in z: intensity 31-496 (z 25-400), motion space 8-31 (z 6-25), time unchanged.
+- Hash tables 2^22 for intensity and motion (user's choice among unchanged 2^19 / 2^21, 2^22,
+  and 2^25 / 2^26, which keeps the box's collision level but needs 1.1 GB of gradient sums per
+  step): 72,746,801 parameters (intensity 33,292,608, motion 39,454,193).
+- Sampling kept at the box's 21 samples per voxel and frame (1.77e11 points): 224,000 steps
+  of 16,777,216 points = 64 processes x 262,144; the same learning rates and cosine schedule
+  (user's choice over scaling them with the batch); checkpoints at the box's fractions,
+  steps 73,500 and 147,000.
+- Estimates (not measured): T = 18 ms + about 1.0-1.2 us per point per process (the three
+  Vista step times: 2,048 points 20.9 ms, 32,768 51.1 ms, 65,536 84-95 ms) plus about
+  10-20 ms of gradient sums for 291 MB, so 0.29-0.35 s per step and 18-22 h of training;
+  evaluation 1-3 h (each 12.3 M-voxel frame is one SSIM block, so each frame is predicted
+  with its 3 + 3 halo frames, 7 times in all). The user chose 64 nodes and 24 h, pausing at
+  21 h if training is not done.
+- Cost and metric notes given before the choice: without the mask about 60% of the samples
+  fall on voxels that are zero in every frame (39.5% positive in the two local phases), so
+  training costs about 2.5 times the masked run; whole-volume PSNR and SSIM are dominated by
+  that background and are not comparable with the box's; the ROI (bounding box of positive
+  voxels) is about the body's bounding box.
+
+Checked locally (ad-hoc, not kept): the input resolves with the two local phases (bounds
+37.2 x 37.2 x 30 mm); the model builds with the count above; two 262,144-point steps on the
+CPU peak at 2.7 GiB of host memory. 214 tests pass (the experiments listing includes the new
+input).
 
 ## 2D CRT inverse problem (2026-11-18): plan agreed, stage 1 (operator, measurements) done
 

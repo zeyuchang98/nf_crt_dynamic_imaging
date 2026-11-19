@@ -246,6 +246,22 @@ user chose 32 nodes and a 5 h limit:
 ```bash
 sbatch -p gh -N 32 -t 05:00:00 motion_static/experiments/vista/train_multinode.sbatch motion_static/experiments/dce_moby_box64_full_series.json NAME
 ```
+
+[dce_moby_whole_full_series.json](dce_moby_whole_full_series.json) is the whole 248 x 248 x
+200 volume over all 14,401 frames (no `box_start` or `box_shape`, no support mask), with the
+settings agreed with the user on 2026-11-19. The encodings' cell counts are per axis of the
+data's bounds (37.2 x 37.2 x 30 mm instead of 9.6 mm), so they are scaled to keep the box's
+cells per mm: intensity 31-496 cells in x and y and 25-400 in z (box 8-128), motion 8-31 and
+6-25 in space (box 2-8) and 384-1536 in time as before; both hash tables 2^22 (72,746,801
+parameters). The sampling keeps the box's 21 samples per voxel and frame: 224,000 steps of
+16,777,216 points, i.e. 64 processes of 262,144; the same learning rates and cosine schedule;
+checkpoints at the box's fractions (steps 73,500 and 147,000). Each process holds its 225-226
+frames, about 11 GB. The user chose 64 nodes and 24 h, pausing at 21 h if training is not
+done (then continued with `--continue`):
+
+```bash
+sbatch -p gh -N 64 -t 24:00:00 motion_static/experiments/vista/train_multinode.sbatch motion_static/experiments/dce_moby_whole_full_series.json NAME --continue --segment-minutes 1260
+```
 3D box data take `"held_out_split": "none"` (embedding) or `"midpoints"` (even window
 frames observed, odd frames only scored, as on the slice); the alternate split and the
 plateau schedule are not implemented for 3D.
