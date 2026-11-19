@@ -2495,7 +2495,7 @@ Queue waits, as the user asked to record (Slurm submit to start):
 | 1147432 (check) | 2, 45 min, gh-dev | 11-16 15:31:08 | 11-16 17:49:04 | 2 h 18 min |
 | 1148080 (formal, cancelled) | 32, 5 h, gh | 11-17 00:12:12 | 11-17 21:57:05 | 21 h 45 min |
 | 1149828 (formal chain, segment 1) | 32, 2 h, gh | 11-17 15:25:37 | 11-18 11:36:46 | 20 h 11 min |
-| 1149832 (segment 2) | 32, 2 h, gh, afterok on 1149828 | 11-17 15:26:00, eligible 11-18 13:17:38 | pending | |
+| 1149832 (segment 2) | 32, 2 h, gh, afterok on 1149828 | 11-17 15:26:00, eligible 11-18 13:17:38 | 11-19 08:27:46 | 19 h 10 min after eligible |
 | 1149833-1149834 (segments 3-4) | 32, 2 h, gh, each afterok on the one before | 11-17 15:26:01 | pending | |
 | 1150575 (segment 5) | 32, 2 h, gh, afterok on 1149834 | 11-17 22:20:10 | pending | |
 | 1152425 (formal, one long continuation, replaced) | 32, 7 h, gh | 11-18 15:08:38 | never | cancelled after 2 min |
@@ -2554,6 +2554,13 @@ run without breaks, bit for bit; no setting records the folder name.
 The user then asked for 10 h, for margin: `scontrol update` did raise 1152425's limit, but
 its `--segment-minutes 390` could not change, so it was replaced by job 1152427 (same
 command with `-t 10:00:00 --segment-minutes 570`) and cancelled before it started.
+
+Segment 2 (1149832) is the first continuation on Vista: it started 2026-11-19 08:27:46
+and, by 09:57, had continued from step 273,000 to 520,000 (`run.log` marks it
+continuing; `loss.csv` goes on at 273,500 with no repeated step and the same level of
+loss; 21.1 ms per step, the first 500 steps after the restart 14.4 s). The bit-for-bit
+check against a run without breaks exists only locally (no uninterrupted 32-node run got
+past step 66,000).
 
 ## Resume over segments (2026-11-17): implemented, tested locally
 
