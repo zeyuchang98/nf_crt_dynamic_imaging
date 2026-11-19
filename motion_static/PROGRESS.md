@@ -2499,7 +2499,8 @@ Queue waits, as the user asked to record (Slurm submit to start):
 | 1148080 (formal, cancelled) | 32, 5 h, gh | 11-17 00:12:12 | 11-17 21:57:05 | 21 h 45 min |
 | 1149828 (formal chain, segment 1) | 32, 2 h, gh | 11-17 15:25:37 | 11-18 11:36:46 | 20 h 11 min |
 | 1149832 (segment 2) | 32, 2 h, gh, afterok on 1149828 | 11-17 15:26:00, eligible 11-18 13:17:38 | 11-19 08:27:46 | 19 h 10 min after eligible |
-| 1149833-1149834 (segments 3-4) | 32, 2 h, gh, each afterok on the one before | 11-17 15:26:01 | pending | |
+| 1149833 (segment 3) | 32, 2 h, gh, afterok on 1149832 | 11-17 15:26:01, eligible 11-19 10:08:54 | pending | |
+| 1149834 (segment 4) | 32, 2 h, gh, afterok on 1149833 | 11-17 15:26:01 | pending | |
 | 1150575 (segment 5) | 32, 2 h, gh, afterok on 1149834 | 11-17 22:20:10 | pending | |
 | 1152425 (formal, one long continuation, replaced) | 32, 7 h, gh | 11-18 15:08:38 | never | cancelled after 2 min |
 | 1152427 (formal, one long continuation) | 32, 10 h, gh | 11-18 15:10:41 | pending | |
@@ -2563,7 +2564,8 @@ and, by 09:57, had continued from step 273,000 to 520,000 (`run.log` marks it
 continuing; `loss.csv` goes on at 273,500 with no repeated step and the same level of
 loss; 21.1 ms per step, the first 500 steps after the restart 14.4 s). The bit-for-bit
 check against a run without breaks exists only locally (no uninterrupted 32-node run got
-past step 66,000).
+past step 66,000). Segment 2 paused as planned after step 552,500 (1 h 41 min, ended
+10:08:54, exit 0); segment 3 then became eligible.
 
 ## Resume over segments (2026-11-17): implemented, tested locally
 
@@ -2638,6 +2640,13 @@ Checked locally (ad-hoc, not kept): the input resolves with the two local phases
 37.2 x 37.2 x 30 mm); the model builds with the count above; two 262,144-point steps on the
 CPU peak at 2.7 GiB of host memory. 214 tests pass (the experiments listing includes the new
 input).
+
+Submitted 2026-11-19 10:42:48 from code `6b8ecbb` in a third Vista checkout
+(`$WORK/nf_crt_dynamic_imaging_whole`, a detached worktree; the box chain keeps its own):
+job 1154656, `sbatch -p gh -N 64 -t 24:00:00 train_multinode.sbatch
+dce_moby_whole_full_series.json dce_moby_whole_full_20261119_224k_b16m_r3_s0_64node
+--continue --segment-minutes 1260`, pending (Priority 1516). Vista allows 96 nodes per
+user, so it cannot run while two 32-node box jobs run.
 
 ## 2D CRT inverse problem (2026-11-18): plan agreed, stage 1 (operator, measurements) done
 
