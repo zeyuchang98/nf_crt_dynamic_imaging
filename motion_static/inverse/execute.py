@@ -13,7 +13,8 @@ import traceback
 import numpy as np
 import torch
 
-from ..evaluation.evaluate import evaluate_image_only
+from ..evaluation.evaluate import _image_report, bounding_roi, image_splits
+from ..evaluation.metrics import evaluate_sequence_in_blocks, save_metrics
 from ..phantoms import moby
 from ..run_records import Tee, initialize_run_metadata, snapshot_source, update_summary, utc_now, write_json
 from .crt_operator import file_sha256
@@ -43,6 +44,8 @@ def validate_inverse(config):
         raise ValueError("inverse runs use the cosine schedule (the plateau schedule would select on the truth)")
     if config.get("temporal_weight", 0.) or config.get("oracle_branch") is not None:
         raise ValueError("inverse runs do not support temporal_weight or oracle_branch")
+    if config.get("output", {}).get("predictions", False):
+        raise ValueError("output.predictions is not supported for inverse runs (scored frame block by block)")
     if settings.get("method") not in METHODS:
         raise ValueError(f"inverse.method must be one of {METHODS}")
     path = Path(settings.get("measurements", "")).expanduser()
@@ -111,6 +114,50 @@ def validate_inverse(config):
         raise ValueError("coefficient_cg is implemented for pou_net with method proximal only")
 
 
+@torch.no_grad()
+def score_all_frames(model, problem, chunk=8):
+    """Image metrics of every frame and the all-frame data fidelity from one rendering pass.
+
+    The image report is the one streamed_image_report gives (metrics.evaluate_sequence_in_blocks
+    with the same ROI and label, equal to the whole-array evaluation up to rounding); the
+    blocks' renderings also give mean(((P f - d) / sigma)^2), each frame counted once
+    although SSIM halos render a few frames twice.
+    """
+    was_training = model.training
+    model.eval()
+    window = problem.window_entry()
+    (split, label), = image_splits(window)
+    entry = window[split]
+    counted = np.zeros(len(problem), dtype=bool)
+    misfit = [0.]
+
+    def predict_frames(frames):
+        part = np.arange(frames.start, frames.stop)
+        pieces = []
+        for start in range(0, len(part), chunk):
+            positions = part[start:start + chunk]
+            images = problem.render(model, positions)
+            new = ~counted[positions]
+            if new.any():
+                index = positions[new]
+                residual = (problem.predicted_data(images[torch.as_tensor(new, device=problem.device)], index)
+                            - problem.data[torch.as_tensor(index, device=problem.device)])
+                misfit[0] += (residual / problem.sigma).cpu().double().square().sum().item()
+                counted[index] = True
+            pieces.append(images.cpu().numpy())
+        return np.moveaxis(np.concatenate(pieces).reshape(len(part), problem.size, problem.size), 0, -1)
+
+    try:
+        image = {label: evaluate_sequence_in_blocks(entry["truth"], predict_frames, data_range=1, times=entry["t"],
+                                                    roi=bounding_roi([entry["truth"]]))}
+    finally:
+        model.train(was_training)
+    if not counted.all():
+        raise RuntimeError("Some frames were not scored")
+    data_fidelity = misfit[0] / (len(problem) * problem.operator.rows_per_frame)
+    return image, dict(data_fidelity=data_fidelity, truth_rrmse=image[label]["rrmse"])
+
+
 def execute_inverse(config, out):
     """Reconstruct from the measurement file and save a run record like run.execute."""
     from ..run import build_model, cpu_state, torch_device
@@ -154,10 +201,18 @@ def execute_inverse(config, out):
             _, seconds = (train_proximal if proximal else train_direct)(model, problem, config, out)
             torch.save(dict(config=config, step=config["steps"], state_dict=cpu_state(model)), out / "model.pt")
 
+            # Every frame scored frame block by frame block on the truth already loaded, with the
+            # final data fidelity from the same rendering pass.
             model.eval()
-            settings["final_all_frames"] = problem.evaluate(model, np.arange(len(problem)))
+            from .proximal import release_device_memory
+            release_device_memory(device)
+            image, settings["final_all_frames"] = score_all_frames(model, problem)
             print(f"Final all-frame data fidelity {settings['final_all_frames']['data_fidelity']:.6g}", flush=True)
-            evaluate_image_only(model, moby.make_all_frames(config["data"]), config, out, seconds)
+            window = problem.window_entry()
+            report = _image_report(model, config, seconds, image, image_splits(window))
+            save_metrics(out / "metrics.json", report)
+            print(f"All-frame image RRMSE={report['image']['all_window_frames']['rrmse']:.4%}, "
+                  f"SSIM={report['image']['all_window_frames']['ssim']}", flush=True)
             config.update(status="complete", finished_at=utc_now())
             write_json(out / "config.json", config)
             update_summary(out.parent)

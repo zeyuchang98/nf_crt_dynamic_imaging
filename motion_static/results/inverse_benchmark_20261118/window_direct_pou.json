@@ -1,0 +1,16 @@
+{
+  "config": "motion_static/experiments/inverse/window_direct_pou.json",
+  "model": "pou_net",
+  "device": "mps",
+  "frames": 151,
+  "parameters": 695690,
+  "render_ms_per_frame": 0.20579691044986248,
+  "direct_frames_per_step": 4,
+  "direct_step_ms": 31.981959007680416,
+  "gradient_step_ms_per_frame": 1.5505931266145596,
+  "gradient_step_memory_gib": 3.0260772705078125,
+  "inner_batch_points": 16384,
+  "inner_step_ms": 86.97304129600525,
+  "cg_ms": 4.630499519407749,
+  "mps_driver_memory_gib": 3.0329132080078125
+}

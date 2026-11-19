@@ -1,0 +1,15 @@
+{
+  "config": "/private/tmp/claude-501/-Users-zeyuchang-Research-nf-crt-dynamic-imaging/68770966-f1b6-4d34-934a-f66146422940/scratchpad/crt_plan/bench_cpu_nested.json",
+  "model": "nested_low_rank_hash_nf",
+  "device": "cpu",
+  "frames": 151,
+  "parameters": 776062,
+  "render_ms_per_frame": 123.00699489424005,
+  "direct_frames_per_step": 4,
+  "direct_step_ms": 1288.1101248785853,
+  "gradient_step_ms_per_frame": 155.13126352271496,
+  "gradient_step_memory_gib": NaN,
+  "inner_batch_points": 16384,
+  "inner_step_ms": 72.95074965804815,
+  "mps_driver_memory_gib": NaN
+}

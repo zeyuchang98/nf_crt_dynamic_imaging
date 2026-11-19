@@ -27,32 +27,51 @@ import torch
 from .monitor import ProximalMonitor
 
 
+def release_device_memory(device):
+    """Return the caching allocator's free blocks to the system (full-frame arrays are large)."""
+    if device.type == "mps":
+        torch.mps.empty_cache()
+    elif device.type == "cuda":
+        torch.cuda.empty_cache()
+
+
 @torch.no_grad()
 def gradient_step(model, problem, chunk=8):
-    """Targets z (frames, pixels) on the device and the step record (tau, data fidelity before)."""
+    """Targets z (frames, pixels) on the device and the step record (tau, data fidelity before).
+
+    Two passes over the frames with one stored array: the first renders f_k once, stores it
+    and accumulates the sums for tau; the second recomputes g_k from the stored f_k with the
+    operators only (no rendering) and overwrites f_k by z_k = f_k - tau g_k.
+    """
     was_training = model.training
     model.eval()
     frames, pixels = len(problem), problem.size ** 2
     images = torch.empty((frames, pixels), device=problem.device)
-    gradient = torch.empty_like(images)
     misfit = squared_gradient = squared_projection = 0.
+
+    def gradient(current, part, index):
+        residual = problem.predicted_data(current, part) - problem.data[index]
+        return residual, problem.operator.adjoint(residual, part) / problem.sigma ** 2
+
     try:
         for start in range(0, frames, chunk):
             part = np.arange(start, min(start + chunk, frames))
             index = torch.as_tensor(part, device=problem.device)
             current = problem.render(model, part)
-            residual = problem.predicted_data(current, part) - problem.data[index]
-            step = problem.operator.adjoint(residual, part) / problem.sigma ** 2
+            residual, step = gradient(current, part, index)
             projected = problem.predicted_data(step, part)
-            images[index], gradient[index] = current, step
+            images[index] = current
             # MPS has no float64: accumulate on the CPU.
             misfit += (residual / problem.sigma).cpu().double().square().sum().item()
             squared_gradient += step.cpu().double().square().sum().item()
             squared_projection += projected.cpu().double().square().sum().item()
+        tau = problem.sigma ** 2 * squared_gradient / squared_projection
+        for start in range(0, frames, chunk):
+            part = np.arange(start, min(start + chunk, frames))
+            index = torch.as_tensor(part, device=problem.device)
+            images[index] -= tau * gradient(images[index], part, index)[1]
     finally:
         model.train(was_training)
-    tau = problem.sigma ** 2 * squared_gradient / squared_projection
-    images -= tau * gradient
     return images, dict(tau=tau, gradient_norm=float(np.sqrt(squared_gradient)),
                         data_fidelity_before=misfit / (frames * problem.operator.rows_per_frame))
 
@@ -142,7 +161,11 @@ def pou_coefficient_cg(model, problem, targets, mu, settings):
     size, partitions = problem.size, model.coefficients.shape[1]
     psi = model.partition(problem.times)  # (frames, partitions)
     gram = psi.T @ psi
-    rhs = (targets.T @ psi).reshape(size, size, partitions)
+    # Z^T Psi summed over frame chunks, without a transposed copy of all targets.
+    rhs = torch.zeros(size * size, partitions, device=targets.device)
+    for start in range(0, len(psi), 256):
+        rhs += targets[start:start + 256].T @ psi[start:start + 256]
+    rhs = rhs.reshape(size, size, partitions)
 
     def apply(coefficients):
         return (coefficients + 2 * mu * laplacian(coefficients)) @ gram
@@ -189,6 +212,7 @@ def train_proximal(model, problem, config, out=None):
         inner = inner_fit(model, problem, targets, optimizer, settings["inner_steps"], config["batch_size"],
                           regularizer, coefficient)
         del targets
+        release_device_memory(problem.device)
         record.update(inner_loss_first=inner[0][1], inner_loss_last=inner[-1][1])
         history.append(record)
         text = ""

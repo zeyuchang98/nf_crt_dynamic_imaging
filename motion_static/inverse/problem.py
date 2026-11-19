@@ -50,6 +50,7 @@ class InverseProblem:
         if not np.array_equal(entry["t"], arrays["times"]):
             raise ValueError("Measurement times differ from the window times")
         self.size = len(entry["x"])
+        self.x, self.y, self.times_s = entry["x"], entry["y"], entry["t"]  # float64 axes for scoring
         # Pixel (iy, ix) at flat position iy * size + ix, the operator's column order.
         y, x = np.meshgrid(entry["y"], entry["x"], indexing="ij")
         self.xy = torch.as_tensor(np.stack([x.reshape(-1), y.reshape(-1)], axis=1), dtype=torch.float32,
@@ -59,6 +60,11 @@ class InverseProblem:
 
     def __len__(self):
         return len(self.frames)
+
+    def window_entry(self):
+        """The window as moby.make_all_frames gives it, (y, x, t) truth as a view of self.truth."""
+        truth = np.moveaxis(self.truth.reshape(len(self.frames), self.size, self.size), 0, -1)
+        return {"training": dict(x=self.x, y=self.y, t=self.times_s, truth=truth)}
 
     def coordinates(self, frames):
         """(K * size**2, 3) query points of whole frames, frame by frame, x-fastest."""

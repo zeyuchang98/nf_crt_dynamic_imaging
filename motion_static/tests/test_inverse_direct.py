@@ -122,6 +122,23 @@ class _Truth(torch.nn.Module):
         return torch.as_tensor(self.problem.truth[index], dtype=torch.float32)
 
 
+def assert_float32_close(test, streamed, whole, path="report"):
+    """Same keys (the streamed settings note aside) and values to float32 rounding."""
+    if isinstance(whole, dict):
+        keys = set(streamed) - ({"computation"} if path.endswith("settings") else set())
+        test.assertEqual(keys, set(whole), path)
+        for key in whole:
+            assert_float32_close(test, streamed[key], whole[key], f"{path}.{key}")
+    elif isinstance(whole, list):
+        test.assertEqual(len(streamed), len(whole), path)
+        for k, (a, b) in enumerate(zip(streamed, whole)):
+            assert_float32_close(test, a, b, f"{path}[{k}]")
+    elif isinstance(whole, float):
+        test.assertTrue(np.isclose(streamed, whole, rtol=1e-6, atol=1e-9), f"{path}: {streamed} != {whole}")
+    else:
+        test.assertEqual(streamed, whole, path)
+
+
 class _Sized:
     """Gives a namespace a length (the frame count), like InverseProblem."""
 
@@ -219,6 +236,29 @@ class RunTests(InverseTestCase):
         self.assertGreater(group["iterations"], 1)
         _, _, record = warm_start.grouped_lsqr(problem, 36, atol=2.)  # atol > 1 stops at once
         self.assertEqual(record["groups"][0]["iterations"], 1)
+
+    def test_block_scoring_equals_the_whole_array_evaluation(self):
+        # Inverse runs score frame block by frame block on the loaded truth; the result must
+        # equal image_only_report (whole arrays, moby.make_all_frames) up to rounding.
+        from motion_static.evaluation.evaluate import image_only_report
+        from motion_static.phantoms import moby
+        from motion_static.run import build_model
+
+        out, saved = self.run_config(self.config(NESTED), "block_scoring")
+        checkpoint = torch.load(out / "model.pt", weights_only=False)
+        model = build_model(checkpoint["config"])
+        model.load_state_dict(checkpoint["state_dict"])
+        model.eval()
+        whole, _ = image_only_report(model, moby.make_all_frames(saved["data"]), saved,
+                                     json.loads((out / "metrics.json").read_text())["training_seconds"])
+        # The two paths render the same points in different batches (float32), so values agree
+        # to float32 rounding rather than bit for bit.
+        assert_float32_close(self, json.loads((out / "metrics.json").read_text())["image"],
+                             json.loads(json.dumps(whole["image"])))
+        self.assertAlmostEqual(saved["inverse"]["final_all_frames"]["truth_rrmse"],
+                               whole["image"]["all_window_frames"]["rrmse"], places=6)
+        with self.assertRaises(SystemExit):  # predictions would need the whole prediction array
+            self.resolved(dict(self.config(NESTED), output=dict(gifs=False, predictions=True)))
 
     def test_training_never_reads_the_truth(self):
         histories = []

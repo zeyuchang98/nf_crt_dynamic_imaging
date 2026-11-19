@@ -1,0 +1,16 @@
+{
+  "config": "motion_static/experiments/inverse/window_proximal_pou.json",
+  "model": "pou_net",
+  "device": "mps",
+  "frames": 151,
+  "parameters": 695690,
+  "render_ms_per_frame": 0.3856249968521297,
+  "direct_frames_per_step": 4,
+  "direct_step_ms": 31.75804065540433,
+  "gradient_step_ms_per_frame": 1.0179815126200582,
+  "gradient_step_memory_gib": 3.0260772705078125,
+  "inner_batch_points": 10000,
+  "inner_step_ms": 69.69854142516851,
+  "cg_ms": 7.312125060707331,
+  "mps_driver_memory_gib": 3.0329132080078125
+}

@@ -179,7 +179,11 @@ Requires `held_out_split: "none"` (protocol E1: every frame has data and is scor
 cosine schedule. `loss.csv`/`loss.png` record the batch objective, the normalized data
 fidelity on the monitor frames (about 1 at the noise level) and the truth RRMSE
 (monitoring only). The final all-frame data fidelity is in `config.json`
-(`inverse.final_all_frames`), the image metrics in `metrics.json` as for the embedding.
+(`inverse.final_all_frames`), the image metrics in `metrics.json` as for the embedding; both
+come from one rendering pass, scored frame block by frame block (`output.predictions` is not
+supported). `python -m motion_static.inverse.benchmark --config C --out F.json` times the
+parts of a run. Long runs on a laptop need the lid open or power: macOS sleeps a closed
+laptop on battery, which pauses the run.
 
 ## Usage
 

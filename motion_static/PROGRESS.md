@@ -79,8 +79,10 @@ at the end of this file.
   on MPS). Warm-start LSQR stops at the noise level (user's choice). Stage 3 done:
   proximal splitting for any model, ProxNF's CG coefficient update for POUnet (212 tests).
   Stage 4 done: smoke runs of all four combinations on the window run and record completely
-  (untuned; not a method comparison). Next: throughput and memory here, then the longest
-  frame range.
+  (untuned; not a method comparison). Stage 5 done: on this machine (M4, 24 GB, MPS) all four
+  combinations run on the whole series, 14,401 frames (peak 9.5-13.2 GiB after three memory
+  fixes), so the data, not memory, set the longest range. Open: budgets, penalty weights and
+  the models' time resolution for that run (user).
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -2804,3 +2806,70 @@ Cost on this machine (MPS, including one monitor pass of all 151 frames per log 
 nested about 0.65 s per step (4 frames, 246,016 points), direct POUnet 30 ms, proximal nested
 0.24 s per inner step, proximal POUnet 40 ms. Peak resident memory 1.9 GB (nested) and 3.7 GB
 (POUnet, which also holds the LSQR warm start). Stage 5 measures these without the monitor.
+
+### Stage 5 (2026-11-18): throughput, memory and the longest frame range on this machine
+
+"Longest" means the number of frames (the user's words), not a wall-time budget. Machine:
+Apple M4, 24 GB unified memory, MPS. Memory is the lifetime peak physical footprint (it
+includes MPS buffers; RSS does not).
+
+Component timings (`inverse/benchmark.py`, window, MPS, medians; JSON files in
+`results/inverse_benchmark_20261118/`):
+
+| | render, ms per frame | direct step (4 frames), ms | gradient step, ms per frame | inner step, ms | CG, ms |
+|---|---:|---:|---:|---:|---:|
+| nested (776,062 parameters) | 71 | 452 | 72 | 31 (16,384 points) | - |
+| POUnet (695,690) | 0.2-0.4 | 32 | 1.0-1.6 | 70-87 (with R) | 5-7 |
+
+The nested model renders about 0.87 M points per second on MPS; on the CPU (10 threads) it is
+slower (123 ms per frame, 1.29 s per direct step), so MPS stays the device.
+
+Tiny pipeline runs (direct 10 steps; proximal 1 outer x 10 inner; 32 monitor frames), from
+frame 0, with measurement files of 1,201, 3,601 and 14,401 frames (sigma 0.0439, 0.0508,
+0.0508; the whole series is `meas_z100_f0-14400_rnl0.04_seed0.npz`):
+
+| Peak footprint (GiB) | 1,201 | 3,601 | 14,401 (whole series) |
+|---|---:|---:|---:|
+| direct, nested | 8.3 | 9.9 | 12.2 |
+| proximal, nested | 9.3 | 10.8 | 13.2 |
+| direct, POUnet | 5.0 | 5.6 | 9.5 |
+| proximal, POUnet | 6.0 | 8.3 | 10.6 |
+
+Three memory problems were found and fixed on the way (the tables give the fixed values; the
+1,201/3,601-frame nested runs and the whole-series direct runs predate fixes 2-3, which only
+lower their peaks):
+1. POUnet warm start: scipy's lsqr wraps each group's operator in LinearOperators that form
+   reference cycles, so every group's operator copies (about 0.5 GB) stayed alive until the
+   cyclic collector ran; peaks grew with the number of groups (21.5 / 37.1 GB at 1,201 / 3,601
+   frames, swapping). `grouped_lsqr` now collects after each group and uses the full operator
+   when a group saw every view; the results are unchanged (same metrics as before the fix).
+2. Scoring: `predict_entry` builds the float64 coordinates of all frames at once (about 21 GB
+   for the whole series). Inverse runs now score frame block by frame block
+   (`metrics.evaluate_sequence_in_blocks`, the 3D path, equal to the whole-array evaluation up
+   to rounding) on the truth already loaded, and the final data fidelity comes from the same
+   rendering pass (one rendering instead of two). `output.predictions` is refused for inverse
+   runs. Test: the run's metrics equal `image_only_report`'s to float32 rounding (the paths
+   render in different batches).
+3. Proximal splitting: the forward step stored both f and g (2 x 3.5 GB for the whole series)
+   and MPS kept the freed blocks cached, so the whole-series nested run passed the 21 GiB
+   guard during scoring and was stopped. The step now stores f only and recomputes g from it
+   with the operators (no second rendering), the MPS cache is emptied after each outer
+   iteration and before scoring, and POUnet's CG right-hand side is summed over frame chunks.
+   Whole-series proximal POUnet went from 19.6 to 10.6 GiB with identical results.
+
+Conclusion: every combination runs on all 14,401 frames (-36 to 684 s) with at least 10 GiB
+to spare, so the longest local range is the whole series.
+
+Compute time on the whole series (MPS; the wall time of the whole-series proximal nested
+check, 4.0 h, is not compute: the laptop slept with its lid closed on battery from 17:18 to
+about 20:47, so long runs need the lid open or power): one nested rendering of all frames
+takes about 17 min and scoring about 20 min; the POUnet warm start about 4 min. With the
+window smoke budgets scaled to the same visits per frame (about 8 per frame): direct nested
+about 28,600 steps, 3.6 h; direct POUnet about 15 min; proximal POUnet about 30 s per outer
+iteration; proximal nested about 17 min per outer iteration (ProxNF's 125 outer iterations
+would be about 35 h). These are planning estimates, not decided budgets.
+
+Before the whole-series run, to decide with the user: which combinations, budgets (steps,
+outer and inner iterations), penalty weights, and the models' time resolution (the window
+settings resolve 151 frames: nested temporal grid 3-48 and motion time 4-16 cells; POUnet
+10 partitions over 7.2 min cannot follow breathing at about 1 s per cycle).

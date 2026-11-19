@@ -17,6 +17,8 @@
    group per partition and copies the first group into partition 0; with fewer groups than
    partitions, interpolation is the direct generalization.
 """
+import gc
+
 import numpy as np
 import scipy.sparse.linalg as ssla
 import torch
@@ -58,7 +60,14 @@ def grouped_lsqr(problem, frames_per_group, atol="proxnf", cover=2):
             options = dict(atol=0., btol=noise_norm / np.linalg.norm(b))
         else:
             options = dict(atol=2e2 * problem.sigma / cover if atol == "proxnf" else float(atol))
-        solution, stop, iterations, residual = ssla.lsqr(problem.matrix[rows], b, **options)[:4]
+        # A group that saw every view uses the full operator itself, not a 0.3 GB row copy.
+        matrix = problem.matrix if len(rows) == problem.matrix.shape[0] else problem.matrix[rows]
+        solution, stop, iterations, residual = ssla.lsqr(matrix, b, **options)[:4]
+        del matrix
+        # lsqr's LinearOperator wrappers form reference cycles that keep each group's operator
+        # copies (about 0.5 GB) alive until the cyclic collector runs; large NumPy allocations
+        # do not trigger it, so without this the memory grows with the number of groups.
+        gc.collect()
         images.append(solution)
         centers.append(times[positions].mean())
         records.append(dict(frames=[int(positions[0]), int(positions[-1])], views=int(len(views)),

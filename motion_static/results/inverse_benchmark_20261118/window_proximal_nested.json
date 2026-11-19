@@ -1,0 +1,15 @@
+{
+  "config": "motion_static/experiments/inverse/window_proximal_nested.json",
+  "model": "nested_low_rank_hash_nf",
+  "device": "mps",
+  "frames": 151,
+  "parameters": 776062,
+  "render_ms_per_frame": 70.83010423230007,
+  "direct_frames_per_step": 4,
+  "direct_step_ms": 452.83900015056133,
+  "gradient_step_ms_per_frame": 72.43620185027306,
+  "gradient_step_memory_gib": 6.031005859375,
+  "inner_batch_points": 16384,
+  "inner_step_ms": 31.778582837432623,
+  "mps_driver_memory_gib": 6.034912109375
+}
