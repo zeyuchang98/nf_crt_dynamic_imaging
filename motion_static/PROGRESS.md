@@ -3010,13 +3010,13 @@ Whole-series configs: `experiments/inverse/full_{direct,proximal}_{pou,nested}.j
 order: direct POUnet, proximal POUnet, proximal nested, direct nested, outputs
 `results/inverse_full_20261119_<name>/`.
 
-### Whole-series runs (2026-11-19/20): three finished, direct nested stopped, direct POUnet diagnosed
+### Whole-series runs (2026-11-19/20): three finished, direct nested stopped, direct POUnet diagnosed and dropped
 
 Runs (`results/inverse_full_20261119_<name>/`, model.pt not committed), all-frame scores:
 
 | Run | RRMSE | PSNR | SSIM | Activity-curve RRMSE | Final DF | Training |
 |---|---|---|---|---|---|---|
-| Direct POUnet (TV 3) | 39.08% | 43.34 dB | 0.982 | 9.9% | 1.561 | 0.54 h |
+| Direct POUnet (TV 3), dropped from the comparison | 39.08% | 43.34 dB | 0.982 | 9.9% | 1.561 | 0.54 h |
 | Proximal POUnet (squared gradient 1e4) | 47.50% | 41.65 dB | 0.976 | 2.7% | 1.229 | 1.32 h |
 | Proximal nested | **36.56%** | **43.92 dB** | **0.985** | **2.4%** | 1.126 | 7.79 h |
 
@@ -3031,7 +3031,8 @@ Runs (`results/inverse_full_20261119_<name>/`, model.pt not committed), all-fram
   exclude them.
 - Figures: `results/inverse_full_20261119_comparison_{frames,curves}.png`
   (`evaluation/inverse_figures.py`; per-frame RRMSE of its renders equals the saved scores to
-  1.2e-4).
+  1e-5). Since 2026-11-20 they show the two proximal runs only; the version with direct POUnet
+  is in commit 56fd43c.
 - Observations: proximal nested is still improving at its last iteration (budget-limited).
   Proximal POUnet ends worse than its warm start (monitor RRMSE 40.4% -> 47.1%, DF 1.17 ->
   1.21) and blurred. Nested against direct POUnet: lower on 68% of frames, mean gap 2.2 points,
@@ -3076,7 +3077,9 @@ and outputs):
    those penalties work against (not tested).
 
 Conclusion: the whole-series direct POUnet (39.1%) is a near-static image, not a valid
-baseline as run. Open, for the user: what to do with direct POUnet (drop it, report it as is,
-or use the original direct method); whether POUnet's per-revolution time unit should be kept
-for a 200-revolution series (it also affects proximal POUnet); a direct nested rerun (with
-checkpoints, a code change not yet made); choosing weights or stopping by held-out data.
+baseline as run. Decision (user, 2026-11-20): direct POUnet is dropped from the comparison;
+its config, run record and diagnosis stay as records, and it is not tuned further. Open, for
+the user: whether POUnet's per-revolution time unit should be kept for a 200-revolution series
+(it also affects proximal POUnet); a direct nested rerun (with checkpoints, a code change not
+yet made); choosing weights or stopping by held-out data. No run is started until the user
+says so.

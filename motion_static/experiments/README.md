@@ -190,7 +190,8 @@ laptop on battery, which pauses the run.
 Configs in [inverse/](inverse/): `window_*` are the smoke runs on frames 1250-1400;
 `full_*` are the whole-series runs (frames 0-14400, 2026-11-19), whose penalty weights and
 nested inner rates were chosen by the truth-free window checks (PROGRESS.md). Their
-measurements: `--first-frame 0 --cycles 288` in the command above.
+measurements: `--first-frame 0 --cycles 288` in the command above. `full_direct_pou` collapsed
+to a near-static image and is not part of the comparison (kept as the record of that run).
 
 ## Usage
 
