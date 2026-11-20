@@ -28,8 +28,9 @@ at the end of this file.
   (midpoints, alternate_validation_test, none), plateau schedule, SS(r) baseline,
   embedding figures, branch GIFs (with frame subsets), whole-series data checks,
   time-chunked SSIM, Vista job scripts, lesion activity curves, streamed source data over several processes
-  (2026-11-16), optional support mask, resume over segments (2026-11-17). 181 tests pass
-  (2026-11-17) in this machine's `nf-crt` conda
+  (2026-11-16), optional support mask, resume over segments (2026-11-17), the 2D inverse
+  problem (2026-11-18), per-frame score plots (2026-11-20). 215 tests pass
+  (2026-11-20) in this machine's `nf-crt` conda
   environment (Python 3.11, torch 2.14.0, numpy 1.26.4, h5py 3.16.0); 136 passed earlier
   in the second machine's `.venv-hash-sweep` and Vista's `$WORK/envs/nf-crt`.
 - **Local only on the second machine (not on GitHub):** `model.pt` of the DCE-MOBY runs
@@ -72,7 +73,8 @@ at the end of this file.
   (NCCL, job 1147432, 2026-11-16): about 51 ms per step at batch 65,536.
   The formal box run (32 nodes, 21.5 ms per step) finished on 2026-11-20 as one long job
   continuing a copy of the chain's first 2 h segment: all-frame RRMSE 2.47%, PSNR 62.99
-  dB, SSIM 0.99974; frame 0 fits worst (80%). A whole-volume run
+  dB, SSIM 0.99974; frame 0 fits worst (80%); a per-frame score plot and a truth | NF GIF
+  of one frame per breath were made locally. A whole-volume run
   (248 x 248 x 200, no mask, 72.7 M parameters, 64 nodes) was set up on 2026-11-19.
 - **2D inverse problem (started 2026-11-18):** plan agreed with the user (last section):
   caSRT's circular Radon transform on the 248^2 grid, ProxNF's 2D geometry and noise
@@ -2578,11 +2580,31 @@ Records (no `model.pt`, checkpoints or `scan.npz`; those stay on Vista):
 [results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_long/](results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_long/metrics.json).
 Scores, protocol A (all 14,401 frames fitted and scored, ROI box rows 0-57):
 - Image: RRMSE 2.47%, PSNR 62.99 dB, SSIM 0.99974; the 10k-step trial on the same box and
-  frames gave 11.78%. Lesion activity curve (fixed spatial mask): RRMSE 0.45%.
+  frames gave 11.78%. The ROI-mean curve (`activity_curve` in `metrics.json`, the mean
+  over the rectangular ROI, not the lesion activity curve of METRICS.md Section 3.6, which
+  exists for slice files only): RRMSE 0.45%.
 - Per frame: median RRMSE 2.11% (best 1.18%). The first frames fit worst, as in the 2D
   formal run (frame 0 54%): frame 0 (t = -36 s) 80.4% with SSIM 0.862, then 73.5%, 47.9%,
   ... down to about 5% by frame 19. 164 frames are above 5%: 19 of frames 0-19 and isolated
   frames later in the series. The largest absolute error, 0.535, is in frame 0.
+
+Visuals (2026-11-20, asked by the user), made on this machine from code `8ab1744`:
+- [visuals/series_scores.png](results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_long/visuals/series_scores.png):
+  per-frame RRMSE and 1 - SSIM (log scales), the ROI-mean curve of truth and NF and its
+  error over the 720 s, from `metrics.json` alone ([evaluation/series_score_plots.py](evaluation/series_score_plots.py)).
+  Apart from the first frames, both scores spike briefly over and over through the series.
+- [visuals/one_per_breath_volume.gif](results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_long/visuals/one_per_breath_volume.gif)
+  and its still: truth | NF maximum-intensity renders of frames 0:14401:50 (289 frames,
+  one every 50 frames; the breathing repeats only approximately every 50 frames), display
+  0-0.05 raw p0, 13 min 21 s on the CPU (8 threads). The truth is read frame by frame from
+  the extracted full-series box `moby_box64_full.h5`, copied from Vista to `~/Data/dce-moby/`
+  (sha256 `c2bb7db1...`, as recorded by the 10k trial): `moby_box_gif` now takes
+  `--data-file` for runs on source files and checks the box, extent, series length and
+  window times (test: the same stills as the run on the extracted file, up to one gray
+  level). `model.pt` was copied to the run folder, local only.
+- Seen in the GIF: in frame 0 (t = -36 s) the NF is wrong (the bright organ region nearly
+  missing, the vessels displaced); from frame 50 on NF and truth look alike, the enhancing
+  lesion at the end included.
 
 The chain's remaining segments 3-5 (1149833, 1149834, 1150575, 32 nodes and 2 h each)
 would only reach the same result: cancelled at the user's request on 2026-11-20 at
