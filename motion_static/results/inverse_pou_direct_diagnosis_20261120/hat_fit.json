@@ -1,0 +1,26 @@
+{
+ "full_series_20_partitions": {
+  "range_units": [
+   -100.0,
+   100.0
+  ],
+  "fit_loss": 0.0005176567356102169,
+  "frame_rms_error": 0.03306523710489273,
+  "target_rms": 0.18257732689380646,
+  "frame_change_psi": 0.26786279678344727,
+  "frame_change_target": 0.0026380212511867285,
+  "seconds": 31.1
+ },
+ "window_10_partitions": {
+  "range_units": [
+   -1.0416667461395264,
+   1.0416667461395264
+  ],
+  "fit_loss": 2.1296148133842507e-06,
+  "frame_rms_error": 0.002247555647045374,
+  "target_rms": 0.25865161418914795,
+  "frame_change_psi": 0.11982855200767517,
+  "frame_change_target": 0.11840001493692398,
+  "seconds": 29.4
+ }
+}

@@ -1,0 +1,44 @@
+Inverse (direct) | model nested_low_rank_hash_nf | frames 14401 | 4 frames per step | regularizer {'type': 'none', 'weight': 0.0}
+dce_moby/nested_low_rank_hash_nf step 1: MSE 0.000319228, temporal L2 0, total 0.000319228
+dce_moby/nested_low_rank_hash_nf step 1000: MSE 3.16254e-06, temporal L2 0, total 3.16254e-06
+dce_moby/nested_low_rank_hash_nf step 2000: MSE 3.11743e-06, temporal L2 0, total 3.11743e-06
+dce_moby/nested_low_rank_hash_nf step 3000: MSE 2.77049e-06, temporal L2 0, total 2.77049e-06
+dce_moby/nested_low_rank_hash_nf step 4000: MSE 2.54559e-06, temporal L2 0, total 2.54559e-06
+dce_moby/nested_low_rank_hash_nf step 5000: MSE 2.47726e-06, temporal L2 0, total 2.47726e-06
+Warm start: 19 groups, LSQR iterations [9, 11, 11, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+direct/nested_low_rank_hash_nf step 1: data fidelity 1.13797, R 0, total 0.568985, all-frame data fidelity 8.12332, truth RRMSE 47.7633%
+direct/nested_low_rank_hash_nf step 2000: data fidelity 1.03791, R 0, total 0.518954, all-frame data fidelity 1.05385, truth RRMSE 25.2267%
+direct/nested_low_rank_hash_nf step 4000: data fidelity 1.02441, R 0, total 0.512203, all-frame data fidelity 1.04458, truth RRMSE 20.4613%
+direct/nested_low_rank_hash_nf step 6000: data fidelity 1.04852, R 0, total 0.524258, all-frame data fidelity 1.03519, truth RRMSE 19.2076%
+direct/nested_low_rank_hash_nf step 8000: data fidelity 1.01652, R 0, total 0.508261, all-frame data fidelity 1.04726, truth RRMSE 18.6081%
+direct/nested_low_rank_hash_nf step 10000: data fidelity 0.997539, R 0, total 0.49877, all-frame data fidelity 1.01521, truth RRMSE 17.7866%
+direct/nested_low_rank_hash_nf step 12000: data fidelity 1.02493, R 0, total 0.512465, all-frame data fidelity 1.0109, truth RRMSE 17.6305%
+direct/nested_low_rank_hash_nf step 14000: data fidelity 1.02283, R 0, total 0.511417, all-frame data fidelity 1.01108, truth RRMSE 17.9208%
+direct/nested_low_rank_hash_nf step 16000: data fidelity 1.03187, R 0, total 0.515935, all-frame data fidelity 1.00891, truth RRMSE 17.0120%
+direct/nested_low_rank_hash_nf step 18000: data fidelity 1.01977, R 0, total 0.509887, all-frame data fidelity 1.01058, truth RRMSE 16.8904%
+direct/nested_low_rank_hash_nf step 20000: data fidelity 0.997366, R 0, total 0.498683, all-frame data fidelity 1.01561, truth RRMSE 17.5259%
+direct/nested_low_rank_hash_nf step 22000: data fidelity 1.03154, R 0, total 0.515772, all-frame data fidelity 1.01171, truth RRMSE 17.1516%
+direct/nested_low_rank_hash_nf step 24000: data fidelity 1.01291, R 0, total 0.506453, all-frame data fidelity 1.00467, truth RRMSE 17.1193%
+direct/nested_low_rank_hash_nf step 26000: data fidelity 0.997649, R 0, total 0.498825, all-frame data fidelity 1.00337, truth RRMSE 17.9167%
+direct/nested_low_rank_hash_nf step 28000: data fidelity 1.01055, R 0, total 0.505277, all-frame data fidelity 1.00253, truth RRMSE 17.6403%
+direct/nested_low_rank_hash_nf step 30000: data fidelity 0.987693, R 0, total 0.493847, all-frame data fidelity 1.0028, truth RRMSE 17.8106%
+direct/nested_low_rank_hash_nf step 32000: data fidelity 0.996784, R 0, total 0.498392, all-frame data fidelity 1.00201, truth RRMSE 18.3674%
+direct/nested_low_rank_hash_nf step 34000: data fidelity 0.999848, R 0, total 0.499924, all-frame data fidelity 0.998572, truth RRMSE 18.3822%
+direct/nested_low_rank_hash_nf step 36000: data fidelity 0.992438, R 0, total 0.496219, all-frame data fidelity 0.998663, truth RRMSE 18.4885%
+direct/nested_low_rank_hash_nf step 38000: data fidelity 0.977303, R 0, total 0.488652, all-frame data fidelity 0.996888, truth RRMSE 18.7695%
+direct/nested_low_rank_hash_nf step 40000: data fidelity 1.00159, R 0, total 0.500797, all-frame data fidelity 0.995341, truth RRMSE 18.8911%
+direct/nested_low_rank_hash_nf step 42000: data fidelity 0.995288, R 0, total 0.497644, all-frame data fidelity 0.995344, truth RRMSE 19.2982%
+direct/nested_low_rank_hash_nf step 44000: data fidelity 0.988791, R 0, total 0.494395, all-frame data fidelity 0.993958, truth RRMSE 19.2453%
+direct/nested_low_rank_hash_nf step 46000: data fidelity 0.997015, R 0, total 0.498507, all-frame data fidelity 0.996018, truth RRMSE 19.4169%
+direct/nested_low_rank_hash_nf step 48000: data fidelity 0.982961, R 0, total 0.49148, all-frame data fidelity 0.99665, truth RRMSE 20.0822%
+direct/nested_low_rank_hash_nf step 50000: data fidelity 0.98843, R 0, total 0.494215, all-frame data fidelity 0.990995, truth RRMSE 20.4832%
+direct/nested_low_rank_hash_nf step 52000: data fidelity 0.966634, R 0, total 0.483317, all-frame data fidelity 0.991338, truth RRMSE 20.5052%
+direct/nested_low_rank_hash_nf step 54000: data fidelity 1.00513, R 0, total 0.502565, all-frame data fidelity 0.98958, truth RRMSE 20.5126%
+direct/nested_low_rank_hash_nf step 56000: data fidelity 0.992681, R 0, total 0.496341, all-frame data fidelity 0.989075, truth RRMSE 21.0118%
+direct/nested_low_rank_hash_nf step 58000: data fidelity 1.00351, R 0, total 0.501754, all-frame data fidelity 0.988552, truth RRMSE 20.8717%
+direct/nested_low_rank_hash_nf step 60000: data fidelity 0.987221, R 0, total 0.49361, all-frame data fidelity 0.98747, truth RRMSE 20.9453%
+direct/nested_low_rank_hash_nf step 62000: data fidelity 0.987851, R 0, total 0.493926, all-frame data fidelity 0.986988, truth RRMSE 21.2566%
+direct/nested_low_rank_hash_nf step 64000: data fidelity 0.996925, R 0, total 0.498463, all-frame data fidelity 0.986244, truth RRMSE 21.3299%
+direct/nested_low_rank_hash_nf step 66000: data fidelity 0.979734, R 0, total 0.489867, all-frame data fidelity 0.986143, truth RRMSE 21.4485%
+direct/nested_low_rank_hash_nf step 68000: data fidelity 0.980387, R 0, total 0.490193, all-frame data fidelity 0.986191, truth RRMSE 21.5120%
+direct/nested_low_rank_hash_nf step 70000: data fidelity 0.999366, R 0, total 0.499683, all-frame data fidelity 0.985896, truth RRMSE 21.5752%

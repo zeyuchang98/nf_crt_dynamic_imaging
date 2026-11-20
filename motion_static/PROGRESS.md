@@ -3009,3 +3009,74 @@ Whole-series configs: `experiments/inverse/full_{direct,proximal}_{pou,nested}.j
 (settings of the plan above plus the chosen weights and rates; all pass `--dry-run`). Run
 order: direct POUnet, proximal POUnet, proximal nested, direct nested, outputs
 `results/inverse_full_20261119_<name>/`.
+
+### Whole-series runs (2026-11-19/20): three finished, direct nested stopped, direct POUnet diagnosed
+
+Runs (`results/inverse_full_20261119_<name>/`, model.pt not committed), all-frame scores:
+
+| Run | RRMSE | PSNR | SSIM | Activity-curve RRMSE | Final DF | Training |
+|---|---|---|---|---|---|---|
+| Direct POUnet (TV 3) | 39.08% | 43.34 dB | 0.982 | 9.9% | 1.561 | 0.54 h |
+| Proximal POUnet (squared gradient 1e4) | 47.50% | 41.65 dB | 0.976 | 2.7% | 1.229 | 1.32 h |
+| Proximal nested | **36.56%** | **43.92 dB** | **0.985** | **2.4%** | 1.126 | 7.79 h |
+
+- Direct nested: killed at step 70,000 of 76,000 (23:45 on 11-19) when the Claude Code session
+  that had started it as a background task ended; inverse runs save no checkpoint, so no model
+  or all-frame score exists. Its monitor (151 frames): truth RRMSE 40.3% (warm start), lowest
+  16.9% at step 18,000, 21.6% at step 70,000; DF below 1 after about step 40,000 (0.986 at
+  70,000), i.e. fitting the noise late, much less than on the window. A detached rerun was
+  started and stopped by the user after about 1.5 min (folder `inverse_full_20261120_*`, not
+  kept). Long local runs are now launched detached (setsid + nohup).
+- Two lid-closed sleeps paused runs 3 and 4 (08:53-09:36, 15:36-18:01); compute times above
+  exclude them.
+- Figures: `results/inverse_full_20261119_comparison_{frames,curves}.png`
+  (`evaluation/inverse_figures.py`; per-frame RRMSE of its renders equals the saved scores to
+  1.2e-4).
+- Observations: proximal nested is still improving at its last iteration (budget-limited).
+  Proximal POUnet ends worse than its warm start (monitor RRMSE 40.4% -> 47.1%, DF 1.17 ->
+  1.21) and blurred. Nested against direct POUnet: lower on 68% of frames, mean gap 2.2 points,
+  mostly in the first third of the series (5.3 points; 0.4 and 0.8 later); against proximal
+  POUnet: lower on every frame, mean gap 11.1 points. With one noise realization and different
+  penalties, inner solvers and compute, this does not show that the nested representation is
+  better.
+
+Direct POUnet: it collapsed to a nearly static image (flat activity curve; frame-to-frame
+spread 2.6% of the mean intensity against 18% for proximal POUnet; psi entropy 2.96 of the
+uniform log 20 = 3.0). Diagnosis (`results/inverse_pou_direct_diagnosis_20261120/`, scripts
+and outputs):
+1. Time scale. psi's input is time in sensor revolutions (ProxNF's convention), so the whole
+   series spans -100..100 (window -1..1; ProxNF's own setting, nrevs = 18, spans -9..9). The
+   warm start's hat fit there is poor: loss 5.4e-4 against 2.1e-6 on the window, RMS error at
+   the frame times 0.033 (target RMS 0.18), and psi changes 0.27 per frame against the hats'
+   0.0026, a jitter about 100 times too fast. With a 360 s time unit (-1..1) the fit loss is
+   1.6e-6 and the change 0.0027. Both POUnet runs started from the jittery psi.
+2. Training. The first 10,000 of the 76,000 steps were replayed (same warm start, schedule and
+   step; step 0 reproduces DF 1.1686 and RRMSE 40.41%), one setting changed per variant
+   (diagnosis only):
+
+   | Variant | psi entropy 0 -> 1k -> 10k | psi change per frame at 10k | DF at 10k | RRMSE at 10k | coefficient range at 10k |
+   |---|---|---|---|---|---|
+   | as run (psi 1e-3, C 1e-3, -100..100) | 0.85 -> 2.16 -> 2.70 | 0.83 | 1.547 | 40.8% | -0.05..0.45 |
+   | psi rate 1e-5 | 0.85 -> 1.96 -> 2.10 | 1.19 | 1.606 | 42.8% | -0.04..0.45 |
+   | coefficient rate 1e-4 | 0.85 -> 2.12 -> 2.29 | 1.23 | 1.496 | 38.9% | -0.01..0.42 |
+   | time unit 360 s | 0.56 -> 2.79 -> 2.93 | 0.34 | 1.507 | 40.3% | -0.05..0.45 |
+   | time unit 360 s, coefficient rate 1e-4 | 0.56 -> 2.76 -> 2.81 | 0.63 | 1.477 | 38.7% | -0.01..0.46 |
+   | time unit 360 s, psi rate 1e-5 | 0.56 -> 2.66 -> 2.78 | 0.012 | 1.123 | 44.6% | -0.82..1.04 |
+
+   Every variant with psi rate 1e-3 mixes the partitions and raises DF from 1.16 to about 1.5
+   within 1,000 steps; psi rate 1e-5 on -100..100 still jitters; psi rate 1e-5 on -1..1 stays
+   smooth and lowers DF below the warm start, but fits the noise with overlapping partitions
+   and large coefficients of opposite sign. No tested setting gives a sound reconstruction.
+3. The original direct method (`applications/self_supervised_training`, Lozenski et al. 2022)
+   is a different model and training: psi over (x, y, t) with 40 partitions and a cubic
+   polynomial basis, time scaled to -1/2..1/2 over the series, alternating C and psi updates,
+   and penalties on psi (l1/2 sparsity) and on C (Frobenius) that shrink to zero over the
+   first quarter. The direct POUnet here (ProxNF's psi(t) x pixel C, joint Adam, neither
+   penalty) is our own combination; the two failures above (mixing psi, large C) are what
+   those penalties work against (not tested).
+
+Conclusion: the whole-series direct POUnet (39.1%) is a near-static image, not a valid
+baseline as run. Open, for the user: what to do with direct POUnet (drop it, report it as is,
+or use the original direct method); whether POUnet's per-revolution time unit should be kept
+for a 200-revolution series (it also affects proximal POUnet); a direct nested rerun (with
+checkpoints, a code change not yet made); choosing weights or stopping by held-out data.

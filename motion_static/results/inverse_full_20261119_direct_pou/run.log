@@ -1,0 +1,47 @@
+Inverse (direct) | model pou_net | frames 14401 | 4 frames per step | regularizer {'type': 'tv', 'weight': 3.0, 'epsilon': 1e-05}
+/Users/zeyuchang/Research/nf_crt_dynamic_imaging/motion_static/inverse/warm_start.py:97: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /Users/runner/work/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:821.)
+  return nodes, float(loss)
+Warm start: 19 groups, LSQR iterations [9, 11, 11, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+direct/pou_net step 1: data fidelity 1.14399, R 0.00340608, total 0.582211, all-frame data fidelity 1.53957, truth RRMSE 42.2019%
+direct/pou_net step 2000: data fidelity 2.36813, R 0.00418377, total 1.19661, all-frame data fidelity 1.59649, truth RRMSE 41.7686%
+direct/pou_net step 4000: data fidelity 2.42134, R 0.0041444, total 1.2231, all-frame data fidelity 1.56481, truth RRMSE 41.4101%
+direct/pou_net step 6000: data fidelity 2.70423, R 0.00383257, total 1.36361, all-frame data fidelity 1.61294, truth RRMSE 41.3239%
+direct/pou_net step 8000: data fidelity 1.48325, R 0.00396713, total 0.753524, all-frame data fidelity 1.59621, truth RRMSE 41.0807%
+direct/pou_net step 10000: data fidelity 1.2388, R 0.00338392, total 0.629551, all-frame data fidelity 1.54734, truth RRMSE 40.8172%
+direct/pou_net step 12000: data fidelity 1.93122, R 0.00337661, total 0.975738, all-frame data fidelity 1.65383, truth RRMSE 40.5370%
+direct/pou_net step 14000: data fidelity 2.38806, R 0.00344742, total 1.20437, all-frame data fidelity 1.51048, truth RRMSE 40.4193%
+direct/pou_net step 16000: data fidelity 2.18105, R 0.00324061, total 1.10025, all-frame data fidelity 1.50502, truth RRMSE 40.2560%
+direct/pou_net step 18000: data fidelity 1.22804, R 0.00322559, total 0.623699, all-frame data fidelity 1.52036, truth RRMSE 40.2453%
+direct/pou_net step 20000: data fidelity 1.93119, R 0.00306537, total 0.974794, all-frame data fidelity 1.61142, truth RRMSE 40.3332%
+direct/pou_net step 22000: data fidelity 2.28305, R 0.00301643, total 1.15057, all-frame data fidelity 1.50127, truth RRMSE 40.1063%
+direct/pou_net step 24000: data fidelity 1.22471, R 0.00299963, total 0.621356, all-frame data fidelity 1.55219, truth RRMSE 40.0569%
+direct/pou_net step 26000: data fidelity 2.16415, R 0.00292647, total 1.09086, all-frame data fidelity 1.49149, truth RRMSE 39.9157%
+direct/pou_net step 28000: data fidelity 2.24605, R 0.00281012, total 1.13145, all-frame data fidelity 1.5209, truth RRMSE 39.8070%
+direct/pou_net step 30000: data fidelity 1.16701, R 0.00270499, total 0.59162, all-frame data fidelity 1.49215, truth RRMSE 39.6398%
+direct/pou_net step 32000: data fidelity 2.11804, R 0.00271681, total 1.06717, all-frame data fidelity 1.52234, truth RRMSE 39.6312%
+direct/pou_net step 34000: data fidelity 1.86686, R 0.00261373, total 0.941269, all-frame data fidelity 1.47877, truth RRMSE 39.5593%
+direct/pou_net step 36000: data fidelity 1.69301, R 0.00257622, total 0.854233, all-frame data fidelity 1.45727, truth RRMSE 39.5552%
+direct/pou_net step 38000: data fidelity 1.46903, R 0.00244796, total 0.741859, all-frame data fidelity 1.56905, truth RRMSE 39.5311%
+direct/pou_net step 40000: data fidelity 1.48459, R 0.00241987, total 0.749552, all-frame data fidelity 1.47897, truth RRMSE 39.3522%
+direct/pou_net step 42000: data fidelity 2.36954, R 0.00233455, total 1.19177, all-frame data fidelity 1.49775, truth RRMSE 39.2661%
+direct/pou_net step 44000: data fidelity 1.16455, R 0.00225554, total 0.589043, all-frame data fidelity 1.467, truth RRMSE 39.1721%
+direct/pou_net step 46000: data fidelity 1.36199, R 0.00215229, total 0.687451, all-frame data fidelity 1.47636, truth RRMSE 39.1261%
+direct/pou_net step 48000: data fidelity 2.04008, R 0.00207001, total 1.02625, all-frame data fidelity 1.47699, truth RRMSE 39.0262%
+direct/pou_net step 50000: data fidelity 1.22932, R 0.00198526, total 0.620616, all-frame data fidelity 1.47908, truth RRMSE 38.9695%
+direct/pou_net step 52000: data fidelity 1.36125, R 0.00191661, total 0.686374, all-frame data fidelity 1.46971, truth RRMSE 38.9078%
+direct/pou_net step 54000: data fidelity 1.26699, R 0.00182799, total 0.63898, all-frame data fidelity 1.46183, truth RRMSE 38.8190%
+direct/pou_net step 56000: data fidelity 1.14597, R 0.0017364, total 0.578192, all-frame data fidelity 1.48332, truth RRMSE 38.7489%
+direct/pou_net step 58000: data fidelity 1.69673, R 0.0016832, total 0.853414, all-frame data fidelity 1.47998, truth RRMSE 38.7523%
+direct/pou_net step 60000: data fidelity 1.147, R 0.00160211, total 0.578305, all-frame data fidelity 1.45588, truth RRMSE 38.6688%
+direct/pou_net step 62000: data fidelity 1.69273, R 0.00153511, total 0.850968, all-frame data fidelity 1.45933, truth RRMSE 38.6607%
+direct/pou_net step 64000: data fidelity 1.22582, R 0.00146969, total 0.617319, all-frame data fidelity 1.45425, truth RRMSE 38.6136%
+direct/pou_net step 66000: data fidelity 2.22068, R 0.00143128, total 1.11463, all-frame data fidelity 1.47142, truth RRMSE 38.6154%
+direct/pou_net step 68000: data fidelity 2.27921, R 0.00139674, total 1.14379, all-frame data fidelity 1.45575, truth RRMSE 38.5648%
+direct/pou_net step 70000: data fidelity 1.14434, R 0.00136083, total 0.576251, all-frame data fidelity 1.45481, truth RRMSE 38.5571%
+direct/pou_net step 72000: data fidelity 1.17565, R 0.00132549, total 0.591799, all-frame data fidelity 1.45665, truth RRMSE 38.5622%
+direct/pou_net step 74000: data fidelity 1.3854, R 0.00132019, total 0.69666, all-frame data fidelity 1.4545, truth RRMSE 38.5437%
+direct/pou_net step 76000: data fidelity 1.18922, R 0.00133791, total 0.598622, all-frame data fidelity 1.45506, truth RRMSE 38.5340%
+Final all-frame data fidelity 1.56126
+All-frame image RRMSE=39.0807%, SSIM=0.982289823377888
+Saved results: motion_static/results/inverse_full_20261119_direct_pou

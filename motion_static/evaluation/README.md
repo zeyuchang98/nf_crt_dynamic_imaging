@@ -27,6 +27,18 @@ does not grow with the number of frames. Midpoint and block SSIM conventions are
 Raw predictions are never clipped before metrics. Turning off exports does not
 subsample evaluation times or use the monitoring subset as the evaluation set.
 
+## Figures of whole-series reconstructions (2D CRT inverse runs)
+
+```bash
+python -m motion_static.evaluation.inverse_figures OUT_PREFIX motion_static/results/inverse_full_<date>_<name> ...
+```
+
+Writes `OUT_PREFIX_frames.png` (truth, reconstructions and signed errors at five fixed times:
+pre-contrast, wash-in, activity peak, 300 s, 600 s) and `OUT_PREFIX_curves.png` (per-frame
+RRMSE averaged over one sensor revolution, the saved activity curve, and the monitor RRMSE over
+training). It reads model.pt, metrics.json and loss.csv, renders five frames on the CPU and
+prints their per-frame RRMSE next to the saved scores; it changes no record.
+
 ## Generate GIFs for selected runs
 
 ```bash

@@ -1,0 +1,36 @@
+Inverse (proximal) | model nested_low_rank_hash_nf | frames 14401 | 25 outer x 300 inner steps | regularizer {'type': 'none', 'weight': 0.0}
+dce_moby/nested_low_rank_hash_nf step 1: MSE 0.000319228, temporal L2 0, total 0.000319228
+dce_moby/nested_low_rank_hash_nf step 1000: MSE 3.1624e-06, temporal L2 0, total 3.1624e-06
+dce_moby/nested_low_rank_hash_nf step 2000: MSE 3.11489e-06, temporal L2 0, total 3.11489e-06
+dce_moby/nested_low_rank_hash_nf step 3000: MSE 2.72139e-06, temporal L2 0, total 2.72139e-06
+dce_moby/nested_low_rank_hash_nf step 4000: MSE 2.52177e-06, temporal L2 0, total 2.52177e-06
+dce_moby/nested_low_rank_hash_nf step 5000: MSE 2.4564e-06, temporal L2 0, total 2.4564e-06
+Warm start: 19 groups, LSQR iterations [9, 11, 11, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+proximal/nested_low_rank_hash_nf outer 1: tau 7.653e-05, data fidelity before 1.2444, inner loss 7.355e-07 -> 5.681e-07, data fidelity after 1.17471, truth RRMSE 40.1398%
+proximal/nested_low_rank_hash_nf outer 2: tau 0.0001003, data fidelity before 1.19693, inner loss 9.391e-07 -> 8.218e-07, data fidelity after 1.16599, truth RRMSE 40.0121%
+proximal/nested_low_rank_hash_nf outer 3: tau 9.61e-05, data fidelity before 1.19034, inner loss 8.59e-07 -> 7.313e-07, data fidelity after 1.16685, truth RRMSE 39.8705%
+proximal/nested_low_rank_hash_nf outer 4: tau 9.319e-05, data fidelity before 1.18911, inner loss 8.535e-07 -> 6.483e-07, data fidelity after 1.1598, truth RRMSE 39.7037%
+proximal/nested_low_rank_hash_nf outer 5: tau 9.16e-05, data fidelity before 1.18387, inner loss 8.13e-07 -> 6.117e-07, data fidelity after 1.16253, truth RRMSE 39.5247%
+proximal/nested_low_rank_hash_nf outer 6: tau 8.896e-05, data fidelity before 1.18253, inner loss 7.526e-07 -> 5.448e-07, data fidelity after 1.15081, truth RRMSE 39.3467%
+proximal/nested_low_rank_hash_nf outer 7: tau 9.239e-05, data fidelity before 1.17267, inner loss 7.941e-07 -> 6.137e-07, data fidelity after 1.15187, truth RRMSE 39.2314%
+proximal/nested_low_rank_hash_nf outer 8: tau 9.244e-05, data fidelity before 1.17, inner loss 7.871e-07 -> 6.086e-07, data fidelity after 1.14425, truth RRMSE 39.0627%
+proximal/nested_low_rank_hash_nf outer 9: tau 9.382e-05, data fidelity before 1.16363, inner loss 8.058e-07 -> 6.195e-07, data fidelity after 1.14259, truth RRMSE 38.9023%
+proximal/nested_low_rank_hash_nf outer 10: tau 9.768e-05, data fidelity before 1.1579, inner loss 8.435e-07 -> 6.527e-07, data fidelity after 1.13868, truth RRMSE 38.7565%
+proximal/nested_low_rank_hash_nf outer 11: tau 9.273e-05, data fidelity before 1.1594, inner loss 7.778e-07 -> 5.797e-07, data fidelity after 1.13914, truth RRMSE 38.6453%
+proximal/nested_low_rank_hash_nf outer 12: tau 9.515e-05, data fidelity before 1.15406, inner loss 7.784e-07 -> 5.969e-07, data fidelity after 1.13653, truth RRMSE 38.5331%
+proximal/nested_low_rank_hash_nf outer 13: tau 8.975e-05, data fidelity before 1.15736, inner loss 7.231e-07 -> 5.262e-07, data fidelity after 1.13343, truth RRMSE 38.4023%
+proximal/nested_low_rank_hash_nf outer 14: tau 9.534e-05, data fidelity before 1.1485, inner loss 7.9e-07 -> 5.912e-07, data fidelity after 1.1302, truth RRMSE 38.2178%
+proximal/nested_low_rank_hash_nf outer 15: tau 9.125e-05, data fidelity before 1.14989, inner loss 7.328e-07 -> 5.398e-07, data fidelity after 1.1277, truth RRMSE 38.0361%
+proximal/nested_low_rank_hash_nf outer 16: tau 9.558e-05, data fidelity before 1.14208, inner loss 7.633e-07 -> 5.682e-07, data fidelity after 1.12499, truth RRMSE 37.8285%
+proximal/nested_low_rank_hash_nf outer 17: tau 9.023e-05, data fidelity before 1.14512, inner loss 7.227e-07 -> 5.195e-07, data fidelity after 1.12328, truth RRMSE 37.6994%
+proximal/nested_low_rank_hash_nf outer 18: tau 9.529e-05, data fidelity before 1.1371, inner loss 7.535e-07 -> 5.506e-07, data fidelity after 1.11983, truth RRMSE 37.5400%
+proximal/nested_low_rank_hash_nf outer 19: tau 9.175e-05, data fidelity before 1.13852, inner loss 7.329e-07 -> 5.282e-07, data fidelity after 1.11669, truth RRMSE 37.4100%
+proximal/nested_low_rank_hash_nf outer 20: tau 9.76e-05, data fidelity before 1.13049, inner loss 7.481e-07 -> 5.902e-07, data fidelity after 1.11925, truth RRMSE 37.3204%
+proximal/nested_low_rank_hash_nf outer 21: tau 8.795e-05, data fidelity before 1.1396, inner loss 6.858e-07 -> 4.68e-07, data fidelity after 1.12085, truth RRMSE 37.1813%
+proximal/nested_low_rank_hash_nf outer 22: tau 8.839e-05, data fidelity before 1.13709, inner loss 6.699e-07 -> 4.813e-07, data fidelity after 1.11165, truth RRMSE 36.9556%
+proximal/nested_low_rank_hash_nf outer 23: tau 9.248e-05, data fidelity before 1.1301, inner loss 6.968e-07 -> 5.05e-07, data fidelity after 1.11346, truth RRMSE 36.8426%
+proximal/nested_low_rank_hash_nf outer 24: tau 9.222e-05, data fidelity before 1.12833, inner loss 6.977e-07 -> 5.082e-07, data fidelity after 1.10709, truth RRMSE 36.7041%
+proximal/nested_low_rank_hash_nf outer 25: tau 9.295e-05, data fidelity before 1.12602, inner loss 6.824e-07 -> 5.25e-07, data fidelity after 1.11052, truth RRMSE 36.5203%
+Final all-frame data fidelity 1.1255
+All-frame image RRMSE=36.5592%, SSIM=0.9846050154522364
+Saved results: motion_static/results/inverse_full_20261119_proximal_nested

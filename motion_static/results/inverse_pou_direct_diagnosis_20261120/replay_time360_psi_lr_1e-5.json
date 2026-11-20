@@ -1,0 +1,167 @@
+{
+ "time360_psi_lr_1e-5": {
+  "change": {
+   "time_unit_s": 360.0,
+   "pou_lr": 1e-05
+  },
+  "hat_fit_loss": 1.582147206136142e-06,
+  "log": [
+   {
+    "step": 0,
+    "psi_entropy": 0.5633711397493707,
+    "psi_max_mean": 0.745819402013369,
+    "psi_range_max": 0.9852085320671904,
+    "psi_frame_change": 0.002673693611055165,
+    "image_temporal_spread": 0.18202407658100128,
+    "data_fidelity": 1.1643850024558233,
+    "truth_rrmse": 0.4043778548682433,
+    "coef_min": -0.009818806312978268,
+    "coef_max": 0.3998262286186218
+   },
+   {
+    "step": 100,
+    "psi_entropy": 1.3483836559732123,
+    "psi_max_mean": 0.5523622572426167,
+    "psi_range_max": 0.9575834818242583,
+    "psi_frame_change": 0.007005728611009342,
+    "image_temporal_spread": 0.5145608186721802,
+    "data_fidelity": 1.283341723257811,
+    "truth_rrmse": 0.46144321832950475,
+    "coef_min": -0.033225540071725845,
+    "coef_max": 0.4066747725009918
+   },
+   {
+    "step": 300,
+    "psi_entropy": 2.4545730039221723,
+    "psi_max_mean": 0.25412914643289064,
+    "psi_range_max": 0.8921016852837056,
+    "psi_frame_change": 0.01024114138984765,
+    "image_temporal_spread": 0.30361607670783997,
+    "data_fidelity": 1.1936692029987548,
+    "truth_rrmse": 0.40897747169408477,
+    "coef_min": -0.03498905152082443,
+    "coef_max": 0.44301602244377136
+   },
+   {
+    "step": 1000,
+    "psi_entropy": 2.6570723973992396,
+    "psi_max_mean": 0.1838998692515666,
+    "psi_range_max": 0.7665200070478022,
+    "psi_frame_change": 0.010088096313637733,
+    "image_temporal_spread": 0.2941620945930481,
+    "data_fidelity": 1.196282964149052,
+    "truth_rrmse": 0.40323334558859547,
+    "coef_min": -0.07415004819631577,
+    "coef_max": 0.5073299407958984
+   },
+   {
+    "step": 2000,
+    "psi_entropy": 2.677475022936504,
+    "psi_max_mean": 0.17616047314964775,
+    "psi_range_max": 0.7928728447295725,
+    "psi_frame_change": 0.009711162881827072,
+    "image_temporal_spread": 0.3246293365955353,
+    "data_fidelity": 1.1841606644318925,
+    "truth_rrmse": 0.41258839660628555,
+    "coef_min": -0.0918387919664383,
+    "coef_max": 0.5549329519271851
+   },
+   {
+    "step": 3000,
+    "psi_entropy": 2.71411175666021,
+    "psi_max_mean": 0.16278001081394278,
+    "psi_range_max": 0.625181210692972,
+    "psi_frame_change": 0.009804473849508213,
+    "image_temporal_spread": 0.33243244886398315,
+    "data_fidelity": 1.166937955841337,
+    "truth_rrmse": 0.41563033128490506,
+    "coef_min": -0.12993964552879333,
+    "coef_max": 0.5767639875411987
+   },
+   {
+    "step": 4000,
+    "psi_entropy": 2.7289473913185103,
+    "psi_max_mean": 0.15701802057267047,
+    "psi_range_max": 0.6458681267686188,
+    "psi_frame_change": 0.010094818126575167,
+    "image_temporal_spread": 0.34731319546699524,
+    "data_fidelity": 1.1678483568346432,
+    "truth_rrmse": 0.4216350422708796,
+    "coef_min": -0.21158234775066376,
+    "coef_max": 0.5900995135307312
+   },
+   {
+    "step": 5000,
+    "psi_entropy": 2.7400326136851136,
+    "psi_max_mean": 0.1559021666322133,
+    "psi_range_max": 0.5605194587260485,
+    "psi_frame_change": 0.010624896771850117,
+    "image_temporal_spread": 0.3564230501651764,
+    "data_fidelity": 1.171663963107312,
+    "truth_rrmse": 0.42700895177884773,
+    "coef_min": -0.3302074372768402,
+    "coef_max": 0.6180045008659363
+   },
+   {
+    "step": 6000,
+    "psi_entropy": 2.745283510993117,
+    "psi_max_mean": 0.1535333589926899,
+    "psi_range_max": 0.5455861447844654,
+    "psi_frame_change": 0.01085780909765971,
+    "image_temporal_spread": 0.37102237343788147,
+    "data_fidelity": 1.1487039488926276,
+    "truth_rrmse": 0.4293817051368865,
+    "coef_min": -0.4209344685077667,
+    "coef_max": 0.6346679329872131
+   },
+   {
+    "step": 7000,
+    "psi_entropy": 2.764454109033998,
+    "psi_max_mean": 0.1496451883565493,
+    "psi_range_max": 0.4940859293565154,
+    "psi_frame_change": 0.011107211095691632,
+    "image_temporal_spread": 0.37907227873802185,
+    "data_fidelity": 1.147200344362358,
+    "truth_rrmse": 0.436675981525184,
+    "coef_min": -0.5142027735710144,
+    "coef_max": 0.7113043069839478
+   },
+   {
+    "step": 8000,
+    "psi_entropy": 2.77162414462048,
+    "psi_max_mean": 0.1466879715934643,
+    "psi_range_max": 0.4924103970406577,
+    "psi_frame_change": 0.011463004934970135,
+    "image_temporal_spread": 0.37762171030044556,
+    "data_fidelity": 1.1360656324125693,
+    "truth_rrmse": 0.43741952792089417,
+    "coef_min": -0.629756510257721,
+    "coef_max": 0.8575721979141235
+   },
+   {
+    "step": 9000,
+    "psi_entropy": 2.7775041501252407,
+    "psi_max_mean": 0.14572871430573237,
+    "psi_range_max": 0.49176147778052837,
+    "psi_frame_change": 0.011544345005661146,
+    "image_temporal_spread": 0.3993828594684601,
+    "data_fidelity": 1.1570565038113039,
+    "truth_rrmse": 0.43918152343168104,
+    "coef_min": -0.7254352569580078,
+    "coef_max": 0.9662131667137146
+   },
+   {
+    "step": 10000,
+    "psi_entropy": 2.7820925212156604,
+    "psi_max_mean": 0.1424943975000719,
+    "psi_range_max": 0.5371905318461359,
+    "psi_frame_change": 0.011766333744663926,
+    "image_temporal_spread": 0.3981051743030548,
+    "data_fidelity": 1.1229112012997313,
+    "truth_rrmse": 0.44587438073187186,
+    "coef_min": -0.8176631927490234,
+    "coef_max": 1.0355790853500366
+   }
+  ]
+ }
+}

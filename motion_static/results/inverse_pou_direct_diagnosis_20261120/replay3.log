@@ -1,0 +1,17 @@
+LSQR 19 groups in 12 s
+time360_psi_lr_1e-5: hat-fit loss 1.58e-06
+time360_psi_lr_1e-5 {'step': 0, 'psi_entropy': 0.5634, 'psi_max_mean': 0.7458, 'psi_range_max': 0.9852, 'psi_frame_change': 0.0027, 'image_temporal_spread': 0.182, 'data_fidelity': 1.1644, 'truth_rrmse': 0.4044, 'coef_min': -0.0098, 'coef_max': 0.3998}
+time360_psi_lr_1e-5 {'step': 100, 'psi_entropy': 1.3484, 'psi_max_mean': 0.5524, 'psi_range_max': 0.9576, 'psi_frame_change': 0.007, 'image_temporal_spread': 0.5146, 'data_fidelity': 1.2833, 'truth_rrmse': 0.4614, 'coef_min': -0.0332, 'coef_max': 0.4067}
+time360_psi_lr_1e-5 {'step': 300, 'psi_entropy': 2.4546, 'psi_max_mean': 0.2541, 'psi_range_max': 0.8921, 'psi_frame_change': 0.0102, 'image_temporal_spread': 0.3036, 'data_fidelity': 1.1937, 'truth_rrmse': 0.409, 'coef_min': -0.035, 'coef_max': 0.443}
+time360_psi_lr_1e-5 {'step': 1000, 'psi_entropy': 2.6571, 'psi_max_mean': 0.1839, 'psi_range_max': 0.7665, 'psi_frame_change': 0.0101, 'image_temporal_spread': 0.2942, 'data_fidelity': 1.1963, 'truth_rrmse': 0.4032, 'coef_min': -0.0742, 'coef_max': 0.5073}
+time360_psi_lr_1e-5 {'step': 2000, 'psi_entropy': 2.6775, 'psi_max_mean': 0.1762, 'psi_range_max': 0.7929, 'psi_frame_change': 0.0097, 'image_temporal_spread': 0.3246, 'data_fidelity': 1.1842, 'truth_rrmse': 0.4126, 'coef_min': -0.0918, 'coef_max': 0.5549}
+time360_psi_lr_1e-5 {'step': 3000, 'psi_entropy': 2.7141, 'psi_max_mean': 0.1628, 'psi_range_max': 0.6252, 'psi_frame_change': 0.0098, 'image_temporal_spread': 0.3324, 'data_fidelity': 1.1669, 'truth_rrmse': 0.4156, 'coef_min': -0.1299, 'coef_max': 0.5768}
+time360_psi_lr_1e-5 {'step': 4000, 'psi_entropy': 2.7289, 'psi_max_mean': 0.157, 'psi_range_max': 0.6459, 'psi_frame_change': 0.0101, 'image_temporal_spread': 0.3473, 'data_fidelity': 1.1678, 'truth_rrmse': 0.4216, 'coef_min': -0.2116, 'coef_max': 0.5901}
+time360_psi_lr_1e-5 {'step': 5000, 'psi_entropy': 2.74, 'psi_max_mean': 0.1559, 'psi_range_max': 0.5605, 'psi_frame_change': 0.0106, 'image_temporal_spread': 0.3564, 'data_fidelity': 1.1717, 'truth_rrmse': 0.427, 'coef_min': -0.3302, 'coef_max': 0.618}
+time360_psi_lr_1e-5 {'step': 6000, 'psi_entropy': 2.7453, 'psi_max_mean': 0.1535, 'psi_range_max': 0.5456, 'psi_frame_change': 0.0109, 'image_temporal_spread': 0.371, 'data_fidelity': 1.1487, 'truth_rrmse': 0.4294, 'coef_min': -0.4209, 'coef_max': 0.6347}
+time360_psi_lr_1e-5 {'step': 7000, 'psi_entropy': 2.7645, 'psi_max_mean': 0.1496, 'psi_range_max': 0.4941, 'psi_frame_change': 0.0111, 'image_temporal_spread': 0.3791, 'data_fidelity': 1.1472, 'truth_rrmse': 0.4367, 'coef_min': -0.5142, 'coef_max': 0.7113}
+time360_psi_lr_1e-5 {'step': 8000, 'psi_entropy': 2.7716, 'psi_max_mean': 0.1467, 'psi_range_max': 0.4924, 'psi_frame_change': 0.0115, 'image_temporal_spread': 0.3776, 'data_fidelity': 1.1361, 'truth_rrmse': 0.4374, 'coef_min': -0.6298, 'coef_max': 0.8576}
+time360_psi_lr_1e-5 {'step': 9000, 'psi_entropy': 2.7775, 'psi_max_mean': 0.1457, 'psi_range_max': 0.4918, 'psi_frame_change': 0.0115, 'image_temporal_spread': 0.3994, 'data_fidelity': 1.1571, 'truth_rrmse': 0.4392, 'coef_min': -0.7254, 'coef_max': 0.9662}
+time360_psi_lr_1e-5 {'step': 10000, 'psi_entropy': 2.7821, 'psi_max_mean': 0.1425, 'psi_range_max': 0.5372, 'psi_frame_change': 0.0118, 'image_temporal_spread': 0.3981, 'data_fidelity': 1.1229, 'truth_rrmse': 0.4459, 'coef_min': -0.8177, 'coef_max': 1.0356}
+done
+GUARD: exit 0, peak footprint 9.48 GiB, 298 s
