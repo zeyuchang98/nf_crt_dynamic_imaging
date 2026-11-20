@@ -1,4 +1,6 @@
 """3D (x, y, z, t) support: coordinate rows, 4D hash grids, the 3D nested model, box files and tiny runs."""
+import contextlib
+import io
 import json
 from pathlib import Path
 import tempfile
@@ -141,6 +143,13 @@ class BoxFileTests(unittest.TestCase):
         metrics = json.loads((out / "metrics.json").read_text())["image"]["all_window_frames"]
         self.assertAlmostEqual(metrics["rrmse"], error_metrics(training["truth"], direct, data_range=1)["rrmse"], places=6)
         self.assertEqual(len(metrics["per_frame_rrmse"]), len(training["t"]))
+
+        # The saved per-frame scores and ROI-mean curve plot without the model or data.
+        from motion_static.evaluation import series_score_plots
+        series_score_plots.main([str(out)])
+        self.assertTrue((out / "visuals" / "series_scores.png").exists())
+        with self.assertRaises(SystemExit), contextlib.redirect_stderr(io.StringIO()):
+            series_score_plots.main([str(out), "--split", "unseen_time_midpoints"])
 
     def test_tiny_3d_midpoint_run_observes_even_frames_and_scores_odd_frames(self):
         config = self.root / "run.json"

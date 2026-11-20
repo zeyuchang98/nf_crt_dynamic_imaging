@@ -107,7 +107,12 @@ grid spacings of t0's configuration ([METRICS.md](../METRICS.md) Section 3.7); i
 functions take 2D or 3D grids.
 `moby_box_gif` draws the GIF of a 3D box run: truth (left) and NF (right) as
 maximum-intensity volume renders with one fixed display range and camera; it needs
-the optional PyVista.
+the optional PyVista. A run trained on the source phase files reads its truth, frame by
+frame, from `--data-file`, an extracted file of its box over every series frame
+(`moby_slice.extract_box`; box, extent and window times are checked).
+`series_score_plots` plots a run's saved per-frame RRMSE and SSIM and its ROI-mean curve
+(the `activity_curve` of `metrics.json`, not the lesion curve) over time, from
+`metrics.json` alone.
 `moby_series_checks` is data only (no model): tissue mean curves over a whole slice
 series, the time-grid resolution they need, the breathing periodicity, and the SVD of
 frames of one respiratory phase (the rank of the intensity change without motion).

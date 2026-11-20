@@ -60,6 +60,44 @@ class BoxGifTests(unittest.TestCase):
             with self.assertRaises(SystemExit):  # its training entry has only the even frames
                 moby_box_gif.main([str(held_out)])
 
+    def test_source_run_reads_its_extracted_box_like_the_run_on_that_file(self):
+        from motion_static.evaluation import moby_box_gif
+        from motion_static.phantoms.moby_slice import extract_box
+        from motion_static.tests.test_streamed_training import (BOX_SHAPE, BOX_START, WINDOW, captured_stderr,
+                                                                source_config, write_source)
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            write_source(root)
+            box = extract_box(root, BOX_START, BOX_SHAPE, root / "box.h5")
+            on_file = config_3d(box, steps=4)
+            on_file["data"] = dict(WINDOW, file=str(box))
+            runs = {}
+            for name, config in (("file", on_file), ("source", source_config(root))):
+                (root / f"{name}.json").write_text(json.dumps(config))
+                runs[name] = root / "results" / name
+                main(["--config", str(root / f"{name}.json"), "--out", str(runs[name])])
+            options = ["--frames", "0:21:5", "--size", "96"]
+            moby_box_gif.main([str(runs["file"]), *options])
+            moby_box_gif.main([str(runs["source"]), *options, "--data-file", str(box)])
+            # Same weights (the streamed run reproduces the file run) and the same truth, read
+            # frame by frame instead of normalized in memory: equal stills up to one gray level.
+            stills = [np.asarray(Image.open(runs[name] / "visuals" / "window_volume.png"), dtype=int)
+                      for name in ("file", "source")]
+            self.assertLessEqual(np.abs(stills[0] - stills[1]).max(), 1)
+            with Image.open(runs["source"] / "visuals" / "window_volume.gif") as gif:
+                self.assertEqual(gif.n_frames, 5)
+            record = json.loads((runs["source"] / "visuals" / "window_volume_gif.json").read_text())
+            self.assertEqual(record["window_frames"], [0, 5, 10, 15, 20])
+            self.assertEqual((record["data_file"], len(record["data_file_sha256"])), ("box.h5", 64))
+            expected = json.loads((runs["file"] / "visuals" / "window_volume_gif.json").read_text())
+            self.assertEqual(record["times"], expected["times"])
+
+            shifted = extract_box(root, (2, 2, 1), BOX_SHAPE, root / "shifted.h5")
+            window_only = extract_box(root, BOX_START, BOX_SHAPE, root / "window.h5", frames=(0, 21))
+            for data_file in ([], ["--data-file", str(shifted)], ["--data-file", str(window_only)]):
+                with self.subTest(data_file=data_file), self.assertRaises(SystemExit), captured_stderr():
+                    moby_box_gif.main([str(runs["source"]), *options, *data_file])
+
 
 if __name__ == "__main__":
     unittest.main()
