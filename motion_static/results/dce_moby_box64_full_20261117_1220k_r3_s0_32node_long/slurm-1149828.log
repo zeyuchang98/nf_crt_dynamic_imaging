@@ -1,0 +1,1329 @@
+
+Lmod is automatically replacing "nvidia/24.7" with "gcc/15.1.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) openmpi/5.0.5
+
+The following have been reloaded with a version change:
+  1) nvpl/24.7 => nvpl/26.9
+
+[rank4]:[W1118 11:37:29.384206748 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank20]:[W1118 11:37:29.884967272 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank19]:[W1118 11:37:29.392748760 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank25]:[W1118 11:37:29.389988903 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank2]:[W1118 11:37:29.413151240 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank15]:[W1118 11:37:29.473830095 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank23]:[W1118 11:37:29.548519731 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank6]:[W1118 11:37:29.497288989 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank8]:[W1118 11:37:29.502583710 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank29]:[W1118 11:37:29.600474965 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank1]:[W1118 11:37:29.567793121 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank28]:[W1118 11:37:29.275784865 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank13]:[W1118 11:37:29.044492328 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank12]:[W1118 11:37:29.625671959 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank17]:[W1118 11:37:29.677936236 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank9]:[W1118 11:37:29.839045933 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank16]:[W1118 11:37:29.656308608 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank7]:[W1118 11:37:29.704465782 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank3]:[W1118 11:37:29.045648632 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank18]:[W1118 11:37:29.729457380 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank5]:[W1118 11:37:29.695884492 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank14]:[W1118 11:37:29.986276504 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank22]:[W1118 11:37:29.857833750 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank27]:[W1118 11:37:29.737158869 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank21]:[W1118 11:37:29.760722442 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank11]:[W1118 11:37:29.948885653 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank26]:[W1118 11:37:29.793632232 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank30]:[W1118 11:37:29.132204465 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank24]:[W1118 11:37:29.953231319 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank10]:[W1118 11:37:29.889276142 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+/work/11803/zc7665/vista/envs/nf-crt/lib/python3.11/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank31]:[W1118 11:37:29.767983825 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[rank0]:[W1118 11:37:29.776814818 ProcessGroupNCCL.cpp:5310] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+Phantom: dce_moby (source files, streamed) | box: [93, 161, 65] + [64, 64, 64] | frames: 14401 | processes: 32 | time: [-36.0, 684.0]
+dce_moby/nested_low_rank_hash_nf step 1: MSE 0.00149201, temporal L2 0, total 0.00149201, fixed train 0.00111644, held-out nan
+dce_moby/nested_low_rank_hash_nf step 500: MSE 7.81758e-05, temporal L2 0, total 7.81758e-05, fixed train 6.54151e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 1000: MSE 5.59148e-05, temporal L2 0, total 5.59148e-05, fixed train 4.77294e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 1500: MSE 5.06209e-05, temporal L2 0, total 5.06209e-05, fixed train 4.33948e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 2000: MSE 3.57184e-05, temporal L2 0, total 3.57184e-05, fixed train 3.21631e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 2500: MSE 3.81679e-05, temporal L2 0, total 3.81679e-05, fixed train 3.03297e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 3000: MSE 3.36259e-05, temporal L2 0, total 3.36259e-05, fixed train 3.22557e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 3500: MSE 3.41218e-05, temporal L2 0, total 3.41218e-05, fixed train 3.1858e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 4000: MSE 2.88521e-05, temporal L2 0, total 2.88521e-05, fixed train 2.78359e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 4500: MSE 2.68085e-05, temporal L2 0, total 2.68085e-05, fixed train 2.41119e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 5000: MSE 2.63983e-05, temporal L2 0, total 2.63983e-05, fixed train 3.02155e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 5500: MSE 1.91971e-05, temporal L2 0, total 1.91971e-05, fixed train 2.10011e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 6000: MSE 2.66459e-05, temporal L2 0, total 2.66459e-05, fixed train 2.01687e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 6500: MSE 2.68513e-05, temporal L2 0, total 2.68513e-05, fixed train 2.21922e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 7000: MSE 1.80377e-05, temporal L2 0, total 1.80377e-05, fixed train 2.17548e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 7500: MSE 2.52764e-05, temporal L2 0, total 2.52764e-05, fixed train 2.35452e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 8000: MSE 1.97312e-05, temporal L2 0, total 1.97312e-05, fixed train 2.22972e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 8500: MSE 2.01672e-05, temporal L2 0, total 2.01672e-05, fixed train 1.83678e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 9000: MSE 1.80578e-05, temporal L2 0, total 1.80578e-05, fixed train 1.86572e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 9500: MSE 1.8916e-05, temporal L2 0, total 1.8916e-05, fixed train 2.22756e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 10000: MSE 1.73483e-05, temporal L2 0, total 1.73483e-05, fixed train 1.70343e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 10500: MSE 2.1691e-05, temporal L2 0, total 2.1691e-05, fixed train 1.93544e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 11000: MSE 1.76443e-05, temporal L2 0, total 1.76443e-05, fixed train 1.6315e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 11500: MSE 1.47339e-05, temporal L2 0, total 1.47339e-05, fixed train 1.91173e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 12000: MSE 1.94298e-05, temporal L2 0, total 1.94298e-05, fixed train 1.4852e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 12500: MSE 1.65464e-05, temporal L2 0, total 1.65464e-05, fixed train 1.96156e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 13000: MSE 1.9932e-05, temporal L2 0, total 1.9932e-05, fixed train 1.7887e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 13500: MSE 2.29323e-05, temporal L2 0, total 2.29323e-05, fixed train 2.00465e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 14000: MSE 2.42217e-05, temporal L2 0, total 2.42217e-05, fixed train 1.58056e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 14500: MSE 1.4672e-05, temporal L2 0, total 1.4672e-05, fixed train 1.31972e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 15000: MSE 1.93022e-05, temporal L2 0, total 1.93022e-05, fixed train 1.30693e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 15500: MSE 2.00695e-05, temporal L2 0, total 2.00695e-05, fixed train 1.58625e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 16000: MSE 1.77003e-05, temporal L2 0, total 1.77003e-05, fixed train 1.29967e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 16500: MSE 1.66826e-05, temporal L2 0, total 1.66826e-05, fixed train 1.2282e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 17000: MSE 1.68309e-05, temporal L2 0, total 1.68309e-05, fixed train 1.67452e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 17500: MSE 1.39136e-05, temporal L2 0, total 1.39136e-05, fixed train 1.22619e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 18000: MSE 1.54331e-05, temporal L2 0, total 1.54331e-05, fixed train 1.35705e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 18500: MSE 1.60713e-05, temporal L2 0, total 1.60713e-05, fixed train 1.49016e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 19000: MSE 1.4359e-05, temporal L2 0, total 1.4359e-05, fixed train 1.64194e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 19500: MSE 2.21151e-05, temporal L2 0, total 2.21151e-05, fixed train 1.83906e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 20000: MSE 1.29275e-05, temporal L2 0, total 1.29275e-05, fixed train 1.28856e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 20500: MSE 1.068e-05, temporal L2 0, total 1.068e-05, fixed train 1.30213e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 21000: MSE 1.45452e-05, temporal L2 0, total 1.45452e-05, fixed train 1.06451e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 21500: MSE 1.1838e-05, temporal L2 0, total 1.1838e-05, fixed train 1.2407e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 22000: MSE 2.10647e-05, temporal L2 0, total 2.10647e-05, fixed train 1.31928e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 22500: MSE 1.08305e-05, temporal L2 0, total 1.08305e-05, fixed train 1.21482e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 23000: MSE 1.3248e-05, temporal L2 0, total 1.3248e-05, fixed train 1.41332e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 23500: MSE 1.43834e-05, temporal L2 0, total 1.43834e-05, fixed train 1.24191e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 24000: MSE 1.31698e-05, temporal L2 0, total 1.31698e-05, fixed train 1.37974e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 24500: MSE 1.08485e-05, temporal L2 0, total 1.08485e-05, fixed train 1.35359e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 25000: MSE 1.08094e-05, temporal L2 0, total 1.08094e-05, fixed train 1.32926e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 25500: MSE 1.37063e-05, temporal L2 0, total 1.37063e-05, fixed train 1.00542e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 26000: MSE 1.63994e-05, temporal L2 0, total 1.63994e-05, fixed train 1.0348e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 26500: MSE 1.34328e-05, temporal L2 0, total 1.34328e-05, fixed train 1.03298e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 27000: MSE 1.56681e-05, temporal L2 0, total 1.56681e-05, fixed train 1.11912e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 27500: MSE 2.02948e-05, temporal L2 0, total 2.02948e-05, fixed train 1.21066e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 28000: MSE 1.25839e-05, temporal L2 0, total 1.25839e-05, fixed train 1.26537e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 28500: MSE 9.66599e-06, temporal L2 0, total 9.66599e-06, fixed train 1.16868e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 29000: MSE 1.31157e-05, temporal L2 0, total 1.31157e-05, fixed train 1.17323e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 29500: MSE 1.25769e-05, temporal L2 0, total 1.25769e-05, fixed train 1.19374e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 30000: MSE 1.19475e-05, temporal L2 0, total 1.19475e-05, fixed train 9.05588e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 30500: MSE 1.09617e-05, temporal L2 0, total 1.09617e-05, fixed train 1.15091e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 31000: MSE 1.07277e-05, temporal L2 0, total 1.07277e-05, fixed train 1.19958e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 31500: MSE 9.93968e-06, temporal L2 0, total 9.93968e-06, fixed train 1.28308e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 32000: MSE 1.75146e-05, temporal L2 0, total 1.75146e-05, fixed train 9.39117e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 32500: MSE 1.27119e-05, temporal L2 0, total 1.27119e-05, fixed train 1.28365e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 33000: MSE 1.00667e-05, temporal L2 0, total 1.00667e-05, fixed train 1.05199e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 33500: MSE 1.48306e-05, temporal L2 0, total 1.48306e-05, fixed train 1.16985e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 34000: MSE 1.18139e-05, temporal L2 0, total 1.18139e-05, fixed train 1.21053e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 34500: MSE 1.4202e-05, temporal L2 0, total 1.4202e-05, fixed train 1.08063e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 35000: MSE 8.35707e-06, temporal L2 0, total 8.35707e-06, fixed train 1.11445e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 35500: MSE 9.64872e-06, temporal L2 0, total 9.64872e-06, fixed train 8.26105e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 36000: MSE 1.3961e-05, temporal L2 0, total 1.3961e-05, fixed train 8.90925e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 36500: MSE 7.68582e-06, temporal L2 0, total 7.68582e-06, fixed train 8.95662e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 37000: MSE 1.34746e-05, temporal L2 0, total 1.34746e-05, fixed train 1.15939e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 37500: MSE 1.11361e-05, temporal L2 0, total 1.11361e-05, fixed train 1.04658e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 38000: MSE 9.79052e-06, temporal L2 0, total 9.79052e-06, fixed train 1.04162e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 38500: MSE 9.89735e-06, temporal L2 0, total 9.89735e-06, fixed train 9.0708e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 39000: MSE 1.10811e-05, temporal L2 0, total 1.10811e-05, fixed train 1.09051e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 39500: MSE 1.53752e-05, temporal L2 0, total 1.53752e-05, fixed train 9.65256e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 40000: MSE 7.91755e-06, temporal L2 0, total 7.91755e-06, fixed train 1.00847e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 40500: MSE 8.51394e-06, temporal L2 0, total 8.51394e-06, fixed train 8.92928e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 41000: MSE 1.14073e-05, temporal L2 0, total 1.14073e-05, fixed train 8.37983e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 41500: MSE 1.15307e-05, temporal L2 0, total 1.15307e-05, fixed train 1.11612e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 42000: MSE 7.6155e-06, temporal L2 0, total 7.6155e-06, fixed train 1.00687e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 42500: MSE 1.13805e-05, temporal L2 0, total 1.13805e-05, fixed train 8.84612e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 43000: MSE 9.25687e-06, temporal L2 0, total 9.25687e-06, fixed train 1.02678e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 43500: MSE 1.20095e-05, temporal L2 0, total 1.20095e-05, fixed train 1.27296e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 44000: MSE 8.58582e-06, temporal L2 0, total 8.58582e-06, fixed train 8.48493e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 44500: MSE 1.33939e-05, temporal L2 0, total 1.33939e-05, fixed train 1.06356e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 45000: MSE 7.93365e-06, temporal L2 0, total 7.93365e-06, fixed train 1.21685e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 45500: MSE 1.15407e-05, temporal L2 0, total 1.15407e-05, fixed train 1.016e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 46000: MSE 1.15524e-05, temporal L2 0, total 1.15524e-05, fixed train 9.398e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 46500: MSE 1.00931e-05, temporal L2 0, total 1.00931e-05, fixed train 1.07808e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 47000: MSE 1.56145e-05, temporal L2 0, total 1.56145e-05, fixed train 1.26101e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 47500: MSE 8.66395e-06, temporal L2 0, total 8.66395e-06, fixed train 7.36651e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 48000: MSE 1.28514e-05, temporal L2 0, total 1.28514e-05, fixed train 1.0293e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 48500: MSE 7.98385e-06, temporal L2 0, total 7.98385e-06, fixed train 8.62478e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 49000: MSE 1.16991e-05, temporal L2 0, total 1.16991e-05, fixed train 7.53044e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 49500: MSE 8.42665e-06, temporal L2 0, total 8.42665e-06, fixed train 8.1093e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 50000: MSE 7.70717e-06, temporal L2 0, total 7.70717e-06, fixed train 1.08632e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 50500: MSE 1.10105e-05, temporal L2 0, total 1.10105e-05, fixed train 8.58272e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 51000: MSE 1.34174e-05, temporal L2 0, total 1.34174e-05, fixed train 7.92841e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 51500: MSE 1.05249e-05, temporal L2 0, total 1.05249e-05, fixed train 9.15411e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 52000: MSE 1.06101e-05, temporal L2 0, total 1.06101e-05, fixed train 8.93985e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 52500: MSE 1.03169e-05, temporal L2 0, total 1.03169e-05, fixed train 7.74343e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 53000: MSE 1.14769e-05, temporal L2 0, total 1.14769e-05, fixed train 7.28215e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 53500: MSE 7.03885e-06, temporal L2 0, total 7.03885e-06, fixed train 9.0241e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 54000: MSE 1.23966e-05, temporal L2 0, total 1.23966e-05, fixed train 9.5907e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 54500: MSE 1.62509e-05, temporal L2 0, total 1.62509e-05, fixed train 7.65586e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 55000: MSE 1.01577e-05, temporal L2 0, total 1.01577e-05, fixed train 8.50053e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 55500: MSE 7.20286e-06, temporal L2 0, total 7.20286e-06, fixed train 8.67269e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 56000: MSE 1.02759e-05, temporal L2 0, total 1.02759e-05, fixed train 7.92079e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 56500: MSE 1.22117e-05, temporal L2 0, total 1.22117e-05, fixed train 7.94306e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 57000: MSE 1.30439e-05, temporal L2 0, total 1.30439e-05, fixed train 8.76254e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 57500: MSE 6.46972e-06, temporal L2 0, total 6.46972e-06, fixed train 8.62395e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 58000: MSE 8.81599e-06, temporal L2 0, total 8.81599e-06, fixed train 9.31009e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 58500: MSE 8.64158e-06, temporal L2 0, total 8.64158e-06, fixed train 6.49202e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 59000: MSE 7.04756e-06, temporal L2 0, total 7.04756e-06, fixed train 9.27206e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 59500: MSE 1.17201e-05, temporal L2 0, total 1.17201e-05, fixed train 1.03435e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 60000: MSE 1.06581e-05, temporal L2 0, total 1.06581e-05, fixed train 9.4191e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 60500: MSE 6.89571e-06, temporal L2 0, total 6.89571e-06, fixed train 8.76786e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 61000: MSE 7.60653e-06, temporal L2 0, total 7.60653e-06, fixed train 6.9739e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 61500: MSE 7.53885e-06, temporal L2 0, total 7.53885e-06, fixed train 8.8304e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 62000: MSE 1.3236e-05, temporal L2 0, total 1.3236e-05, fixed train 7.90244e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 62500: MSE 1.27584e-05, temporal L2 0, total 1.27584e-05, fixed train 7.60802e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 63000: MSE 7.42624e-06, temporal L2 0, total 7.42624e-06, fixed train 9.52705e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 63500: MSE 7.52236e-06, temporal L2 0, total 7.52236e-06, fixed train 7.41816e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 64000: MSE 8.4333e-06, temporal L2 0, total 8.4333e-06, fixed train 7.4727e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 64500: MSE 7.40161e-06, temporal L2 0, total 7.40161e-06, fixed train 6.15263e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 65000: MSE 1.08942e-05, temporal L2 0, total 1.08942e-05, fixed train 7.44783e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 65500: MSE 9.99501e-06, temporal L2 0, total 9.99501e-06, fixed train 7.84188e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 66000: MSE 8.74627e-06, temporal L2 0, total 8.74627e-06, fixed train 8.63221e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 66500: MSE 9.40949e-06, temporal L2 0, total 9.40949e-06, fixed train 1.02908e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 67000: MSE 6.85578e-06, temporal L2 0, total 6.85578e-06, fixed train 9.2102e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 67500: MSE 6.99087e-06, temporal L2 0, total 6.99087e-06, fixed train 7.86294e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 68000: MSE 8.40015e-06, temporal L2 0, total 8.40015e-06, fixed train 7.36873e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 68500: MSE 1.44093e-05, temporal L2 0, total 1.44093e-05, fixed train 7.54091e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 69000: MSE 6.86868e-06, temporal L2 0, total 6.86868e-06, fixed train 5.95585e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 69500: MSE 5.69428e-06, temporal L2 0, total 5.69428e-06, fixed train 8.4134e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 70000: MSE 8.02441e-06, temporal L2 0, total 8.02441e-06, fixed train 6.53499e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 70500: MSE 5.23957e-06, temporal L2 0, total 5.23957e-06, fixed train 7.3464e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 71000: MSE 7.94574e-06, temporal L2 0, total 7.94574e-06, fixed train 8.39922e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 71500: MSE 8.28906e-06, temporal L2 0, total 8.28906e-06, fixed train 8.59857e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 72000: MSE 6.07477e-06, temporal L2 0, total 6.07477e-06, fixed train 8.90762e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 72500: MSE 7.61126e-06, temporal L2 0, total 7.61126e-06, fixed train 1.02518e-05, held-out nan
+dce_moby/nested_low_rank_hash_nf step 73000: MSE 6.57288e-06, temporal L2 0, total 6.57288e-06, fixed train 7.88205e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 73500: MSE 1.01222e-05, temporal L2 0, total 1.01222e-05, fixed train 8.2419e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 74000: MSE 9.4935e-06, temporal L2 0, total 9.4935e-06, fixed train 9.93765e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 74500: MSE 9.2985e-06, temporal L2 0, total 9.2985e-06, fixed train 8.52434e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 75000: MSE 9.25733e-06, temporal L2 0, total 9.25733e-06, fixed train 7.04331e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 75500: MSE 5.30773e-06, temporal L2 0, total 5.30773e-06, fixed train 6.50779e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 76000: MSE 1.19271e-05, temporal L2 0, total 1.19271e-05, fixed train 7.35843e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 76500: MSE 1.08566e-05, temporal L2 0, total 1.08566e-05, fixed train 6.39904e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 77000: MSE 9.53248e-06, temporal L2 0, total 9.53248e-06, fixed train 7.52333e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 77500: MSE 1.00347e-05, temporal L2 0, total 1.00347e-05, fixed train 4.92494e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 78000: MSE 8.79079e-06, temporal L2 0, total 8.79079e-06, fixed train 6.27925e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 78500: MSE 1.11202e-05, temporal L2 0, total 1.11202e-05, fixed train 6.2054e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 79000: MSE 6.42248e-06, temporal L2 0, total 6.42248e-06, fixed train 7.59148e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 79500: MSE 7.70571e-06, temporal L2 0, total 7.70571e-06, fixed train 6.30849e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 80000: MSE 7.61683e-06, temporal L2 0, total 7.61683e-06, fixed train 7.88097e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 80500: MSE 1.19687e-05, temporal L2 0, total 1.19687e-05, fixed train 9.34302e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 81000: MSE 5.73319e-06, temporal L2 0, total 5.73319e-06, fixed train 7.39332e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 81500: MSE 9.83013e-06, temporal L2 0, total 9.83013e-06, fixed train 6.9499e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 82000: MSE 7.41369e-06, temporal L2 0, total 7.41369e-06, fixed train 9.16663e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 82500: MSE 6.50341e-06, temporal L2 0, total 6.50341e-06, fixed train 7.3602e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 83000: MSE 4.43154e-06, temporal L2 0, total 4.43154e-06, fixed train 8.86867e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 83500: MSE 1.0566e-05, temporal L2 0, total 1.0566e-05, fixed train 9.38432e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 84000: MSE 1.00578e-05, temporal L2 0, total 1.00578e-05, fixed train 6.41357e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 84500: MSE 7.73409e-06, temporal L2 0, total 7.73409e-06, fixed train 6.86235e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 85000: MSE 9.57514e-06, temporal L2 0, total 9.57514e-06, fixed train 5.69726e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 85500: MSE 6.82278e-06, temporal L2 0, total 6.82278e-06, fixed train 6.55534e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 86000: MSE 5.60332e-06, temporal L2 0, total 5.60332e-06, fixed train 8.98644e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 86500: MSE 1.1279e-05, temporal L2 0, total 1.1279e-05, fixed train 8.96733e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 87000: MSE 5.09781e-06, temporal L2 0, total 5.09781e-06, fixed train 7.46591e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 87500: MSE 1.02097e-05, temporal L2 0, total 1.02097e-05, fixed train 7.38185e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 88000: MSE 4.38252e-06, temporal L2 0, total 4.38252e-06, fixed train 8.10977e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 88500: MSE 5.05404e-06, temporal L2 0, total 5.05404e-06, fixed train 6.87996e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 89000: MSE 5.12601e-06, temporal L2 0, total 5.12601e-06, fixed train 5.64118e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 89500: MSE 7.13684e-06, temporal L2 0, total 7.13684e-06, fixed train 7.35266e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 90000: MSE 7.79857e-06, temporal L2 0, total 7.79857e-06, fixed train 6.77837e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 90500: MSE 8.09939e-06, temporal L2 0, total 8.09939e-06, fixed train 7.43032e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 91000: MSE 5.18329e-06, temporal L2 0, total 5.18329e-06, fixed train 6.06186e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 91500: MSE 9.46609e-06, temporal L2 0, total 9.46609e-06, fixed train 6.66202e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 92000: MSE 6.44176e-06, temporal L2 0, total 6.44176e-06, fixed train 6.37863e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 92500: MSE 7.44613e-06, temporal L2 0, total 7.44613e-06, fixed train 8.15187e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 93000: MSE 5.48511e-06, temporal L2 0, total 5.48511e-06, fixed train 8.72646e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 93500: MSE 7.99575e-06, temporal L2 0, total 7.99575e-06, fixed train 6.21615e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 94000: MSE 9.47322e-06, temporal L2 0, total 9.47322e-06, fixed train 5.02188e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 94500: MSE 7.58691e-06, temporal L2 0, total 7.58691e-06, fixed train 5.5842e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 95000: MSE 9.54084e-06, temporal L2 0, total 9.54084e-06, fixed train 6.89829e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 95500: MSE 7.10212e-06, temporal L2 0, total 7.10212e-06, fixed train 6.30948e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 96000: MSE 5.8618e-06, temporal L2 0, total 5.8618e-06, fixed train 5.72156e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 96500: MSE 8.86243e-06, temporal L2 0, total 8.86243e-06, fixed train 4.88782e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 97000: MSE 4.09519e-06, temporal L2 0, total 4.09519e-06, fixed train 6.76048e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 97500: MSE 6.21585e-06, temporal L2 0, total 6.21585e-06, fixed train 6.35181e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 98000: MSE 8.43489e-06, temporal L2 0, total 8.43489e-06, fixed train 8.54334e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 98500: MSE 6.29992e-06, temporal L2 0, total 6.29992e-06, fixed train 8.08078e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 99000: MSE 5.69412e-06, temporal L2 0, total 5.69412e-06, fixed train 5.60005e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 99500: MSE 8.04049e-06, temporal L2 0, total 8.04049e-06, fixed train 5.61365e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 100000: MSE 4.74252e-06, temporal L2 0, total 4.74252e-06, fixed train 5.714e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 100500: MSE 5.49086e-06, temporal L2 0, total 5.49086e-06, fixed train 5.48003e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 101000: MSE 4.32771e-06, temporal L2 0, total 4.32771e-06, fixed train 7.68776e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 101500: MSE 7.46035e-06, temporal L2 0, total 7.46035e-06, fixed train 7.50259e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 102000: MSE 9.26134e-06, temporal L2 0, total 9.26134e-06, fixed train 7.30575e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 102500: MSE 8.97348e-06, temporal L2 0, total 8.97348e-06, fixed train 5.32279e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 103000: MSE 7.21144e-06, temporal L2 0, total 7.21144e-06, fixed train 6.35428e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 103500: MSE 6.39286e-06, temporal L2 0, total 6.39286e-06, fixed train 7.34144e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 104000: MSE 5.77866e-06, temporal L2 0, total 5.77866e-06, fixed train 7.34374e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 104500: MSE 5.72648e-06, temporal L2 0, total 5.72648e-06, fixed train 6.50689e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 105000: MSE 1.01004e-05, temporal L2 0, total 1.01004e-05, fixed train 6.23691e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 105500: MSE 1.04145e-05, temporal L2 0, total 1.04145e-05, fixed train 6.68436e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 106000: MSE 6.36171e-06, temporal L2 0, total 6.36171e-06, fixed train 4.53595e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 106500: MSE 5.27439e-06, temporal L2 0, total 5.27439e-06, fixed train 8.61319e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 107000: MSE 7.20224e-06, temporal L2 0, total 7.20224e-06, fixed train 6.82646e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 107500: MSE 5.10498e-06, temporal L2 0, total 5.10498e-06, fixed train 5.01027e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 108000: MSE 7.41193e-06, temporal L2 0, total 7.41193e-06, fixed train 5.21023e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 108500: MSE 3.29266e-06, temporal L2 0, total 3.29266e-06, fixed train 6.63764e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 109000: MSE 5.66277e-06, temporal L2 0, total 5.66277e-06, fixed train 5.87589e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 109500: MSE 6.47653e-06, temporal L2 0, total 6.47653e-06, fixed train 6.68248e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 110000: MSE 6.25588e-06, temporal L2 0, total 6.25588e-06, fixed train 5.2122e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 110500: MSE 8.73319e-06, temporal L2 0, total 8.73319e-06, fixed train 5.87876e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 111000: MSE 1.15942e-05, temporal L2 0, total 1.15942e-05, fixed train 7.18277e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 111500: MSE 4.67095e-06, temporal L2 0, total 4.67095e-06, fixed train 7.29331e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 112000: MSE 6.90755e-06, temporal L2 0, total 6.90755e-06, fixed train 8.27202e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 112500: MSE 8.91511e-06, temporal L2 0, total 8.91511e-06, fixed train 7.08266e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 113000: MSE 5.04507e-06, temporal L2 0, total 5.04507e-06, fixed train 7.30152e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 113500: MSE 5.08537e-06, temporal L2 0, total 5.08537e-06, fixed train 5.56381e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 114000: MSE 6.07004e-06, temporal L2 0, total 6.07004e-06, fixed train 8.35876e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 114500: MSE 5.00012e-06, temporal L2 0, total 5.00012e-06, fixed train 7.47249e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 115000: MSE 5.33288e-06, temporal L2 0, total 5.33288e-06, fixed train 5.33535e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 115500: MSE 7.00304e-06, temporal L2 0, total 7.00304e-06, fixed train 5.40857e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 116000: MSE 5.07676e-06, temporal L2 0, total 5.07676e-06, fixed train 6.11921e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 116500: MSE 8.06085e-06, temporal L2 0, total 8.06085e-06, fixed train 7.33698e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 117000: MSE 4.99122e-06, temporal L2 0, total 4.99122e-06, fixed train 7.70038e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 117500: MSE 3.36182e-06, temporal L2 0, total 3.36182e-06, fixed train 6.52523e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 118000: MSE 4.00651e-06, temporal L2 0, total 4.00651e-06, fixed train 7.65849e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 118500: MSE 5.18162e-06, temporal L2 0, total 5.18162e-06, fixed train 5.66136e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 119000: MSE 9.22302e-06, temporal L2 0, total 9.22302e-06, fixed train 6.64779e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 119500: MSE 7.2634e-06, temporal L2 0, total 7.2634e-06, fixed train 5.17505e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 120000: MSE 4.46078e-06, temporal L2 0, total 4.46078e-06, fixed train 4.43585e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 120500: MSE 6.21546e-06, temporal L2 0, total 6.21546e-06, fixed train 6.22077e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 121000: MSE 1.17556e-05, temporal L2 0, total 1.17556e-05, fixed train 5.18134e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 121500: MSE 7.92897e-06, temporal L2 0, total 7.92897e-06, fixed train 5.19651e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 122000: MSE 4.86762e-06, temporal L2 0, total 4.86762e-06, fixed train 5.88038e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 122500: MSE 5.41931e-06, temporal L2 0, total 5.41931e-06, fixed train 6.92635e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 123000: MSE 5.21272e-06, temporal L2 0, total 5.21272e-06, fixed train 6.75434e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 123500: MSE 6.7096e-06, temporal L2 0, total 6.7096e-06, fixed train 6.99626e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 124000: MSE 9.91858e-06, temporal L2 0, total 9.91858e-06, fixed train 7.85071e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 124500: MSE 6.97624e-06, temporal L2 0, total 6.97624e-06, fixed train 6.57319e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 125000: MSE 5.02388e-06, temporal L2 0, total 5.02388e-06, fixed train 6.51173e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 125500: MSE 4.74558e-06, temporal L2 0, total 4.74558e-06, fixed train 8.16356e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 126000: MSE 5.98309e-06, temporal L2 0, total 5.98309e-06, fixed train 7.94519e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 126500: MSE 4.41727e-06, temporal L2 0, total 4.41727e-06, fixed train 6.98374e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 127000: MSE 5.92938e-06, temporal L2 0, total 5.92938e-06, fixed train 9.95393e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 127500: MSE 3.70754e-06, temporal L2 0, total 3.70754e-06, fixed train 7.16889e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 128000: MSE 6.2507e-06, temporal L2 0, total 6.2507e-06, fixed train 7.65501e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 128500: MSE 4.86458e-06, temporal L2 0, total 4.86458e-06, fixed train 4.59394e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 129000: MSE 9.49103e-06, temporal L2 0, total 9.49103e-06, fixed train 5.28294e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 129500: MSE 3.42569e-06, temporal L2 0, total 3.42569e-06, fixed train 6.02261e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 130000: MSE 6.00715e-06, temporal L2 0, total 6.00715e-06, fixed train 8.28822e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 130500: MSE 9.32553e-06, temporal L2 0, total 9.32553e-06, fixed train 5.89451e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 131000: MSE 5.47647e-06, temporal L2 0, total 5.47647e-06, fixed train 5.40167e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 131500: MSE 5.48376e-06, temporal L2 0, total 5.48376e-06, fixed train 7.79947e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 132000: MSE 7.56881e-06, temporal L2 0, total 7.56881e-06, fixed train 6.00378e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 132500: MSE 5.59016e-06, temporal L2 0, total 5.59016e-06, fixed train 6.62733e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 133000: MSE 8.68413e-06, temporal L2 0, total 8.68413e-06, fixed train 7.12975e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 133500: MSE 2.49103e-06, temporal L2 0, total 2.49103e-06, fixed train 4.63181e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 134000: MSE 4.80543e-06, temporal L2 0, total 4.80543e-06, fixed train 7.31429e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 134500: MSE 3.52572e-06, temporal L2 0, total 3.52572e-06, fixed train 5.96844e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 135000: MSE 6.55219e-06, temporal L2 0, total 6.55219e-06, fixed train 6.6127e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 135500: MSE 5.12204e-06, temporal L2 0, total 5.12204e-06, fixed train 6.14345e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 136000: MSE 3.30758e-06, temporal L2 0, total 3.30758e-06, fixed train 3.75572e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 136500: MSE 9.39978e-06, temporal L2 0, total 9.39978e-06, fixed train 3.91643e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 137000: MSE 4.51631e-06, temporal L2 0, total 4.51631e-06, fixed train 4.70287e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 137500: MSE 3.86956e-06, temporal L2 0, total 3.86956e-06, fixed train 4.70523e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 138000: MSE 6.00567e-06, temporal L2 0, total 6.00567e-06, fixed train 5.31082e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 138500: MSE 5.6167e-06, temporal L2 0, total 5.6167e-06, fixed train 4.89676e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 139000: MSE 4.15529e-06, temporal L2 0, total 4.15529e-06, fixed train 4.33746e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 139500: MSE 7.15849e-06, temporal L2 0, total 7.15849e-06, fixed train 5.61866e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 140000: MSE 6.0046e-06, temporal L2 0, total 6.0046e-06, fixed train 7.48583e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 140500: MSE 6.05094e-06, temporal L2 0, total 6.05094e-06, fixed train 4.91215e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 141000: MSE 4.78641e-06, temporal L2 0, total 4.78641e-06, fixed train 6.12322e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 141500: MSE 3.74071e-06, temporal L2 0, total 3.74071e-06, fixed train 5.91356e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 142000: MSE 5.58983e-06, temporal L2 0, total 5.58983e-06, fixed train 5.45354e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 142500: MSE 4.66727e-06, temporal L2 0, total 4.66727e-06, fixed train 6.3853e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 143000: MSE 5.64059e-06, temporal L2 0, total 5.64059e-06, fixed train 5.20658e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 143500: MSE 4.62651e-06, temporal L2 0, total 4.62651e-06, fixed train 5.82343e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 144000: MSE 7.48109e-06, temporal L2 0, total 7.48109e-06, fixed train 6.46108e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 144500: MSE 7.00031e-06, temporal L2 0, total 7.00031e-06, fixed train 6.08701e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 145000: MSE 1.00766e-05, temporal L2 0, total 1.00766e-05, fixed train 4.33314e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 145500: MSE 6.4582e-06, temporal L2 0, total 6.4582e-06, fixed train 6.57145e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 146000: MSE 5.65425e-06, temporal L2 0, total 5.65425e-06, fixed train 5.34315e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 146500: MSE 2.90352e-06, temporal L2 0, total 2.90352e-06, fixed train 4.67398e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 147000: MSE 4.44231e-06, temporal L2 0, total 4.44231e-06, fixed train 4.71642e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 147500: MSE 5.50755e-06, temporal L2 0, total 5.50755e-06, fixed train 6.86519e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 148000: MSE 6.4759e-06, temporal L2 0, total 6.4759e-06, fixed train 6.37844e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 148500: MSE 3.33311e-06, temporal L2 0, total 3.33311e-06, fixed train 4.392e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 149000: MSE 5.29108e-06, temporal L2 0, total 5.29108e-06, fixed train 3.42001e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 149500: MSE 4.09962e-06, temporal L2 0, total 4.09962e-06, fixed train 5.81329e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 150000: MSE 3.84824e-06, temporal L2 0, total 3.84824e-06, fixed train 5.79705e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 150500: MSE 5.53431e-06, temporal L2 0, total 5.53431e-06, fixed train 5.17967e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 151000: MSE 5.02652e-06, temporal L2 0, total 5.02652e-06, fixed train 5.29381e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 151500: MSE 7.09114e-06, temporal L2 0, total 7.09114e-06, fixed train 5.7083e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 152000: MSE 3.30296e-06, temporal L2 0, total 3.30296e-06, fixed train 5.37968e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 152500: MSE 6.55881e-06, temporal L2 0, total 6.55881e-06, fixed train 4.1396e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 153000: MSE 3.89289e-06, temporal L2 0, total 3.89289e-06, fixed train 3.88428e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 153500: MSE 6.9167e-06, temporal L2 0, total 6.9167e-06, fixed train 4.18536e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 154000: MSE 6.86538e-06, temporal L2 0, total 6.86538e-06, fixed train 4.08049e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 154500: MSE 8.15319e-06, temporal L2 0, total 8.15319e-06, fixed train 5.85359e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 155000: MSE 8.57484e-06, temporal L2 0, total 8.57484e-06, fixed train 5.73149e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 155500: MSE 3.30776e-06, temporal L2 0, total 3.30776e-06, fixed train 4.50384e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 156000: MSE 3.94699e-06, temporal L2 0, total 3.94699e-06, fixed train 3.69864e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 156500: MSE 6.31719e-06, temporal L2 0, total 6.31719e-06, fixed train 4.62285e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 157000: MSE 6.32915e-06, temporal L2 0, total 6.32915e-06, fixed train 3.8853e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 157500: MSE 8.45436e-06, temporal L2 0, total 8.45436e-06, fixed train 4.66847e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 158000: MSE 4.22196e-06, temporal L2 0, total 4.22196e-06, fixed train 4.94122e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 158500: MSE 5.66292e-06, temporal L2 0, total 5.66292e-06, fixed train 3.51979e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 159000: MSE 4.76194e-06, temporal L2 0, total 4.76194e-06, fixed train 3.97348e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 159500: MSE 4.01871e-06, temporal L2 0, total 4.01871e-06, fixed train 3.87706e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 160000: MSE 7.55098e-06, temporal L2 0, total 7.55098e-06, fixed train 4.86417e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 160500: MSE 4.97406e-06, temporal L2 0, total 4.97406e-06, fixed train 4.4384e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 161000: MSE 7.2968e-06, temporal L2 0, total 7.2968e-06, fixed train 5.49484e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 161500: MSE 5.57074e-06, temporal L2 0, total 5.57074e-06, fixed train 4.52101e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 162000: MSE 6.24126e-06, temporal L2 0, total 6.24126e-06, fixed train 3.79056e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 162500: MSE 5.21593e-06, temporal L2 0, total 5.21593e-06, fixed train 5.54664e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 163000: MSE 5.00911e-06, temporal L2 0, total 5.00911e-06, fixed train 5.1887e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 163500: MSE 5.1227e-06, temporal L2 0, total 5.1227e-06, fixed train 3.67981e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 164000: MSE 4.58267e-06, temporal L2 0, total 4.58267e-06, fixed train 4.48153e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 164500: MSE 3.90617e-06, temporal L2 0, total 3.90617e-06, fixed train 3.09577e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 165000: MSE 3.82836e-06, temporal L2 0, total 3.82836e-06, fixed train 3.52598e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 165500: MSE 5.28219e-06, temporal L2 0, total 5.28219e-06, fixed train 3.32145e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 166000: MSE 5.11092e-06, temporal L2 0, total 5.11092e-06, fixed train 4.49631e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 166500: MSE 8.93597e-06, temporal L2 0, total 8.93597e-06, fixed train 4.98282e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 167000: MSE 3.62344e-06, temporal L2 0, total 3.62344e-06, fixed train 4.50941e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 167500: MSE 5.83926e-06, temporal L2 0, total 5.83926e-06, fixed train 4.53807e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 168000: MSE 4.70611e-06, temporal L2 0, total 4.70611e-06, fixed train 3.35318e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 168500: MSE 5.48892e-06, temporal L2 0, total 5.48892e-06, fixed train 3.40557e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 169000: MSE 4.32784e-06, temporal L2 0, total 4.32784e-06, fixed train 4.76705e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 169500: MSE 3.28562e-06, temporal L2 0, total 3.28562e-06, fixed train 4.74198e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 170000: MSE 4.86726e-06, temporal L2 0, total 4.86726e-06, fixed train 2.9995e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 170500: MSE 4.97031e-06, temporal L2 0, total 4.97031e-06, fixed train 3.39634e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 171000: MSE 3.2723e-06, temporal L2 0, total 3.2723e-06, fixed train 4.27112e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 171500: MSE 6.819e-06, temporal L2 0, total 6.819e-06, fixed train 3.98448e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 172000: MSE 7.24792e-06, temporal L2 0, total 7.24792e-06, fixed train 4.41164e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 172500: MSE 4.30223e-06, temporal L2 0, total 4.30223e-06, fixed train 5.36896e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 173000: MSE 6.85645e-06, temporal L2 0, total 6.85645e-06, fixed train 4.57653e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 173500: MSE 5.35059e-06, temporal L2 0, total 5.35059e-06, fixed train 5.31311e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 174000: MSE 4.0816e-06, temporal L2 0, total 4.0816e-06, fixed train 5.58719e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 174500: MSE 6.92309e-06, temporal L2 0, total 6.92309e-06, fixed train 6.09503e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 175000: MSE 4.50265e-06, temporal L2 0, total 4.50265e-06, fixed train 4.02237e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 175500: MSE 4.21826e-06, temporal L2 0, total 4.21826e-06, fixed train 4.6322e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 176000: MSE 7.40774e-06, temporal L2 0, total 7.40774e-06, fixed train 3.59432e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 176500: MSE 5.63485e-06, temporal L2 0, total 5.63485e-06, fixed train 5.176e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 177000: MSE 4.35531e-06, temporal L2 0, total 4.35531e-06, fixed train 4.43989e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 177500: MSE 4.0269e-06, temporal L2 0, total 4.0269e-06, fixed train 4.32746e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 178000: MSE 4.85509e-06, temporal L2 0, total 4.85509e-06, fixed train 5.62978e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 178500: MSE 5.90353e-06, temporal L2 0, total 5.90353e-06, fixed train 4.16441e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 179000: MSE 4.53207e-06, temporal L2 0, total 4.53207e-06, fixed train 4.0527e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 179500: MSE 7.12756e-06, temporal L2 0, total 7.12756e-06, fixed train 6.76415e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 180000: MSE 4.23679e-06, temporal L2 0, total 4.23679e-06, fixed train 3.68811e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 180500: MSE 5.02843e-06, temporal L2 0, total 5.02843e-06, fixed train 4.68607e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 181000: MSE 3.00759e-06, temporal L2 0, total 3.00759e-06, fixed train 4.32143e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 181500: MSE 3.31841e-06, temporal L2 0, total 3.31841e-06, fixed train 5.79425e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 182000: MSE 4.31627e-06, temporal L2 0, total 4.31627e-06, fixed train 4.49724e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 182500: MSE 6.39565e-06, temporal L2 0, total 6.39565e-06, fixed train 6.19377e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 183000: MSE 5.82409e-06, temporal L2 0, total 5.82409e-06, fixed train 3.32954e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 183500: MSE 3.29035e-06, temporal L2 0, total 3.29035e-06, fixed train 2.83517e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 184000: MSE 6.7943e-06, temporal L2 0, total 6.7943e-06, fixed train 3.87937e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 184500: MSE 3.9755e-06, temporal L2 0, total 3.9755e-06, fixed train 5.27652e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 185000: MSE 2.52964e-06, temporal L2 0, total 2.52964e-06, fixed train 4.4015e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 185500: MSE 4.97891e-06, temporal L2 0, total 4.97891e-06, fixed train 3.98752e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 186000: MSE 2.80756e-06, temporal L2 0, total 2.80756e-06, fixed train 5.14929e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 186500: MSE 6.56057e-06, temporal L2 0, total 6.56057e-06, fixed train 6.91497e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 187000: MSE 3.80834e-06, temporal L2 0, total 3.80834e-06, fixed train 6.42161e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 187500: MSE 3.40251e-06, temporal L2 0, total 3.40251e-06, fixed train 3.58866e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 188000: MSE 6.60031e-06, temporal L2 0, total 6.60031e-06, fixed train 5.68101e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 188500: MSE 4.33375e-06, temporal L2 0, total 4.33375e-06, fixed train 3.82399e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 189000: MSE 4.52007e-06, temporal L2 0, total 4.52007e-06, fixed train 3.67106e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 189500: MSE 3.56998e-06, temporal L2 0, total 3.56998e-06, fixed train 3.21337e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 190000: MSE 4.31293e-06, temporal L2 0, total 4.31293e-06, fixed train 4.25514e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 190500: MSE 3.44784e-06, temporal L2 0, total 3.44784e-06, fixed train 3.67169e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 191000: MSE 2.77294e-06, temporal L2 0, total 2.77294e-06, fixed train 3.84704e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 191500: MSE 3.26267e-06, temporal L2 0, total 3.26267e-06, fixed train 9.17913e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 192000: MSE 4.88808e-06, temporal L2 0, total 4.88808e-06, fixed train 4.83813e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 192500: MSE 4.89426e-06, temporal L2 0, total 4.89426e-06, fixed train 4.83865e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 193000: MSE 3.30976e-06, temporal L2 0, total 3.30976e-06, fixed train 4.01498e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 193500: MSE 3.67153e-06, temporal L2 0, total 3.67153e-06, fixed train 3.82345e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 194000: MSE 5.30204e-06, temporal L2 0, total 5.30204e-06, fixed train 4.87808e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 194500: MSE 5.0406e-06, temporal L2 0, total 5.0406e-06, fixed train 4.1012e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 195000: MSE 3.74758e-06, temporal L2 0, total 3.74758e-06, fixed train 4.548e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 195500: MSE 2.42661e-06, temporal L2 0, total 2.42661e-06, fixed train 3.67326e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 196000: MSE 6.51945e-06, temporal L2 0, total 6.51945e-06, fixed train 3.62615e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 196500: MSE 3.69585e-06, temporal L2 0, total 3.69585e-06, fixed train 4.64985e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 197000: MSE 4.37707e-06, temporal L2 0, total 4.37707e-06, fixed train 5.27679e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 197500: MSE 5.30985e-06, temporal L2 0, total 5.30985e-06, fixed train 5.4176e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 198000: MSE 4.45146e-06, temporal L2 0, total 4.45146e-06, fixed train 3.49857e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 198500: MSE 6.04496e-06, temporal L2 0, total 6.04496e-06, fixed train 5.23037e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 199000: MSE 4.76892e-06, temporal L2 0, total 4.76892e-06, fixed train 4.15221e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 199500: MSE 7.13857e-06, temporal L2 0, total 7.13857e-06, fixed train 4.09407e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 200000: MSE 4.02842e-06, temporal L2 0, total 4.02842e-06, fixed train 6.79116e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 200500: MSE 2.52163e-06, temporal L2 0, total 2.52163e-06, fixed train 4.41341e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 201000: MSE 4.96119e-06, temporal L2 0, total 4.96119e-06, fixed train 3.05239e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 201500: MSE 4.99202e-06, temporal L2 0, total 4.99202e-06, fixed train 5.10155e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 202000: MSE 2.84179e-06, temporal L2 0, total 2.84179e-06, fixed train 3.54732e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 202500: MSE 3.16903e-06, temporal L2 0, total 3.16903e-06, fixed train 3.60708e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 203000: MSE 5.21573e-06, temporal L2 0, total 5.21573e-06, fixed train 4.39201e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 203500: MSE 6.31864e-06, temporal L2 0, total 6.31864e-06, fixed train 4.32563e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 204000: MSE 3.64127e-06, temporal L2 0, total 3.64127e-06, fixed train 5.03809e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 204500: MSE 4.14957e-06, temporal L2 0, total 4.14957e-06, fixed train 4.24233e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 205000: MSE 3.40929e-06, temporal L2 0, total 3.40929e-06, fixed train 3.41289e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 205500: MSE 4.62273e-06, temporal L2 0, total 4.62273e-06, fixed train 2.36149e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 206000: MSE 3.02262e-06, temporal L2 0, total 3.02262e-06, fixed train 3.42939e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 206500: MSE 5.13319e-06, temporal L2 0, total 5.13319e-06, fixed train 4.52363e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 207000: MSE 8.22072e-06, temporal L2 0, total 8.22072e-06, fixed train 4.36405e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 207500: MSE 5.11232e-06, temporal L2 0, total 5.11232e-06, fixed train 5.94747e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 208000: MSE 3.19987e-06, temporal L2 0, total 3.19987e-06, fixed train 4.56876e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 208500: MSE 3.42091e-06, temporal L2 0, total 3.42091e-06, fixed train 3.8043e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 209000: MSE 7.28322e-06, temporal L2 0, total 7.28322e-06, fixed train 3.70519e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 209500: MSE 4.05954e-06, temporal L2 0, total 4.05954e-06, fixed train 2.3564e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 210000: MSE 5.09519e-06, temporal L2 0, total 5.09519e-06, fixed train 5.33086e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 210500: MSE 4.48002e-06, temporal L2 0, total 4.48002e-06, fixed train 3.26746e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 211000: MSE 3.62747e-06, temporal L2 0, total 3.62747e-06, fixed train 2.65293e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 211500: MSE 5.16769e-06, temporal L2 0, total 5.16769e-06, fixed train 3.77077e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 212000: MSE 3.95012e-06, temporal L2 0, total 3.95012e-06, fixed train 3.11932e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 212500: MSE 3.43259e-06, temporal L2 0, total 3.43259e-06, fixed train 4.36534e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 213000: MSE 3.14602e-06, temporal L2 0, total 3.14602e-06, fixed train 3.27337e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 213500: MSE 5.42426e-06, temporal L2 0, total 5.42426e-06, fixed train 4.75699e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 214000: MSE 3.94706e-06, temporal L2 0, total 3.94706e-06, fixed train 4.6407e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 214500: MSE 2.38336e-06, temporal L2 0, total 2.38336e-06, fixed train 6.17383e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 215000: MSE 4.53277e-06, temporal L2 0, total 4.53277e-06, fixed train 4.6938e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 215500: MSE 3.60004e-06, temporal L2 0, total 3.60004e-06, fixed train 4.01761e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 216000: MSE 4.81219e-06, temporal L2 0, total 4.81219e-06, fixed train 3.19149e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 216500: MSE 3.79443e-06, temporal L2 0, total 3.79443e-06, fixed train 3.00445e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 217000: MSE 3.21688e-06, temporal L2 0, total 3.21688e-06, fixed train 4.45571e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 217500: MSE 3.25461e-06, temporal L2 0, total 3.25461e-06, fixed train 4.22099e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 218000: MSE 5.78121e-06, temporal L2 0, total 5.78121e-06, fixed train 3.65033e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 218500: MSE 5.58961e-06, temporal L2 0, total 5.58961e-06, fixed train 4.45743e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 219000: MSE 3.70771e-06, temporal L2 0, total 3.70771e-06, fixed train 2.71258e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 219500: MSE 4.56976e-06, temporal L2 0, total 4.56976e-06, fixed train 2.92537e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 220000: MSE 6.29304e-06, temporal L2 0, total 6.29304e-06, fixed train 5.1503e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 220500: MSE 4.98988e-06, temporal L2 0, total 4.98988e-06, fixed train 3.77002e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 221000: MSE 2.8027e-06, temporal L2 0, total 2.8027e-06, fixed train 5.04651e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 221500: MSE 2.46438e-06, temporal L2 0, total 2.46438e-06, fixed train 4.20977e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 222000: MSE 5.15149e-06, temporal L2 0, total 5.15149e-06, fixed train 2.95365e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 222500: MSE 7.53677e-06, temporal L2 0, total 7.53677e-06, fixed train 5.07201e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 223000: MSE 3.93159e-06, temporal L2 0, total 3.93159e-06, fixed train 7.52383e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 223500: MSE 2.48896e-06, temporal L2 0, total 2.48896e-06, fixed train 3.49265e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 224000: MSE 3.12415e-06, temporal L2 0, total 3.12415e-06, fixed train 4.883e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 224500: MSE 4.63429e-06, temporal L2 0, total 4.63429e-06, fixed train 4.16915e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 225000: MSE 4.02914e-06, temporal L2 0, total 4.02914e-06, fixed train 5.0924e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 225500: MSE 3.66955e-06, temporal L2 0, total 3.66955e-06, fixed train 4.29896e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 226000: MSE 3.16598e-06, temporal L2 0, total 3.16598e-06, fixed train 3.56678e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 226500: MSE 3.3492e-06, temporal L2 0, total 3.3492e-06, fixed train 2.97581e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 227000: MSE 5.71203e-06, temporal L2 0, total 5.71203e-06, fixed train 3.20691e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 227500: MSE 6.89619e-06, temporal L2 0, total 6.89619e-06, fixed train 6.06927e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 228000: MSE 5.26639e-06, temporal L2 0, total 5.26639e-06, fixed train 3.68328e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 228500: MSE 2.85463e-06, temporal L2 0, total 2.85463e-06, fixed train 2.48981e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 229000: MSE 2.41451e-06, temporal L2 0, total 2.41451e-06, fixed train 3.98172e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 229500: MSE 5.23019e-06, temporal L2 0, total 5.23019e-06, fixed train 3.51018e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 230000: MSE 4.49564e-06, temporal L2 0, total 4.49564e-06, fixed train 2.40914e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 230500: MSE 2.68185e-06, temporal L2 0, total 2.68185e-06, fixed train 3.00284e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 231000: MSE 5.26474e-06, temporal L2 0, total 5.26474e-06, fixed train 2.75255e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 231500: MSE 7.70924e-06, temporal L2 0, total 7.70924e-06, fixed train 4.76249e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 232000: MSE 3.02964e-06, temporal L2 0, total 3.02964e-06, fixed train 2.99984e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 232500: MSE 4.09383e-06, temporal L2 0, total 4.09383e-06, fixed train 4.69865e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 233000: MSE 3.85853e-06, temporal L2 0, total 3.85853e-06, fixed train 4.84124e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 233500: MSE 3.11437e-06, temporal L2 0, total 3.11437e-06, fixed train 4.80072e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 234000: MSE 5.94868e-06, temporal L2 0, total 5.94868e-06, fixed train 4.86006e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 234500: MSE 3.67422e-06, temporal L2 0, total 3.67422e-06, fixed train 3.28802e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 235000: MSE 2.83262e-06, temporal L2 0, total 2.83262e-06, fixed train 2.87128e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 235500: MSE 2.80197e-06, temporal L2 0, total 2.80197e-06, fixed train 3.13427e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 236000: MSE 2.65267e-06, temporal L2 0, total 2.65267e-06, fixed train 3.56656e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 236500: MSE 2.34873e-06, temporal L2 0, total 2.34873e-06, fixed train 3.34082e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 237000: MSE 2.08931e-06, temporal L2 0, total 2.08931e-06, fixed train 3.08008e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 237500: MSE 5.47926e-06, temporal L2 0, total 5.47926e-06, fixed train 5.07117e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 238000: MSE 4.19708e-06, temporal L2 0, total 4.19708e-06, fixed train 3.68075e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 238500: MSE 3.42274e-06, temporal L2 0, total 3.42274e-06, fixed train 2.40013e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 239000: MSE 4.1977e-06, temporal L2 0, total 4.1977e-06, fixed train 2.63272e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 239500: MSE 4.03629e-06, temporal L2 0, total 4.03629e-06, fixed train 2.99928e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 240000: MSE 3.88561e-06, temporal L2 0, total 3.88561e-06, fixed train 2.90671e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 240500: MSE 3.49546e-06, temporal L2 0, total 3.49546e-06, fixed train 2.04082e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 241000: MSE 4.98294e-06, temporal L2 0, total 4.98294e-06, fixed train 4.36905e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 241500: MSE 2.48962e-06, temporal L2 0, total 2.48962e-06, fixed train 3.23112e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 242000: MSE 4.8671e-06, temporal L2 0, total 4.8671e-06, fixed train 2.58977e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 242500: MSE 4.03715e-06, temporal L2 0, total 4.03715e-06, fixed train 3.07086e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 243000: MSE 3.22222e-06, temporal L2 0, total 3.22222e-06, fixed train 2.79659e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 243500: MSE 2.87456e-06, temporal L2 0, total 2.87456e-06, fixed train 4.029e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 244000: MSE 3.13054e-06, temporal L2 0, total 3.13054e-06, fixed train 2.5537e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 244500: MSE 4.73506e-06, temporal L2 0, total 4.73506e-06, fixed train 2.76256e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 245000: MSE 2.50089e-06, temporal L2 0, total 2.50089e-06, fixed train 2.72085e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 245500: MSE 3.81305e-06, temporal L2 0, total 3.81305e-06, fixed train 2.4212e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 246000: MSE 3.88404e-06, temporal L2 0, total 3.88404e-06, fixed train 2.61368e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 246500: MSE 6.34093e-06, temporal L2 0, total 6.34093e-06, fixed train 4.18756e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 247000: MSE 3.73584e-06, temporal L2 0, total 3.73584e-06, fixed train 4.84903e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 247500: MSE 3.37668e-06, temporal L2 0, total 3.37668e-06, fixed train 3.6571e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 248000: MSE 6.23491e-06, temporal L2 0, total 6.23491e-06, fixed train 3.45734e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 248500: MSE 2.90883e-06, temporal L2 0, total 2.90883e-06, fixed train 2.6069e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 249000: MSE 2.51652e-06, temporal L2 0, total 2.51652e-06, fixed train 4.36391e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 249500: MSE 3.70278e-06, temporal L2 0, total 3.70278e-06, fixed train 2.78438e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 250000: MSE 2.57306e-06, temporal L2 0, total 2.57306e-06, fixed train 3.16991e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 250500: MSE 6.15116e-06, temporal L2 0, total 6.15116e-06, fixed train 2.91465e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 251000: MSE 3.08103e-06, temporal L2 0, total 3.08103e-06, fixed train 2.64934e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 251500: MSE 3.54513e-06, temporal L2 0, total 3.54513e-06, fixed train 2.95398e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 252000: MSE 4.78299e-06, temporal L2 0, total 4.78299e-06, fixed train 4.07006e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 252500: MSE 2.77668e-06, temporal L2 0, total 2.77668e-06, fixed train 3.12852e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 253000: MSE 5.15346e-06, temporal L2 0, total 5.15346e-06, fixed train 3.66351e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 253500: MSE 4.29995e-06, temporal L2 0, total 4.29995e-06, fixed train 3.08953e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 254000: MSE 1.784e-06, temporal L2 0, total 1.784e-06, fixed train 4.32269e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 254500: MSE 3.19147e-06, temporal L2 0, total 3.19147e-06, fixed train 3.97489e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 255000: MSE 7.10966e-06, temporal L2 0, total 7.10966e-06, fixed train 2.92326e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 255500: MSE 3.96921e-06, temporal L2 0, total 3.96921e-06, fixed train 3.4519e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 256000: MSE 2.77012e-06, temporal L2 0, total 2.77012e-06, fixed train 2.76013e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 256500: MSE 2.07442e-06, temporal L2 0, total 2.07442e-06, fixed train 2.75453e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 257000: MSE 2.19543e-06, temporal L2 0, total 2.19543e-06, fixed train 4.10849e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 257500: MSE 5.3638e-06, temporal L2 0, total 5.3638e-06, fixed train 3.13219e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 258000: MSE 3.37384e-06, temporal L2 0, total 3.37384e-06, fixed train 2.34105e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 258500: MSE 6.62118e-06, temporal L2 0, total 6.62118e-06, fixed train 4.20186e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 259000: MSE 4.11518e-06, temporal L2 0, total 4.11518e-06, fixed train 3.29689e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 259500: MSE 4.0454e-06, temporal L2 0, total 4.0454e-06, fixed train 2.78665e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 260000: MSE 4.77421e-06, temporal L2 0, total 4.77421e-06, fixed train 3.52536e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 260500: MSE 2.64663e-06, temporal L2 0, total 2.64663e-06, fixed train 2.57003e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 261000: MSE 3.46943e-06, temporal L2 0, total 3.46943e-06, fixed train 2.79153e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 261500: MSE 2.13342e-06, temporal L2 0, total 2.13342e-06, fixed train 2.3463e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 262000: MSE 6.40879e-06, temporal L2 0, total 6.40879e-06, fixed train 3.27717e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 262500: MSE 3.14425e-06, temporal L2 0, total 3.14425e-06, fixed train 2.43088e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 263000: MSE 2.74104e-06, temporal L2 0, total 2.74104e-06, fixed train 4.55843e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 263500: MSE 3.82274e-06, temporal L2 0, total 3.82274e-06, fixed train 3.19808e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 264000: MSE 3.10082e-06, temporal L2 0, total 3.10082e-06, fixed train 2.77159e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 264500: MSE 4.10401e-06, temporal L2 0, total 4.10401e-06, fixed train 3.64822e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 265000: MSE 3.7775e-06, temporal L2 0, total 3.7775e-06, fixed train 1.84912e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 265500: MSE 2.4273e-06, temporal L2 0, total 2.4273e-06, fixed train 1.7705e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 266000: MSE 2.67107e-06, temporal L2 0, total 2.67107e-06, fixed train 2.47437e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 266500: MSE 6.37272e-06, temporal L2 0, total 6.37272e-06, fixed train 2.60825e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 267000: MSE 3.49468e-06, temporal L2 0, total 3.49468e-06, fixed train 2.19297e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 267500: MSE 2.50873e-06, temporal L2 0, total 2.50873e-06, fixed train 1.89249e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 268000: MSE 6.40398e-06, temporal L2 0, total 6.40398e-06, fixed train 2.35727e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 268500: MSE 3.29728e-06, temporal L2 0, total 3.29728e-06, fixed train 2.98042e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 269000: MSE 4.74853e-06, temporal L2 0, total 4.74853e-06, fixed train 2.8663e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 269500: MSE 3.85578e-06, temporal L2 0, total 3.85578e-06, fixed train 2.16621e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 270000: MSE 4.27871e-06, temporal L2 0, total 4.27871e-06, fixed train 3.97321e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 270500: MSE 3.20756e-06, temporal L2 0, total 3.20756e-06, fixed train 3.32822e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 271000: MSE 2.17409e-06, temporal L2 0, total 2.17409e-06, fixed train 2.75183e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 271500: MSE 2.99388e-06, temporal L2 0, total 2.99388e-06, fixed train 3.05957e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 272000: MSE 2.35779e-06, temporal L2 0, total 2.35779e-06, fixed train 3.10574e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 272500: MSE 4.01459e-06, temporal L2 0, total 4.01459e-06, fixed train 2.74076e-06, held-out nan
+dce_moby/nested_low_rank_hash_nf step 273000: MSE 2.87174e-06, temporal L2 0, total 2.87174e-06, fixed train 2.58653e-06, held-out nan
+Paused after step 273000; continue with --continue
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	User time (seconds): 9547.68
+	System time (seconds): 404.88
+	Percent of CPU this job got: 164%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3846400
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 9473
+	Minor (reclaiming a frame) page faults: 83635
+	Voluntary context switches: 1160775
+	Involuntary context switches: 11012
+	Swaps: 0
+	File system inputs: 25377481
+	File system outputs: 128
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 65536
+	Exit status: 0
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	User time (seconds): 9426.67
+	System time (seconds): 432.30
+	Percent of CPU this job got: 163%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Average shared text size (kbytes): 0
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3916416
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 9664
+	Minor (reclaiming a frame) page faults: 84358
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Voluntary context switches: 1158910
+	Involuntary context switches: 13462
+	Swaps: 0
+	User time (seconds): 9485.76
+	File system inputs: 22781146
+	System time (seconds): 442.76
+	Percent of CPU this job got: 164%
+	File system outputs: 128
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Average shared text size (kbytes): 0
+	Socket messages sent: 0
+	Average unshared data size (kbytes): 0
+	Socket messages received: 0
+	Average stack size (kbytes): 0
+	Signals delivered: 0
+	Average total size (kbytes): 0
+	Page size (bytes): 65536
+	Exit status: 0
+	User time (seconds): 9458.40
+	System time (seconds): 451.20
+	Percent of CPU this job got: 163%
+	Maximum resident set size (kbytes): 3928512
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:42
+	Average resident set size (kbytes): 0
+	Average shared text size (kbytes): 0
+	Major (requiring I/O) page faults: 9597
+	Average unshared data size (kbytes): 0
+	Minor (reclaiming a frame) page faults: 84153
+	Average stack size (kbytes): 0
+	Voluntary context switches: 1159607
+	Average total size (kbytes): 0
+	Involuntary context switches: 12706
+	Swaps: 0
+	File system inputs: 22844809
+	Maximum resident set size (kbytes): 3916288
+	File system outputs: 128
+	Average resident set size (kbytes): 0
+	Socket messages sent: 0
+	Major (requiring I/O) page faults: 9568
+	Socket messages received: 0
+	Minor (reclaiming a frame) page faults: 84561
+	Signals delivered: 0
+	Voluntary context switches: 1160414
+	Page size (bytes): 65536
+	Exit status: 0
+	Involuntary context switches: 8647
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Swaps: 0
+	File system inputs: 25379401
+	File system outputs: 128
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 65536
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Exit status: 0
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	User time (seconds): 9412.95
+	System time (seconds): 440.99
+	Percent of CPU this job got: 163%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	User time (seconds): 9424.48
+	System time (seconds): 439.73
+	Maximum resident set size (kbytes): 3969920
+	Percent of CPU this job got: 163%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Average resident set size (kbytes): 0
+	Average shared text size (kbytes): 0
+	Major (requiring I/O) page faults: 9565
+	User time (seconds): 9496.18
+	System time (seconds): 435.05
+	Average unshared data size (kbytes): 0
+	Minor (reclaiming a frame) page faults: 84303
+	Percent of CPU this job got: 164%
+	Average stack size (kbytes): 0
+	Voluntary context switches: 1158442
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Average total size (kbytes): 0
+	Involuntary context switches: 12552
+	Average shared text size (kbytes): 0
+	Maximum resident set size (kbytes): 3970176
+	Swaps: 0
+	Average unshared data size (kbytes): 0
+	Average resident set size (kbytes): 0
+	Average stack size (kbytes): 0
+	Major (requiring I/O) page faults: 9548
+	File system inputs: 25331145
+	Average total size (kbytes): 0
+	Minor (reclaiming a frame) page faults: 84260
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	File system outputs: 128
+	Voluntary context switches: 1161259
+	Socket messages sent: 0
+	Maximum resident set size (kbytes): 3878400
+	Involuntary context switches: 8959
+	Socket messages received: 0
+	Average resident set size (kbytes): 0
+	Swaps: 0
+	Signals delivered: 0
+	Major (requiring I/O) page faults: 9718
+	File system inputs: 22812841
+	Page size (bytes): 65536
+	Minor (reclaiming a frame) page faults: 84260
+	File system outputs: 128
+	Exit status: 0
+	Voluntary context switches: 1158903
+	Socket messages sent: 0
+	Involuntary context switches: 11784
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 65536
+	User time (seconds): 9620.84
+	Swaps: 0
+	Exit status: 0
+	System time (seconds): 387.94
+	Percent of CPU this job got: 165%
+	File system inputs: 22784649
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	File system outputs: 128
+	Average shared text size (kbytes): 0
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Socket messages sent: 0
+	Average unshared data size (kbytes): 0
+	Socket messages received: 0
+	Average stack size (kbytes): 0
+	Signals delivered: 0
+	Page size (bytes): 65536
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Exit status: 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3950208
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 9693
+	Minor (reclaiming a frame) page faults: 84267
+	User time (seconds): 9466.74
+	System time (seconds): 426.18
+	Percent of CPU this job got: 163%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	User time (seconds): 9373.86
+	System time (seconds): 444.94
+	Average total size (kbytes): 0
+	Voluntary context switches: 1157358
+	Percent of CPU this job got: 162%
+	Maximum resident set size (kbytes): 3829632
+	Involuntary context switches: 31538
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:42
+	Swaps: 0
+	Average shared text size (kbytes): 0
+	File system inputs: 22803642
+	Average unshared data size (kbytes): 0
+	File system outputs: 128
+	Average stack size (kbytes): 0
+	Socket messages sent: 0
+	Average total size (kbytes): 0
+	Average resident set size (kbytes): 0
+	Socket messages received: 0
+	Major (requiring I/O) page faults: 9683
+	Signals delivered: 0
+	Minor (reclaiming a frame) page faults: 84430
+	Page size (bytes): 65536
+	Maximum resident set size (kbytes): 3950016
+	Voluntary context switches: 1161207
+	Exit status: 0
+	Average resident set size (kbytes): 0
+	Involuntary context switches: 10559
+	Major (requiring I/O) page faults: 9678
+	Swaps: 0
+	Minor (reclaiming a frame) page faults: 84744
+	File system inputs: 22784186
+	File system outputs: 128
+	Socket messages sent: 0
+	Voluntary context switches: 1160868
+	Socket messages received: 0
+	Involuntary context switches: 9624
+	Signals delivered: 0
+	Swaps: 0
+	Page size (bytes): 65536
+	File system inputs: 25401882
+	Exit status: 0
+	File system outputs: 128
+	Socket messages sent: 0
+	Socket messages received: 0
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Signals delivered: 0
+	Page size (bytes): 65536
+	Exit status: 0
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	User time (seconds): 9425.31
+	System time (seconds): 428.32
+	Percent of CPU this job got: 163%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	User time (seconds): 9505.26
+	System time (seconds): 374.46
+	Average total size (kbytes): 0
+	Percent of CPU this job got: 163%
+	User time (seconds): 9446.09
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Maximum resident set size (kbytes): 3923392
+	System time (seconds): 427.55
+	Percent of CPU this job got: 163%
+	Average shared text size (kbytes): 0
+	Average resident set size (kbytes): 0
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	User time (seconds): 9491.83
+	Major (requiring I/O) page faults: 9456
+	Average shared text size (kbytes): 0
+	Minor (reclaiming a frame) page faults: 84643
+	Average unshared data size (kbytes): 0
+	Voluntary context switches: 1157217
+	Average stack size (kbytes): 0
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Average total size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Maximum resident set size (kbytes): 3947584
+	Average stack size (kbytes): 0
+	User time (seconds): 9403.05
+	Average total size (kbytes): 0
+	Average resident set size (kbytes): 0
+	System time (seconds): 385.12
+	Percent of CPU this job got: 161%
+	Maximum resident set size (kbytes): 3919744
+	Involuntary context switches: 7182
+	Major (requiring I/O) page faults: 9717
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:42
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Average resident set size (kbytes): 0
+	Swaps: 0
+	Minor (reclaiming a frame) page faults: 83889
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Average shared text size (kbytes): 0
+	File system inputs: 25343721
+	Voluntary context switches: 1161042
+	Average unshared data size (kbytes): 0
+	File system outputs: 128
+	Involuntary context switches: 11535
+	System time (seconds): 353.81
+	Average stack size (kbytes): 0
+	Major (requiring I/O) page faults: 9683
+	Socket messages sent: 0
+	Swaps: 0
+	Percent of CPU this job got: 162%
+	Minor (reclaiming a frame) page faults: 83219
+	Socket messages received: 0
+	File system inputs: 22802106
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	User time (seconds): 9498.93
+	System time (seconds): 377.09
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Voluntary context switches: 1160581
+	Signals delivered: 0
+	Average shared text size (kbytes): 0
+	Percent of CPU this job got: 163%
+	Average total size (kbytes): 0
+	Page size (bytes): 65536
+	File system outputs: 128
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Average unshared data size (kbytes): 0
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Maximum resident set size (kbytes): 3967040
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Exit status: 0
+	Socket messages sent: 0
+	Average stack size (kbytes): 0
+	Average shared text size (kbytes): 0
+	Average resident set size (kbytes): 0
+	Socket messages received: 0
+	Average total size (kbytes): 0
+	User time (seconds): 9502.74
+	Average unshared data size (kbytes): 0
+	Major (requiring I/O) page faults: 9526
+	User time (seconds): 9330.16
+	Involuntary context switches: 7358
+	Signals delivered: 0
+	Maximum resident set size (kbytes): 3906880
+	System time (seconds): 384.53
+	Average stack size (kbytes): 0
+	System time (seconds): 434.95
+	Percent of CPU this job got: 161%
+	Swaps: 0
+	Page size (bytes): 65536
+	Average resident set size (kbytes): 0
+	Percent of CPU this job got: 163%
+	Average total size (kbytes): 0
+	Minor (reclaiming a frame) page faults: 84732
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:42
+	File system inputs: 22820410
+	Exit status: 0
+	Major (requiring I/O) page faults: 9739
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Maximum resident set size (kbytes): 3929664
+	Voluntary context switches: 1160404
+	Average shared text size (kbytes): 0
+	User time (seconds): 9429.83
+	System time (seconds): 425.71
+	File system outputs: 128
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Minor (reclaiming a frame) page faults: 84322
+	Average shared text size (kbytes): 0
+	Average resident set size (kbytes): 0
+	Involuntary context switches: 16120
+	Average unshared data size (kbytes): 0
+	Percent of CPU this job got: 163%
+	Socket messages sent: 0
+	User time (seconds): 9374.66
+	Voluntary context switches: 1161231
+	Average unshared data size (kbytes): 0
+	Major (requiring I/O) page faults: 9621
+	Swaps: 0
+	Average stack size (kbytes): 0
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Socket messages received: 0
+	User time (seconds): 9488.64
+	System time (seconds): 428.30
+	Percent of CPU this job got: 162%
+	Involuntary context switches: 19656
+	Average stack size (kbytes): 0
+	Minor (reclaiming a frame) page faults: 84145
+	File system inputs: 25399578
+	Average total size (kbytes): 0
+	Average shared text size (kbytes): 0
+	Signals delivered: 0
+	System time (seconds): 363.86
+	Percent of CPU this job got: 163%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Swaps: 0
+	Average total size (kbytes): 0
+	File system outputs: 128
+	Maximum resident set size (kbytes): 3930560
+	Average unshared data size (kbytes): 0
+	Page size (bytes): 65536
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Average shared text size (kbytes): 0
+	File system inputs: 22800041
+	Maximum resident set size (kbytes): 3938560
+	Voluntary context switches: 1158881
+	Socket messages sent: 0
+	Average resident set size (kbytes): 0
+	Average stack size (kbytes): 0
+	Exit status: 0
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	File system outputs: 128
+	Average resident set size (kbytes): 0
+	Involuntary context switches: 20699
+	Socket messages received: 0
+	Major (requiring I/O) page faults: 9757
+	Average total size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Socket messages sent: 0
+	Major (requiring I/O) page faults: 9727
+	Swaps: 0
+	Signals delivered: 0
+	Minor (reclaiming a frame) page faults: 83193
+	Maximum resident set size (kbytes): 3916736
+	Average stack size (kbytes): 0
+	User time (seconds): 9542.81
+	Average total size (kbytes): 0
+	Socket messages received: 0
+	Minor (reclaiming a frame) page faults: 84185
+	File system inputs: 22595177
+	Page size (bytes): 65536
+	Voluntary context switches: 1160949
+	Average resident set size (kbytes): 0
+	Average total size (kbytes): 0
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	User time (seconds): 9375.78
+	System time (seconds): 363.02
+	Percent of CPU this job got: 163%
+	Maximum resident set size (kbytes): 3874624
+	Signals delivered: 0
+	Voluntary context switches: 1160717
+	File system outputs: 128
+	Exit status: 0
+	Involuntary context switches: 5631
+	Major (requiring I/O) page faults: 9559
+	Maximum resident set size (kbytes): 3986944
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Average resident set size (kbytes): 0
+	Page size (bytes): 65536
+	Involuntary context switches: 22126
+	Socket messages sent: 0
+	Swaps: 0
+	Minor (reclaiming a frame) page faults: 82866
+	Average resident set size (kbytes): 0
+	Average shared text size (kbytes): 0
+	Major (requiring I/O) page faults: 9603
+	Exit status: 0
+	Swaps: 0
+	Socket messages received: 0
+	File system inputs: 22851977
+	Voluntary context switches: 1158533
+	Major (requiring I/O) page faults: 9649
+	Average unshared data size (kbytes): 0
+	Minor (reclaiming a frame) page faults: 82776
+	File system inputs: 22819305
+	Signals delivered: 0
+	File system outputs: 128
+	Involuntary context switches: 18950
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Minor (reclaiming a frame) page faults: 84232
+	Average stack size (kbytes): 0
+	Voluntary context switches: 1160365
+	File system outputs: 128
+	Page size (bytes): 65536
+	Socket messages sent: 0
+	Swaps: 0
+	Voluntary context switches: 1159151
+	Average total size (kbytes): 0
+	Involuntary context switches: 15917
+	Socket messages sent: 0
+	Exit status: 0
+	Socket messages received: 0
+	File system inputs: 22755753
+	Involuntary context switches: 14096
+	Maximum resident set size (kbytes): 3896448
+	Swaps: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	File system outputs: 128
+	Swaps: 0
+	System time (seconds): 421.83
+	Average resident set size (kbytes): 0
+	File system inputs: 22767657
+	Signals delivered: 0
+	Page size (bytes): 65536
+	Socket messages sent: 0
+	File system inputs: 22774970
+	Percent of CPU this job got: 162%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Major (requiring I/O) page faults: 9451
+	File system outputs: 128
+	Page size (bytes): 65536
+	Exit status: 0
+	Socket messages received: 0
+	File system outputs: 128
+	Average shared text size (kbytes): 0
+	Minor (reclaiming a frame) page faults: 84229
+	Socket messages sent: 0
+	Exit status: 0
+	Signals delivered: 0
+	Socket messages sent: 0
+	Average unshared data size (kbytes): 0
+	Voluntary context switches: 1160198
+	Socket messages received: 0
+	Page size (bytes): 65536
+	Socket messages received: 0
+	Average stack size (kbytes): 0
+	Involuntary context switches: 15152
+	Signals delivered: 0
+	Exit status: 0
+	Signals delivered: 0
+	Average total size (kbytes): 0
+	Swaps: 0
+	Page size (bytes): 65536
+	Page size (bytes): 65536
+	Maximum resident set size (kbytes): 3960320
+	File system inputs: 22749937
+	Exit status: 0
+	Exit status: 0
+	Average resident set size (kbytes): 0
+	File system outputs: 128
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Major (requiring I/O) page faults: 9492
+	Socket messages sent: 0
+	Minor (reclaiming a frame) page faults: 84126
+	Socket messages received: 0
+	Voluntary context switches: 1159082
+	Signals delivered: 0
+	Involuntary context switches: 17149
+	Page size (bytes): 65536
+	Swaps: 0
+	Exit status: 0
+	File system inputs: 22724090
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	File system outputs: 128
+	Socket messages sent: 0
+	Socket messages received: 0
+	User time (seconds): 9567.44
+	Signals delivered: 0
+	System time (seconds): 373.27
+	Percent of CPU this job got: 164%
+	Page size (bytes): 65536
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Exit status: 0
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	User time (seconds): 9528.22
+	System time (seconds): 368.52
+	Average total size (kbytes): 0
+	Percent of CPU this job got: 163%
+	Maximum resident set size (kbytes): 3950144
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:42
+	Average resident set size (kbytes): 0
+	Average shared text size (kbytes): 0
+	Major (requiring I/O) page faults: 9526
+	Average unshared data size (kbytes): 0
+	User time (seconds): 9523.80
+	Minor (reclaiming a frame) page faults: 83843
+	Average stack size (kbytes): 0
+	System time (seconds): 432.91
+	Percent of CPU this job got: 164%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Average shared text size (kbytes): 0
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Voluntary context switches: 1160172
+	Average total size (kbytes): 0
+	Average total size (kbytes): 0
+	Involuntary context switches: 16585
+	Maximum resident set size (kbytes): 3936512
+	User time (seconds): 9570.83
+	System time (seconds): 393.95
+	Swaps: 0
+	Average resident set size (kbytes): 0
+	Percent of CPU this job got: 164%
+	File system inputs: 22797257
+	Major (requiring I/O) page faults: 9780
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	File system outputs: 128
+	Minor (reclaiming a frame) page faults: 82357
+	Average shared text size (kbytes): 0
+	Maximum resident set size (kbytes): 3911296
+	Socket messages sent: 0
+	Average unshared data size (kbytes): 0
+	Average resident set size (kbytes): 0
+	Socket messages received: 0
+	Average stack size (kbytes): 0
+	Major (requiring I/O) page faults: 9652
+	User time (seconds): 9552.12
+	Signals delivered: 0
+	Average total size (kbytes): 0
+	User time (seconds): 9513.99
+	Minor (reclaiming a frame) page faults: 84264
+	System time (seconds): 353.21
+	Page size (bytes): 65536
+	Maximum resident set size (kbytes): 3950016
+	System time (seconds): 443.55
+	Percent of CPU this job got: 164%
+	Voluntary context switches: 1160137
+	Percent of CPU this job got: 163%
+	Exit status: 0
+	Voluntary context switches: 1163098
+	Average resident set size (kbytes): 0
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Involuntary context switches: 11329
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Involuntary context switches: 19320
+	Major (requiring I/O) page faults: 9757
+	Average shared text size (kbytes): 0
+	Average shared text size (kbytes): 0
+	Swaps: 0
+	Minor (reclaiming a frame) page faults: 84798
+	Average unshared data size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	File system inputs: 22875386
+	Voluntary context switches: 1159226
+	Average stack size (kbytes): 0
+	Swaps: 0
+	Average stack size (kbytes): 0
+	File system outputs: 128
+	Involuntary context switches: 16655
+	File system inputs: 22769097
+	Average total size (kbytes): 0
+	Socket messages sent: 0
+	Swaps: 0
+	Average total size (kbytes): 0
+	File system outputs: 128
+	Maximum resident set size (kbytes): 3956352
+	Socket messages received: 0
+	File system inputs: 25437801
+	Maximum resident set size (kbytes): 3908608
+	Socket messages sent: 0
+	Average resident set size (kbytes): 0
+	Signals delivered: 0
+	File system outputs: 128
+	Average resident set size (kbytes): 0
+	Socket messages received: 0
+	Major (requiring I/O) page faults: 9515
+	Page size (bytes): 65536
+	Socket messages sent: 0
+	Major (requiring I/O) page faults: 9723
+	Signals delivered: 0
+	Minor (reclaiming a frame) page faults: 84364
+	Exit status: 0
+	Socket messages received: 0
+	Minor (reclaiming a frame) page faults: 84210
+	Page size (bytes): 65536
+	Signals delivered: 0
+	Exit status: 0
+	Page size (bytes): 65536
+	Exit status: 0
+	Voluntary context switches: 1159682
+	Voluntary context switches: 1159651
+	Involuntary context switches: 12497
+	Involuntary context switches: 18160
+	Swaps: 0
+	Swaps: 0
+	File system inputs: 22732410
+	File system inputs: 22814426
+	File system outputs: 128
+	File system outputs: 128
+	Socket messages sent: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Signals delivered: 0
+	Page size (bytes): 65536
+	Page size (bytes): 65536
+	Exit status: 0
+	Exit status: 0
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	User time (seconds): 9469.64
+	System time (seconds): 369.52
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	Percent of CPU this job got: 162%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:42
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3895808
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 9740
+	Minor (reclaiming a frame) page faults: 84229
+	User time (seconds): 9504.58
+	Voluntary context switches: 1161579
+	System time (seconds): 354.56
+	Percent of CPU this job got: 163%
+	Involuntary context switches: 10598
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Swaps: 0
+	Average shared text size (kbytes): 0
+	File system inputs: 22851945
+	Average unshared data size (kbytes): 0
+	File system outputs: 128
+	Average stack size (kbytes): 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 65536
+	Exit status: 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3951872
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 9558
+	Minor (reclaiming a frame) page faults: 84118
+	Voluntary context switches: 1160128
+	Involuntary context switches: 8222
+	Swaps: 0
+	File system inputs: 22750778
+	File system outputs: 128
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 65536
+	Exit status: 0
+	Command being timed: "/work/11803/zc7665/vista/envs/nf-crt/bin/python -m motion_static.run --distributed --config motion_static/experiments/dce_moby_box64_full_series.json --out motion_static/results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_chain --continue --segment-minutes 100"
+	User time (seconds): 9284.13
+	System time (seconds): 212.27
+	Percent of CPU this job got: 157%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:40:43
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4082880
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 10555
+	Minor (reclaiming a frame) page faults: 130199
+	Voluntary context switches: 1189599
+	Involuntary context switches: 11109
+	Swaps: 0
+	File system inputs: 26023570
+	File system outputs: 467072
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 65536
+	Exit status: 0

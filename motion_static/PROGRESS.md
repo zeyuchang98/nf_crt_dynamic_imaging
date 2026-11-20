@@ -1,6 +1,6 @@
 # Motion and Intensity Separation: Current Progress
 
-Last updated: 2026-11-19.
+Last updated: 2026-11-20.
 
 ## Current status (2026-11-18; 2D items from 2026-10-30)
 
@@ -70,8 +70,9 @@ at the end of this file.
   files are read directly, frame by frame (box or whole volume), with frame shards over
   processes and frame groups per round; tested locally (gloo) and checked on 2 Vista nodes
   (NCCL, job 1147432, 2026-11-16): about 51 ms per step at batch 65,536.
-  The formal box run (32 nodes, 20.9-21.6 ms per step) runs as a chain of 2 h segments and,
-  beside it, one long job continuing a copy (2026-11-17 to 11-19). A whole-volume run
+  The formal box run (32 nodes, 21.5 ms per step) finished on 2026-11-20 as one long job
+  continuing a copy of the chain's first 2 h segment: all-frame RRMSE 2.47%, PSNR 62.99
+  dB, SSIM 0.99974; frame 0 fits worst (80%). A whole-volume run
   (248 x 248 x 200, no mask, 72.7 M parameters, 64 nodes) was set up on 2026-11-19.
 - **2D inverse problem (started 2026-11-18):** plan agreed with the user (last section):
   caSRT's circular Radon transform on the 248^2 grid, ProxNF's 2D geometry and noise
@@ -2503,7 +2504,7 @@ Queue waits, as the user asked to record (Slurm submit to start):
 | 1149834 (segment 4) | 32, 2 h, gh, afterok on 1149833 | 11-17 15:26:01 | pending | |
 | 1150575 (segment 5) | 32, 2 h, gh, afterok on 1149834 | 11-17 22:20:10 | pending | |
 | 1152425 (formal, one long continuation, replaced) | 32, 7 h, gh | 11-18 15:08:38 | never | cancelled after 2 min |
-| 1152427 (formal, one long continuation) | 32, 10 h, gh | 11-18 15:10:41 | pending | |
+| 1152427 (formal, one long continuation) | 32, 10 h, gh | 11-18 15:10:41 | 11-20 01:05:00 | 33 h 54 min |
 
 The same run as a chain of short jobs, submitted alongside 1148080 at the user's request
 (2026-11-17) to compare how fast each finishes: `submit_chain.sh 4 32 02:00:00 100`, same
@@ -2566,6 +2567,25 @@ loss; 21.1 ms per step, the first 500 steps after the restart 14.4 s). The bit-f
 check against a run without breaks exists only locally (no uninterrupted 32-node run got
 past step 66,000). Segment 2 paused as planned after step 552,500 (1 h 41 min, ended
 10:08:54, exit 0); segment 3 then became eligible.
+
+**The formal box run is complete (2026-11-20), from the long job 1152427.** It continued
+the copy from step 273,000 to 1,220,000 in one segment (5 h 43 min 52 s, exit 0, status
+complete): 947,000 steps at 21.5 ms per step (20,342 s), startup and scoring about 3.7 min
+together. Its `loss.csv` equals the chain's at every logged step up to 552,500, in every
+column but the elapsed time: two continuations of the same paused state, in different jobs
+on different nodes, agree bit for bit as far as logged. The loss curve is smooth through the restart.
+Records (no `model.pt`, checkpoints or `scan.npz`; those stay on Vista):
+[results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_long/](results/dce_moby_box64_full_20261117_1220k_r3_s0_32node_long/metrics.json).
+Scores, protocol A (all 14,401 frames fitted and scored, ROI box rows 0-57):
+- Image: RRMSE 2.47%, PSNR 62.99 dB, SSIM 0.99974; the 10k-step trial on the same box and
+  frames gave 11.78%. Lesion activity curve (fixed spatial mask): RRMSE 0.45%.
+- Per frame: median RRMSE 2.11% (best 1.18%). The first frames fit worst, as in the 2D
+  formal run (frame 0 54%): frame 0 (t = -36 s) 80.4% with SSIM 0.862, then 73.5%, 47.9%,
+  ... down to about 5% by frame 19. 164 frames are above 5%: 19 of frames 0-19 and isolated
+  frames later in the series. The largest absolute error, 0.535, is in frame 0.
+
+The chain's remaining segments 3-5 (1149833, 1149834, 1150575, 32 nodes and 2 h each)
+would only reach the same result; whether to cancel them is the user's call.
 
 ## Resume over segments (2026-11-17): implemented, tested locally
 
