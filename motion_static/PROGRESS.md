@@ -2500,9 +2500,9 @@ Queue waits, as the user asked to record (Slurm submit to start):
 | 1148080 (formal, cancelled) | 32, 5 h, gh | 11-17 00:12:12 | 11-17 21:57:05 | 21 h 45 min |
 | 1149828 (formal chain, segment 1) | 32, 2 h, gh | 11-17 15:25:37 | 11-18 11:36:46 | 20 h 11 min |
 | 1149832 (segment 2) | 32, 2 h, gh, afterok on 1149828 | 11-17 15:26:00, eligible 11-18 13:17:38 | 11-19 08:27:46 | 19 h 10 min after eligible |
-| 1149833 (segment 3) | 32, 2 h, gh, afterok on 1149832 | 11-17 15:26:01, eligible 11-19 10:08:54 | pending | |
-| 1149834 (segment 4) | 32, 2 h, gh, afterok on 1149833 | 11-17 15:26:01 | pending | |
-| 1150575 (segment 5) | 32, 2 h, gh, afterok on 1149834 | 11-17 22:20:10 | pending | |
+| 1149833 (segment 3, cancelled) | 32, 2 h, gh, afterok on 1149832 | 11-17 15:26:01, eligible 11-19 10:08:54 | never | cancelled 11-20 09:50:55 after 23 h 42 min eligible |
+| 1149834 (segment 4, cancelled) | 32, 2 h, gh, afterok on 1149833 | 11-17 15:26:01 | never | cancelled 11-20 09:50:55 |
+| 1150575 (segment 5, cancelled) | 32, 2 h, gh, afterok on 1149834 | 11-17 22:20:10 | never | cancelled 11-20 09:50:55 |
 | 1152425 (formal, one long continuation, replaced) | 32, 7 h, gh | 11-18 15:08:38 | never | cancelled after 2 min |
 | 1152427 (formal, one long continuation) | 32, 10 h, gh | 11-18 15:10:41 | 11-20 01:05:00 | 33 h 54 min |
 
@@ -2585,7 +2585,8 @@ Scores, protocol A (all 14,401 frames fitted and scored, ROI box rows 0-57):
   frames later in the series. The largest absolute error, 0.535, is in frame 0.
 
 The chain's remaining segments 3-5 (1149833, 1149834, 1150575, 32 nodes and 2 h each)
-would only reach the same result; whether to cancel them is the user's call.
+would only reach the same result: cancelled at the user's request on 2026-11-20 at
+09:50:55, before any started. The chain's folder stays on Vista, paused at step 552,500.
 
 ## Resume over segments (2026-11-17): implemented, tested locally
 
