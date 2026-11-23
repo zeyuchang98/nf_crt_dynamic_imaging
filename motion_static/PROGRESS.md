@@ -1,6 +1,6 @@
 # Motion and Intensity Separation: Current Progress
 
-Last updated: 2026-11-20.
+Last updated: 2026-11-23.
 
 ## Current status (2026-11-18; 2D items from 2026-10-30)
 
@@ -2690,6 +2690,23 @@ job 1154656, `sbatch -p gh -N 64 -t 24:00:00 train_multinode.sbatch
 dce_moby_whole_full_series.json dce_moby_whole_full_20261119_224k_b16m_r3_s0_64node
 --continue --segment-minutes 1260`, pending (Priority 1516). Vista allows 96 nodes per
 user, so it cannot run while two 32-node box jobs run.
+
+**First segment (2026-11-20/21): paused as planned at step 199,500 of 224,000 (89%).** Job
+1154656 started 2026-11-20 22:24:15 (35 h 41 min after submission), ran 21 h 1 min and
+exited 0 with status paused (`checkpoints/resume.pt` of 873 MB; the checkpoints at 73,500
+and 147,000 saved, 873 MB each). Measured, against the estimates above:
+- 0.378 s per step, steady (0.371-0.378 s over the stretches 1-5,000, 5,000-50,000 and
+  50,000-199,500), not 0.29-0.35 s; 1,260 minutes therefore covered 199,500 steps.
+- Startup about 3.5 min (the scan of every source frame on 64 nodes), first step at 33 s
+  into training.
+- Process 0's GPU: 31.4 GB of 96 GB in use, 100% utilization; peak host memory 4.8 GB
+  (`/usr/bin/time`, per process).
+- The fixed-sample training MSE fell to 1.6e-7 at step 199,500 (most samples lie on zero
+  background, so not comparable with the box's 5.1e-7); the loss curve is smooth.
+The remaining 24,500 steps need about 2.6 h, plus scoring (estimated 1-3 h, not measured).
+Records stay on Vista until the run is complete. A continuation needs 64 nodes again (the
+process count must equal the saved one) and the same code (`6b8ecbb` in the whole-volume
+checkout).
 
 ## 2D CRT inverse problem (2026-11-18): plan agreed, stage 1 (operator, measurements) done
 
