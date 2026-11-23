@@ -2708,6 +2708,12 @@ Records stay on Vista until the run is complete. A continuation needs 64 nodes a
 process count must equal the saved one) and the same code (`6b8ecbb` in the whole-volume
 checkout).
 
+Continuation submitted at the user's request (8 h chosen over 6 h, for scoring margin)
+2026-11-23 15:17:58 from the same checkout (`6b8ecbb`, not pulled, run status paused): job
+1164904, `sbatch -p gh -N 64 -t 08:00:00 train_multinode.sbatch
+dce_moby_whole_full_series.json dce_moby_whole_full_20261119_224k_b16m_r3_s0_64node
+--continue --segment-minutes 300`, pending (Priority 1506) at submission.
+
 ## 2D CRT inverse problem (2026-11-18): plan agreed, stage 1 (operator, measurements) done
 
 Asked by the user (2026-11-18): start the 2D PACT inverse problem on the DCE-MOBY window,
