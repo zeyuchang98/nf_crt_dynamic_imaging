@@ -7,16 +7,23 @@ surface. Both panels use one fixed display range 0..display_max in raw p0 units
 render settings; displays never enter metrics. Requires PyVista (optional dependency).
 
 Frames are window frames in time order; `--frames` takes ranges START:STOP[:STEP] (stop
-excluded) starting at window frame 0, e.g. `0:14401:50` for one frame per breath.
+excluded), e.g. `0:14401:50` for one frame per breath or `1250:1401` for a clip (no panel
+is measured from the first shown frame, so a selection may start anywhere).
 Writes visuals/NAME_volume.gif, a still PNG of its middle frame and NAME_volume_gif.json.
 A run trained on the source phase files (`data.source_root`) reads its truth from an
-extracted file of its box (`--data-file`, moby_slice.extract_box over every series frame),
-one frame at a time.
+extracted file of its box (`--data-file`, moby_slice.extract_box over every series frame)
+or, without --data-file, from the source files themselves, one frame at a time.
+
+Where the source files and the renderer are on different machines (the whole volume on
+Vista, which has no PyVista), `--export FILE` writes the selected frames' truth and NF
+(raw p0, (y, x, z, frame) float32) to an h5 file instead of a GIF, and `--frames-file FILE`
+draws the GIF from such a file, without the model or the data.
 
 python -m motion_static.evaluation.moby_box_gif motion_static/results/RUN
 """
 import argparse
 import json
+import time
 from pathlib import Path
 
 import h5py
@@ -28,7 +35,7 @@ from .evaluate import predict
 from .moby_branch_gifs import selected_frames
 from .moby_embedding_figures import load_model
 from .moby_gifs import FRAME_DURATION_MS, git_commit
-from ..phantoms import moby
+from ..phantoms import moby, moby_source
 from ..phantoms.data import entry_coordinates
 from ..run import prepare_data
 
@@ -137,18 +144,118 @@ class BoxFileFrames:
         self.handle.close()
 
 
+class SourceRunFrames:
+    """Window frames of a run on source phase files, read from those files one at a time.
+
+    The same reader and coordinates as training and scoring (run.execute_streamed), so the
+    truth is the run's own target.
+    """
+
+    def __init__(self, config):
+        data = config["data"]
+        self.source = moby_source.open_source(data)
+        self.frames = moby.window_frames(data)
+        self.t = self.source.times[self.frames]
+        self.x, self.y, self.z = self.source.x, self.source.y, self.source.z
+
+    def raw(self, k):
+        """Window frame k in raw p0 units, (y, x, z) as the training layout."""
+        return np.transpose(self.source.read_raw(int(self.frames[k])), (1, 0, 2))
+
+    def close(self):
+        self.source.close()
+
+
+def write_frames(path, run, config, picks, grid, truth_raw, nf_raw, record):
+    """The selected frames' truth and NF, raw p0, (y, x, z, frame) float32, one frame per chunk.
+
+    Written under a temporary name and renamed when complete, so a stopped job leaves no
+    file that looks finished."""
+    spatial = (len(grid["y"]), len(grid["x"]), len(grid["z"]))
+    partial = path.with_name(path.name + ".partial")
+    started = time.time()
+    with h5py.File(partial, "w") as f:
+        for name in ("truth", "nf"):
+            f.create_dataset(name, shape=(*spatial, len(picks)), dtype="float32", chunks=(*spatial, 1),
+                             compression="lzf")
+        f["window_frames"] = picks
+        f["time"] = grid["t"][picks]
+        for axis in "xyz":
+            f[axis] = grid[axis]
+        f.attrs.update(run=run.name, run_started_at=config["started_at"], model_sha256=moby.file_sha256(run / "model.pt"),
+                       code_commit=git_commit(), layout="(y, x, z, frame)", **record,
+                       units="raw p0 (normalized values times intensity_scale_value)",
+                       intensity_scale_value=config["data"]["intensity_scale_value"])
+        for j, k in enumerate(picks):
+            # Keep the frame axis (size 1): a selection that drops it is written element by element.
+            f["truth"][..., j:j + 1] = truth_raw(k)[..., None]
+            f["nf"][..., j:j + 1] = nf_raw(k)[..., None]
+            if (j + 1) % 10 == 0 or j + 1 == len(picks):
+                print(f"{j + 1}/{len(picks)} frames, {time.time() - started:.0f} s", flush=True)
+    partial.rename(path)
+
+
+class ExportedFrames:
+    """Frames written by --export (write_frames), read one at a time, checked against the run.
+
+    The file must name this run (folder name and start time), its axes must be the pixel
+    centers of the run's extent, its frames must lie in the run's window, and a local
+    model.pt, if present, must be the one the NF was predicted with.
+    """
+
+    def __init__(self, path, run, config):
+        self.handle = h5py.File(path, "r")
+        attrs, bounds = self.handle.attrs, config["coordinate_bounds"]
+        self.window_frames = self.handle["window_frames"][...]
+        self.t = self.handle["time"][...].astype(float)
+        self.x, self.y, self.z = (self.handle[axis][...].astype(float) for axis in "xyz")
+        self.model_sha256 = str(attrs.get("model_sha256"))
+        self.truth_source = str(attrs.get("truth_source"))
+        problems = []
+        if attrs.get("run") != run.name or attrs.get("run_started_at") != config.get("started_at"):
+            problems.append(f"written for run {attrs.get('run')} started {attrs.get('run_started_at')}")
+        model = run / "model.pt"
+        if model.exists() and moby.file_sha256(model) != self.model_sha256:
+            problems.append("its NF comes from another model.pt than the run's")
+        for name, values, (low, high) in zip("xyz", (self.x, self.y, self.z), bounds[:3]):
+            half = (values[1] - values[0]) / 2
+            if not np.allclose([values[0] - half, values[-1] + half], [low, high], rtol=0, atol=1e-6):
+                problems.append(f"{name} axis spans {values[0] - half}-{values[-1] + half}, run {low}-{high}")
+        if (self.window_frames.min() < 0 or self.window_frames.max() >= config["frames"]
+                or self.t.min() < bounds[3][0] - 1e-6 or self.t.max() > bounds[3][1] + 1e-6):
+            problems.append("its frames are outside the run's window")
+        if problems:
+            self.handle.close()
+            raise ValueError("--frames-file does not belong to this run: " + "; ".join(problems))
+
+    def truth(self, j):
+        return self.handle["truth"][..., j:j + 1][..., 0]
+
+    def nf(self, j):
+        return self.handle["nf"][..., j:j + 1][..., 0]
+
+    def close(self):
+        self.handle.close()
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("run", type=Path)
     parser.add_argument("--display-max", type=float, default=0.05, help="display range 0..max, raw p0 units")
     parser.add_argument("--frames", nargs="*", default=[], metavar="START:STOP[:STEP]",
-                        help="window frame ranges to show, starting at frame 0 (default: every frame)")
+                        help="window frame ranges to show (default: every frame)")
     parser.add_argument("--name", default="window", help="output prefix")
     parser.add_argument("--size", type=int, default=450, help="pixels per panel side")
     parser.add_argument("--threads", type=int, default=4, help="CPU threads for inference")
+    parser.add_argument("--device", default="cpu", help="torch device for the NF prediction (e.g. cuda)")
     parser.add_argument("--data-file", type=Path,
                         help="runs on a box file: a local copy, checked by its sha256; runs on source "
-                             "files (required): an extracted file of the run's box and every series frame")
+                             "files: an extracted file of the run's box and every series frame (default: "
+                             "the source files)")
+    parser.add_argument("--export", type=Path, metavar="FILE",
+                        help="write the selected frames' truth and NF to this h5 file instead of a GIF")
+    parser.add_argument("--frames-file", type=Path, metavar="FILE",
+                        help="draw the GIF from a file written by --export, with its frames")
     args = parser.parse_args(argv)
 
     config = json.loads((args.run / "config.json").read_text())
@@ -157,42 +264,71 @@ def main(argv=None):
     if config.get("held_out_split") != "none":
         # A held-out run's training entry holds only the even window frames.
         parser.error("Only embedding-protocol runs (held_out_split none) are drawn")
+    if args.frames_file is not None and (args.export or args.data_file or args.frames):
+        parser.error("--frames-file holds its own frames, truth and NF: drop --export, --data-file and --frames")
     scale = config["data"]["intensity_scale_value"]
-    data_record = {}
-    if "source_root" in config["data"]:
-        # Trained on the source phase files: read the window frames from an extracted box file.
-        if args.data_file is None:
-            parser.error("A run on source files needs --data-file, an extracted file of its box")
+
+    if args.frames_file is not None:
         try:
-            series = BoxFileFrames(args.data_file, config)
+            stored = ExportedFrames(args.frames_file, args.run, config)
         except ValueError as error:
             parser.error(str(error))
-        grid, truth_raw, close_data = dict(x=series.x, y=series.y, z=series.z, t=series.t), series.raw, series.close
-        data_record = dict(data_file=args.data_file.name, data_file_sha256=moby.file_sha256(args.data_file))
+        picks, times, axes = stored.window_frames, stored.t, (stored.x, stored.y, stored.z)
+        pairs = ((stored.truth(j), stored.nf(j)) for j in range(len(picks)))
+        close_data = stored.close
+        data_record = dict(frames_file=args.frames_file.name, frames_file_sha256=moby.file_sha256(args.frames_file),
+                           model_sha256=stored.model_sha256, truth_source=stored.truth_source)
     else:
-        if args.data_file is not None:
-            if moby.file_sha256(args.data_file) != config["data"]["sha256"]:
-                parser.error("--data-file does not have the sha256 recorded by the run")
-            config["data"] = dict(config["data"], file=str(args.data_file.resolve()))
-        grid = prepare_data(config)[0]["training"]  # embedding protocol: every window frame
-        truth_raw, close_data = (lambda k: grid["truth"][..., k] * scale), (lambda: None)
-    torch.set_num_threads(args.threads)
-    model = load_model(args.run)
-    try:
-        picks = selected_frames(args.frames, len(grid["t"]))
-    except ValueError as error:
-        parser.error(str(error))
-    axes = (grid["x"], grid["y"], grid["z"])
-    spatial = (len(grid["y"]), len(grid["x"]), len(grid["z"]))
+        if "source_root" in config["data"]:
+            # Trained on the source phase files: read the window frames from an extracted box
+            # file or from the source files themselves.
+            try:
+                if args.data_file is None:
+                    series = SourceRunFrames(config)
+                    data_record = dict(truth_source=f"source files {config['data']['source_root']}")
+                else:
+                    series = BoxFileFrames(args.data_file, config)
+                    data_record = dict(data_file=args.data_file.name,
+                                       data_file_sha256=moby.file_sha256(args.data_file))
+            except (OSError, ValueError) as error:
+                parser.error(str(error))
+            grid = dict(x=series.x, y=series.y, z=series.z, t=series.t)
+            truth_raw, close_data = series.raw, series.close
+        else:
+            data_record = {}
+            if args.data_file is not None:
+                if moby.file_sha256(args.data_file) != config["data"]["sha256"]:
+                    parser.error("--data-file does not have the sha256 recorded by the run")
+                config["data"] = dict(config["data"], file=str(args.data_file.resolve()))
+            grid = prepare_data(config)[0]["training"]  # embedding protocol: every window frame
+            truth_raw, close_data = (lambda k: grid["truth"][..., k] * scale), (lambda: None)
+        torch.set_num_threads(args.threads)
+        model = load_model(args.run).to(args.device)
+        try:
+            picks = selected_frames(args.frames, len(grid["t"]), from_reference=False)
+        except ValueError as error:
+            parser.error(str(error))
+        spatial = (len(grid["y"]), len(grid["x"]), len(grid["z"]))
+
+        def nf_raw(k):
+            return predict(model, entry_coordinates(grid, slice(k, k + 1))).reshape(spatial) * scale
+
+        if args.export is not None:
+            write_frames(args.export, args.run, config, picks, grid, truth_raw, nf_raw, data_record)
+            close_data()
+            print(f"wrote {args.export} ({args.export.stat().st_size / 2**30:.2f} GiB)")
+            return
+        times, axes = grid["t"][picks], (grid["x"], grid["y"], grid["z"])
+        pairs = ((truth_raw(k), nf_raw(k)) for k in picks)
 
     out = args.run / "visuals"
     out.mkdir(exist_ok=True)
+    spatial = (len(axes[1]), len(axes[0]), len(axes[2]))
     panels = VolumePanels(axes, spatial, args.display_max, args.size)
     frames = []
-    for k in picks:
-        nf = predict(model, entry_coordinates(grid, slice(k, k + 1))).reshape(spatial) * scale
-        rgb = panels.render(truth_raw(k), nf)
-        frames.append(with_header(rgb, f"t = {grid['t'][k]:.2f} s | window frame {k}"))
+    for k, t, (truth, nf) in zip(picks, times, pairs):
+        rgb = panels.render(truth, nf)
+        frames.append(with_header(rgb, f"t = {t:.2f} s | window frame {k}"))
     panels.close()
     close_data()
 
@@ -204,8 +340,8 @@ def main(argv=None):
                    rendering="maximum-intensity volume render, gray, linear opacity, one fixed camera",
                    camera=CAMERA, units="raw p0 (normalized values times intensity_scale_value)",
                    intensity_scale_value=scale, display_range=[0, args.display_max],
-                   frame_ranges=args.frames or "all window frames", window_frames=picks.tolist(),
-                   times=grid["t"][picks].tolist(), **data_record,
+                   frame_ranges=args.frames or ("as in --frames-file" if args.frames_file else "all window frames"),
+                   window_frames=[int(k) for k in picks], times=[float(t) for t in times], **data_record,
                    megabytes=round(path.stat().st_size / 2**20, 2))
     (out / f"{args.name}_volume_gif.json").write_text(json.dumps(summary, indent=2) + "\n")
     print(f"wrote {path} ({summary['megabytes']} MB)")

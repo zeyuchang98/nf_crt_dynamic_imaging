@@ -5,9 +5,11 @@ from pathlib import Path
 import tempfile
 import unittest
 
+import h5py
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageSequence
 
+from motion_static.phantoms import moby
 from motion_static.run import main
 from motion_static.tests.test_moby_3d import config_3d, write_box
 
@@ -92,11 +94,83 @@ class BoxGifTests(unittest.TestCase):
             expected = json.loads((runs["file"] / "visuals" / "window_volume_gif.json").read_text())
             self.assertEqual(record["times"], expected["times"])
 
+            # Without --data-file the truth is read from the source files: the same still.
+            moby_box_gif.main([str(runs["source"]), *options, "--name", "from_source"])
+            from_source = np.asarray(Image.open(runs["source"] / "visuals" / "from_source_volume.png"), dtype=int)
+            np.testing.assert_array_equal(from_source, stills[1])
+            record = json.loads((runs["source"] / "visuals" / "from_source_volume_gif.json").read_text())
+            source_root = json.loads((runs["source"] / "config.json").read_text())["data"]["source_root"]
+            self.assertEqual(record["truth_source"], f"source files {source_root}")
+
             shifted = extract_box(root, (2, 2, 1), BOX_SHAPE, root / "shifted.h5")
             window_only = extract_box(root, BOX_START, BOX_SHAPE, root / "window.h5", frames=(0, 21))
-            for data_file in ([], ["--data-file", str(shifted)], ["--data-file", str(window_only)]):
+            moved = root / "results" / "moved"  # a run whose source files are not on this machine
+            moved.mkdir()
+            config = json.loads((runs["source"] / "config.json").read_text())
+            config["data"]["source_root"] = str(root / "missing")
+            (moved / "config.json").write_text(json.dumps(config))
+            for run, data_file in ((runs["source"], ["--data-file", str(shifted)]),
+                                   (runs["source"], ["--data-file", str(window_only)]), (moved, [])):
                 with self.subTest(data_file=data_file), self.assertRaises(SystemExit), captured_stderr():
-                    moby_box_gif.main([str(runs["source"]), *options, *data_file])
+                    moby_box_gif.main([str(run), *options, *data_file])
+
+    def test_exported_frames_draw_the_same_gif_as_the_run_itself(self):
+        from motion_static.evaluation import moby_box_gif
+        from motion_static.evaluation.evaluate import predict
+        from motion_static.evaluation.moby_embedding_figures import load_model
+        from motion_static.phantoms.data import entry_coordinates
+        from motion_static.tests.test_streamed_training import captured_stderr, source_config, write_source
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            write_source(root)
+            (root / "run.json").write_text(json.dumps(source_config(root)))
+            run = root / "results" / "run"
+            main(["--config", str(root / "run.json"), "--out", str(run)])
+            # A clip that does not start at window frame 0.
+            frames = ["--frames", "5:21:5"]
+            moby_box_gif.main([str(run), *frames, "--export", str(root / "frames.h5")])
+            self.assertFalse((run / "visuals").exists())  # export draws nothing
+            moby_box_gif.main([str(run), *frames, "--size", "96", "--name", "direct"])
+            moby_box_gif.main([str(run), "--frames-file", str(root / "frames.h5"), "--size", "96", "--name", "stored"])
+
+            # The file holds the source frames and the model's prediction, in raw p0 units.
+            config = json.loads((run / "config.json").read_text())
+            scale = config["data"]["intensity_scale_value"]
+            series = moby_box_gif.SourceRunFrames(config)
+            grid = dict(x=series.x, y=series.y, z=series.z, t=series.t)
+            model = load_model(run)
+            with h5py.File(root / "frames.h5", "r") as f:
+                np.testing.assert_array_equal(f["window_frames"][...], [5, 10, 15, 20])
+                self.assertEqual(f["truth"].shape, (16, 16, 9, 4))  # (y, x, z, frame) of the box
+                for j, k in enumerate([5, 10, 15, 20]):
+                    np.testing.assert_array_equal(f["truth"][..., j], series.raw(k))
+                    nf = predict(model, entry_coordinates(grid, slice(k, k + 1))).reshape(16, 16, 9) * scale
+                    np.testing.assert_array_equal(f["nf"][..., j], nf)
+                self.assertEqual(f.attrs["model_sha256"], moby.file_sha256(run / "model.pt"))
+            series.close()
+
+            # The GIF from the file equals the GIF drawn from the run, frame for frame.
+            gifs = {}
+            for name in ("direct", "stored"):
+                with Image.open(run / "visuals" / f"{name}_volume.gif") as gif:
+                    gifs[name] = [np.asarray(frame.convert("RGB")) for frame in ImageSequence.Iterator(gif)]
+            self.assertEqual(len(gifs["stored"]), 4)
+            for direct, stored in zip(gifs["direct"], gifs["stored"]):
+                np.testing.assert_array_equal(direct, stored)
+            records = {name: json.loads((run / "visuals" / f"{name}_volume_gif.json").read_text())
+                       for name in ("direct", "stored")}
+            self.assertEqual(records["stored"]["window_frames"], [5, 10, 15, 20])
+            self.assertEqual(records["stored"]["times"], records["direct"]["times"])
+            self.assertEqual(records["stored"]["frames_file"], "frames.h5")
+
+            # The file belongs to its run only, and carries its own frames.
+            other = root / "results" / "other"
+            other.mkdir()
+            (other / "config.json").write_text(json.dumps(dict(config, started_at="another time")))
+            for arguments in ([str(other), "--frames-file", str(root / "frames.h5")],
+                              [str(run), "--frames-file", str(root / "frames.h5"), *frames]):
+                with self.subTest(arguments=arguments), self.assertRaises(SystemExit), captured_stderr():
+                    moby_box_gif.main(arguments)
 
 
 if __name__ == "__main__":

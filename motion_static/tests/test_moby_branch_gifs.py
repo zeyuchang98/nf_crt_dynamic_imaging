@@ -30,6 +30,11 @@ class MobyBranchGifTests(unittest.TestCase):
         for ranges in (["1:5"], ["0:5", "3:8"], ["0:15"], ["0:5:0"], ["0"], ["5:2"]):
             with self.assertRaises(ValueError, msg=ranges):
                 select(ranges, 14)
+        # Views without a panel measured from the first frame may start anywhere.
+        np.testing.assert_array_equal(select(["1250:1401"], 14401, from_reference=False), np.arange(1250, 1401))
+        for ranges in (["0:5", "3:8"], ["0:15"], ["5:2"]):
+            with self.assertRaises(ValueError, msg=ranges):
+                select(ranges, 14, from_reference=False)
 
     def test_tiles_show_y_upward(self):
         panel = np.zeros((3, 2))

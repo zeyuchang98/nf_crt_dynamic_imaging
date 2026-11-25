@@ -52,11 +52,12 @@ def window_frames(data):
     return truth, times[order], labels
 
 
-def selected_frames(ranges, count):
+def selected_frames(ranges, count, from_reference=True):
     """Window frame indices from START:STOP[:STEP] ranges (stop excluded); all frames if none.
 
-    The selection must begin at window frame 0, the motion reference frame t0: the
-    intensity-change panel and the relative changes are measured from the first shown frame.
+    With from_reference, the selection must begin at window frame 0, the motion reference
+    frame t0: the intensity-change panel and the relative changes are measured from the
+    first shown frame. Views with no such panel (moby_box_gif) may start anywhere.
     """
     if not ranges:
         return np.arange(count)
@@ -70,8 +71,10 @@ def selected_frames(ranges, count):
             raise ValueError(f"Frame range {text!r} is outside 0..{count} or has a step below 1")
         indices.extend(range(start, stop, step))
     indices = np.array(indices)
-    if indices[0] != 0 or np.any(np.diff(indices) <= 0):
-        raise ValueError("Frame ranges must start at window frame 0 and increase without overlap")
+    if from_reference and indices[0] != 0:
+        raise ValueError("Frame ranges must start at window frame 0")
+    if np.any(np.diff(indices) <= 0):
+        raise ValueError("Frame ranges must increase without overlap")
     return indices
 
 

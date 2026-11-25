@@ -109,7 +109,12 @@ functions take 2D or 3D grids.
 maximum-intensity volume renders with one fixed display range and camera; it needs
 the optional PyVista. A run trained on the source phase files reads its truth, frame by
 frame, from `--data-file`, an extracted file of its box over every series frame
-(`moby_slice.extract_box`; box, extent and window times are checked).
+(`moby_slice.extract_box`; box, extent and window times are checked), or else from the
+source files. Its `--frames` may start at any window frame (a clip). Where the data and
+the renderer are on different machines (the whole volume on Vista, without PyVista),
+`--export FILE` writes the selected frames' truth and NF in raw p0 to an h5 file, with no
+rendering. `--frames-file FILE` then draws the same GIF from that file alone. The file must
+name the run, and its axes and frames must fit the run's extent and window.
 `series_score_plots` plots a run's saved per-frame RRMSE and SSIM and its ROI-mean curve
 (the `activity_curve` of `metrics.json`, not the lesion curve) over time, from
 `metrics.json` alone.
