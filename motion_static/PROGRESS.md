@@ -95,7 +95,9 @@ at the end of this file.
   proximal nested 36.6%, proximal POUnet 47.5% all-frame RRMSE; direct POUnet dropped.
   2026-11-25: ProxNF's per-revolution time input (-100..100 on 200 revolutions) makes psi
   jitter frame to frame; the user chose -1..1 over the series for the ProxNF baseline
-  (`pou.time_half_range`), all frames per outer iteration; the rerun is not started.
+  (`pou.time_half_range`), all frames per outer iteration. The rerun removes the jitter but
+  scores 49.2% (final DF 1.229, as before); a single hash-grid baseline (one (x, y, t) grid,
+  1.29 M parameters, proximal nested's settings) runs after it.
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -3200,7 +3202,7 @@ the user: whether POUnet's per-revolution time unit should be kept for a 200-rev
 yet made); choosing weights or stopping by held-out data. No run is started until the user
 says so.
 
-### ProxNF baseline: psi's time input (2026-11-25): fixed, rerun queued
+### ProxNF baseline: psi's time input (2026-11-25): fixed and rerun; no flicker, RRMSE 49.2%
 
 Asked by the user: do the 2D inverse settings follow the ProxNF paper (Lozenski et al., IEEE
 TCI 10, 2024, Section IV-V and Table I)? Comparison:
@@ -3272,6 +3274,41 @@ steps of 10^4 points, psi rate 1e-5, squared-gradient weight 1e4 and the warm st
 unchanged; one run, no tuning; the final all-frame data fidelity is reported as a check of
 the discrepancy principle, not used to change the weight. Queued with the single hash-grid
 baseline (next section).
+
+**Rerun done (2026-11-25):** `results/inverse_full_20261125_proximal_pou_time1/` (model.pt not
+committed), code 9587ad2, status complete; 15:25-16:24 on this laptop (MPS, AC, lid open),
+training 3,352 s. All-frame scores against the earlier runs:
+
+| Run | RRMSE | PSNR | SSIM | Activity-curve RRMSE | Final DF | psi change per frame | Switches |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Proximal POUnet, time -1..1 (new) | 49.22% | 41.34 dB | 0.9711 | 2.66% | 1.2289 | 0.0128 | 231 |
+| Proximal POUnet, time -100..100 (2026-11-19) | 47.50% | 41.65 dB | 0.9761 | 2.70% | 1.2289 | 0.537 | 3,266 |
+| Proximal nested (2026-11-19) | 36.56% | 43.92 dB | 0.9846 | 2.38% | 1.1255 | | |
+
+(Ideal hats: psi change 0.0026 per frame, 19 switches.)
+- Final all-frame data fidelity 1.2289 (old run 1.2289, the same to four digits): above 1, so
+  by the discrepancy principle the weight 1e4 is larger than the whole series needs. Reported
+  only; the weight was not changed.
+- psi (`results/inverse_pou_time_scale_20261125/psi_finished_runs.{py,json}`, the measures
+  of `psi_time_scale.py`; it repeats the old run's 0.537 and 3,266): the flicker is gone
+  (0.0128 per frame, 42 times less than the old run), but training moved psi away from the
+  hats of its warm start (0.00268, 19 switches): 4.8 times the hats' change, 231 switches and
+  a mean largest partition of 0.32 (old run 0.63), i.e. overlapping partitions.
+- Training: the monitor (151 frames) is best at the warm start (RRMSE 40.44%, DF 1.164) and
+  rises monotonically to 49.22% (old run: up to 48.4% at about 45% of the budget, then 47.1%).
+  In both runs the objective falls from 0.926 to 0.647 while the regularization falls about
+  8 times and the data fidelity rises from 1.16 to 1.21: the iterations trade data fit for
+  smoothness. The rise from the warm start therefore does not need the flicker; its cause is
+  not shown.
+- Over the series (`results/inverse_full_20261125_comparison_{frames,curves}.png`): the new
+  run's per-frame error follows the old run's until about 80 s, then grows to 50-53% at the
+  late frames (old 47-51%); its activity curve is smooth (the old run's jitters frame to
+  frame). Both are blurred, with paired red/blue errors along the body edge.
+- Compute: 25.8 s per outer iteration (old run 38.0 s), although CG took more iterations
+  (3,722 in all, 13 at first and 50 at the end; old 1,555, 11-14); the cause of the shorter
+  time is not identified.
+- `evaluation/inverse_figures.py`: entries for this run and the hash run; the old run is
+  relabelled "time -100..100"; the end labels of the top panel are spread apart with leaders.
 
 ### Single hash-grid baseline (2026-11-25): agreed, queued
 

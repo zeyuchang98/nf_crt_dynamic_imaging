@@ -1,0 +1,26 @@
+{
+ "inverse_full_20261119_proximal_pou": {
+  "time_unit_s": 3.6,
+  "finished": {
+   "psi_change_per_frame": 0.5365495085716248,
+   "switches": 3266,
+   "mean_largest_psi": 0.6269967555999756
+  },
+  "ideal_hats": {
+   "psi_change_per_frame": 0.0026380212511867285,
+   "switches": 19
+  }
+ },
+ "inverse_full_20261125_proximal_pou_time1": {
+  "time_unit_s": 360.0,
+  "finished": {
+   "psi_change_per_frame": 0.01275258231908083,
+   "switches": 231,
+   "mean_largest_psi": 0.32445380091667175
+  },
+  "ideal_hats": {
+   "psi_change_per_frame": 0.002638021018356085,
+   "switches": 19
+  }
+ }
+}

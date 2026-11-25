@@ -23,11 +23,15 @@ import torch
 from motion_static.run import build_model
 from motion_static.phantoms.moby import pixel_centers
 
-# Fixed entity colours (validated categorical slots 1-4); text stays in neutral ink.
+# Fixed entity colours (categorical slots 1-4; pass in the plotted order time1, proximal_pou,
+# proximal_nested, proximal_hash); text stays in neutral ink. The direct runs left the comparison
+# (direct POUnet dropped, direct nested never finished), so their slots are reused.
 STYLE = {"direct_pou": ("Direct POUnet (TV 3)", "#2a78d6"),
-         "proximal_pou": ("Proximal POUnet (sq. grad. 1e4)", "#eb6834"),
+         "proximal_pou": ("Proximal POUnet, time −100..100", "#eb6834"),
          "proximal_nested": ("Proximal nested", "#1baf7a"),
-         "direct_nested": ("Direct nested", "#eda100")}
+         "direct_nested": ("Direct nested", "#eda100"),
+         "proximal_pou_time1": ("Proximal POUnet, time −1..1", "#2a78d6"),
+         "proximal_hash": ("Proximal single hash grid", "#eda100")}
 INK, MUTED, GRID = "#0b0b0b", "#52514e", "#e4e3df"
 TIMES = (-18.0, 18.35, 46.0, 300.0, 600.0)  # pre-contrast, wash-in, activity peak, mid, late (s)
 TIME_LABELS = ("pre-contrast", "wash-in", "activity peak", "mid", "late")
@@ -136,19 +140,28 @@ def main(prefix, runs):
     window = 72  # one sensor revolution (3.6 s): every view seen once
     kernel = np.ones(window) / window
     t_smooth = np.convolve(all_times, kernel, mode="valid")
+    ends = []
     for key, (_, _, metrics) in loaded.items():
         name, colour = STYLE[key]
         smooth = np.convolve(np.array(metrics["per_frame_rrmse"]) * 100, kernel, mode="valid")
         top.plot(t_smooth, smooth, color=colour, linewidth=1.6, label=name)
-        top.text(t_smooth[-1] + 6, smooth[-1], f"{metrics['rrmse']:.1%}", color=INK, fontsize=7.5, va="center")
+        ends.append([smooth[-1], smooth[-1], colour, metrics["rrmse"]])
         activity = metrics["activity_curve"]
         middle.plot(all_times, activity["prediction"], color=colour, linewidth=1.4, label=name)
+    # End labels (all-frame RRMSE), spread to at least 1.6 points apart, each with a leader
+    # in its series colour so close curves stay identifiable.
+    ends.sort(key=lambda end: end[0])
+    for lower, upper in zip(ends, ends[1:]):
+        upper[1] = max(upper[1], lower[1] + 1.6)
+    for line_end, label_y, colour, rrmse in ends:
+        top.plot([t_smooth[-1], t_smooth[-1] + 14], [line_end, label_y], color=colour, linewidth=0.8)
+        top.text(t_smooth[-1] + 17, label_y, f"{rrmse:.1%}", color=INK, fontsize=7.5, va="center")
     middle.plot(all_times, metrics["activity_curve"]["truth"], color=INK, linewidth=1.4, linestyle="--", label="Truth")
     for ax in (top, middle):
         for t in times:
             ax.axvline(t, color=MUTED, linewidth=0.6, linestyle=":")
         style_axis(ax)
-        ax.set_xlim(all_times[0], all_times[-1] + 40)
+        ax.set_xlim(all_times[0], all_times[-1] + 60)
         ax.set_xlabel("time (s)", fontsize=8, color=MUTED)
     top.set_ylabel("frame RRMSE (%)\n(mean over 72 frames)", fontsize=8, color=MUTED)
     top.set_title("Error over the series (label: all-frame RRMSE; dotted lines: frames shown in the image figure)",
