@@ -6,9 +6,10 @@ pixel grid, so f has space-time rank <= `partitions`, continuous in time and dis
 space. A query point uses its nearest pixel; in this project the field is only evaluated
 at pixel centers.
 
-Time scaling follows ProxNF's code (applications/proximal_splitting: time_int = nrevs *
-linspace(-1/2, 1/2), one unit per sensor revolution), centered on the window: psi sees the
-same time scale per frame as in ProxNF, whatever the frame interval in seconds.
+Time scaling: psi sees (t - window center) / time_unit_s. By default (inverse/execute.py) the
+unit is one sensor revolution, as in ProxNF's code (applications/proximal_splitting:
+time_int = nrevs * linspace(-1/2, 1/2)), so psi sees the same time step per frame as in
+ProxNF; `pou.time_half_range` instead maps the run's frames to -a..a.
 """
 import torch
 from torch import nn
@@ -30,7 +31,7 @@ class POUNet(nn.Module):
         self.time_unit_s = float(time_unit_s)
 
     def normalized_time(self, t):
-        """Seconds -> sensor revolutions from the window center (ProxNF's time coordinate)."""
+        """Seconds -> psi's input: time from the window center in units of time_unit_s."""
         return (t - self.time_center) / self.time_unit_s
 
     def partition(self, t):

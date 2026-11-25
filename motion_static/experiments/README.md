@@ -175,7 +175,8 @@ python -m motion_static.inverse.measurements --file ~/Data/dce-moby/moby_z100.h5
   `partition_steps` (10,000) for psi; null disables it. Other models (required `fit_steps`):
   the field is fitted to the group images at the group center times, motion branch frozen.
 - `model: "pou_net"` (inverse runs only): `pou` `{partitions, width, depth}` (10, 140, 4) and
-  the rates `pou_lr`, `coefficient_lr`.
+  the rates `pou_lr`, `coefficient_lr`. psi's time input is one unit per sensor revolution
+  (ProxNF's code) unless `pou.time_half_range` a maps the run's frames to -a..a.
 
 Requires `held_out_split: "none"` (protocol E1: every frame has data and is scored) and the
 cosine schedule. `loss.csv`/`loss.png` record the batch objective, the normalized data
@@ -192,6 +193,8 @@ Configs in [inverse/](inverse/): `window_*` are the smoke runs on frames 1250-14
 nested inner rates were chosen by the truth-free window checks (PROGRESS.md). Their
 measurements: `--first-frame 0 --cycles 288` in the command above. `full_direct_pou` collapsed
 to a near-static image and is not part of the comparison (kept as the record of that run).
+`full_proximal_pou_time1` is `full_proximal_pou` with psi's time input on -1..1 over the
+series (`pou.time_half_range: 1`, 2026-11-25) instead of -100..100 per revolution.
 
 ## Usage
 

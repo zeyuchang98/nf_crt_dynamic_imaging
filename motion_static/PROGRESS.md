@@ -87,8 +87,11 @@ at the end of this file.
   Stage 4 done: smoke runs of all four combinations on the window run and record completely
   (untuned; not a method comparison). Stage 5 done: on this machine (M4, 24 GB, MPS) all four
   combinations run on the whole series, 14,401 frames (peak 9.5-13.2 GiB after three memory
-  fixes), so the data, not memory, set the longest range. Open: budgets, penalty weights and
-  the models' time resolution for that run (user).
+  fixes), so the data, not memory, set the longest range. Whole-series runs (2026-11-19/20):
+  proximal nested 36.6%, proximal POUnet 47.5% all-frame RRMSE; direct POUnet dropped.
+  2026-11-25: ProxNF's per-revolution time input (-100..100 on 200 revolutions) makes psi
+  jitter frame to frame; the user chose -1..1 over the series for the ProxNF baseline
+  (`pou.time_half_range`), all frames per outer iteration; the rerun is not started.
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -3149,3 +3152,70 @@ the user: whether POUnet's per-revolution time unit should be kept for a 200-rev
 (it also affects proximal POUnet); a direct nested rerun (with checkpoints, a code change not
 yet made); choosing weights or stopping by held-out data. No run is started until the user
 says so.
+
+### ProxNF baseline: psi's time input (2026-11-25): fixed, rerun not started
+
+Asked by the user: do the 2D inverse settings follow the ProxNF paper (Lozenski et al., IEEE
+TCI 10, 2024, Section IV-V and Table I)? Comparison:
+- Same as the paper: FOV 37.2 mm, R = 26.3 mm, two opposite groups of 5 sensors 1 degree
+  apart, 5 degrees per frame, 10 views per frame; iid Gaussian noise, RNL = sigma / max|d| =
+  0.04; POUnet's psi network (`POU_Siren` 4 x 140, imported); the splitting (gradient step,
+  C by CG, psi by Adam at 1e-5); squared spatial-gradient Tikhonov; a discrepancy-principle
+  weight (the paper's Morozov rule; the code hard-codes `delta = 1e5/nB`).
+- Our runs follow the public code where it differs from the text: all frames per outer
+  iteration (text: J = 324 of 1,296 frames, randomly selected; the code's `--nB` gives
+  cyclic subsets, weight delta/nB and 125 nB outer iterations, so nB = 4 gives J = 324,
+  inferred), 100 inner steps of 10^4 points (text: 10,000 iterations of 100,000 points,
+  ambiguous), a fixed 125 outer iterations (text: stop when the proximal-gradient norm fell
+  by two orders), spatial differences only (text: spatial and temporal derivatives).
+- Our own settings (agreed 2026-11-18): 248^2 pixels of 0.15 mm and 351 rings (paper 186^2,
+  0.2 mm, 263); DCE-MOBY z = 100 (paper: its own MOBY perfusion slice); 14,401 frames of
+  0.05 s, 720 s, 200 sensor revolutions (paper 1,296 frames of 0.5 s, 648 s, 18); caSRT's CRT
+  (paper AirToolsII); warm start by group LSQR stopped at the noise level; 20 partitions on
+  the whole series (paper 10).
+
+Decided by the user (2026-11-25):
+- Goal: a credible ProxNF baseline (our nested model is free to change).
+- All frames per outer iteration (J = K, the code's default; the user asked for all frames
+  rather than the paper's subsampling): the paper subsamples to save
+  operator evaluations, not for accuracy, and with the same visits per frame J = K/4 would
+  need 4x the outer iterations (more CG and psi steps, a confound) and more time here.
+- psi's time input on -1..1 over the series (`pou.time_half_range: 1`, 360 s per unit), as a
+  fixed normalization, not a tuned parameter.
+
+Why the per-revolution input fails on this series: psi's first layer is sin(2 pi (w t + b))
+with w ~ U(-1, 1) (PyTorch's default for one input), so at initialization psi varies about
+once per 2 time units. In the paper 1 unit is 36 s and a partition about 1.8 units (65 s): the
+two scales match. Per revolution here 1 unit is 3.6 s and a partition 10 units (36 s): psi
+starts about 5 times too fast, the sine layers add faster harmonics, and psi's rate of 1e-5
+(12,500 Adam steps, each weight moves at most about 0.1) cannot slow it down. With -1..1, psi
+starts slower than its partitions, which training can sharpen.
+
+Checks (`results/inverse_pou_time_scale_20261125/psi_time_scale.{py,json}`; no truth used).
+psi change per frame = mean of sum_j |psi_j(t_k+1) - psi_j(t_k)|; ideal hats 0.0026 with 19
+switches of the largest partition:
+
+| | First-layer oscillations over the series | psi change per frame | Switches |
+|---|---:|---:|---:|
+| Initialization, -100..100 (3 seeds) | 95-100 | 0.284-0.290 | (psi near uniform) |
+| Initialization, -18..18 | 17-18 | 0.083-0.084 | |
+| Initialization, -9..9 | 8.6-9.0 | 0.042-0.043 | |
+| Initialization, -1..1 | 1.0 | 0.0047-0.0050 | |
+| Warm-start hat fit, `full_proximal_pou` (per revolution) | | 0.268 (fit loss 5.2e-4) | 1,423 |
+| Warm-start hat fit, `full_proximal_pou_time1` (-1..1) | | **0.00268** (fit loss 2.5e-6) | **19** |
+| Finished run `inverse_full_20261119_proximal_pou` | | 0.537 | 3,266 |
+
+The hat fit barely changes the per-revolution psi (0.287 -> 0.268), and the finished run
+switches its largest partition about every 4.4 frames (0.2 s): its frames jump between
+coefficient images. The -1..1 fit matches the hats. Whether this flicker caused the run's
+rise from 40.4% (warm start) to 47.1% monitor RRMSE is not shown.
+
+Implemented: `pou.time_half_range` a maps the run's frames to -a..a (`time_unit_s` =
+duration / 2a); absent, the per-revolution rule is unchanged, so earlier configs give the
+same runs. `experiments/inverse/full_proximal_pou_time1.json` = `full_proximal_pou` plus
+`time_half_range: 1`. Test: per-revolution unit by default, the range ends at -1 and 1,
+invalid values refused (216 tests pass).
+
+Open, for the user: the outer-iteration cap (125 as the code, about 1.3 h; or up to 500 with
+the paper's stopping rule, which needs a code change); the weight (proposed: keep 1e4 and check
+the final all-frame data fidelity afterwards). No run is started until the user says so.

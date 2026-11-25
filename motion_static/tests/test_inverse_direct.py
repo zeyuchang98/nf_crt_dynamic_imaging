@@ -17,7 +17,7 @@ from motion_static.inverse.frame_operator import FrameOperator
 from motion_static.inverse.problem import InverseProblem
 from motion_static.losses import compute_measurement_losses, image_regularizer
 from motion_static.models.pou_net import POUNet
-from motion_static.run import main, parse_configuration
+from motion_static.run import build_model, main, parse_configuration
 from motion_static.tests.test_inverse_data import DR, FOV, HAVE_CASRT, SIZE, write_slice
 
 
@@ -295,6 +295,21 @@ class RunTests(InverseTestCase):
             model = build_model(config)
             histories.append(train_direct(model, problem, config)[0])
         self.assertEqual(histories[0], histories[1])
+
+    def test_pou_time_input_per_revolution_or_on_a_set_range(self):
+        def pou(**options):
+            return self.config(dict(POU, pou=dict(POU["pou"], **options)), warm_start=dict(frames_per_group=4))
+
+        default = self.resolved(pou())
+        t0, t1 = default["coordinate_bounds"][-1]
+        frame_interval = (t1 - t0) / (default["frames"] - 1)
+        self.assertAlmostEqual(default["pou"]["time_unit_s"], 72 * frame_interval)  # 5 degrees per frame
+        model = build_model(self.resolved(pou(time_half_range=1.0)))
+        ends = model.normalized_time(torch.tensor([t0, 0.5 * (t0 + t1), t1])).numpy()
+        np.testing.assert_allclose(ends, [-1., 0., 1.], atol=1e-6)
+        for bad in (0, -1., "1", True, float("inf")):
+            with self.subTest(bad=bad), self.assertRaises(SystemExit):
+                self.resolved(pou(time_half_range=bad))
 
     def test_settings_are_checked(self):
         with self.assertRaises(SystemExit):

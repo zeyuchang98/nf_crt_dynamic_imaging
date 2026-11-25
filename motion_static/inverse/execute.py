@@ -79,10 +79,21 @@ def validate_inverse(config):
         pou = {**POU_DEFAULTS, **config.get("pou", {})}
         if not all(positive_int(pou[key]) for key in POU_DEFAULTS) or pou["partitions"] < 2:
             raise ValueError("pou needs positive integers width, depth and partitions >= 2")
-        # One time unit per sensor revolution, as in ProxNF's code.
         t0, t1 = config["coordinate_bounds"][-1]
-        frame_interval = (t1 - t0) / (config["frames"] - 1)
-        pou["time_unit_s"] = 360. / metadata["schedule"]["rotation_deg"] * frame_interval
+        half_range = pou.get("time_half_range")
+        if half_range is None:
+            # One time unit per sensor revolution, as in ProxNF's code (its 18 revolutions span -9..9).
+            frame_interval = (t1 - t0) / (config["frames"] - 1)
+            pou["time_unit_s"] = 360. / metadata["schedule"]["rotation_deg"] * frame_interval
+        else:
+            # psi's input spans -half_range..half_range over the run's frames. Per revolution, the
+            # 200-revolution series spans -100..100, where psi's initial frequencies (about one
+            # oscillation per 2 units) are far faster than its partitions and it jitters frame to
+            # frame; the user chose 1 for the ProxNF baseline (2026-11-25).
+            if isinstance(half_range, bool) or not isinstance(half_range, (int, float)) \
+                    or not np.isfinite(half_range) or half_range <= 0:
+                raise ValueError("pou.time_half_range must be a positive number or absent")
+            pou["time_unit_s"] = (t1 - t0) / (2. * half_range)
         pou["source_sha256"] = file_sha256(REPOSITORY / "nfCRT" / "pou.py")
         config["pou"] = pou
         for key in ("pou_lr", "coefficient_lr"):
