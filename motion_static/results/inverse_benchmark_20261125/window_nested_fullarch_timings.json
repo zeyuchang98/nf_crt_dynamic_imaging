@@ -1,0 +1,15 @@
+{
+  "config": "motion_static/results/inverse_benchmark_20261125/window_nested_fullarch.json",
+  "model": "nested_low_rank_hash_nf",
+  "device": "mps",
+  "frames": 151,
+  "parameters": 1308330,
+  "render_ms_per_frame": 69.64184887465308,
+  "direct_frames_per_step": 4,
+  "direct_step_ms": 444.5216660024016,
+  "gradient_step_ms_per_frame": 71.24333347019274,
+  "gradient_step_memory_gib": 6.031005859375,
+  "inner_batch_points": 16384,
+  "inner_step_ms": 30.04595799939125,
+  "mps_driver_memory_gib": 6.034912109375
+}

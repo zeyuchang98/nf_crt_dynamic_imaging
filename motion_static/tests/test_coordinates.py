@@ -110,6 +110,19 @@ class CoordinateTests(unittest.TestCase):
                 if kind != "hash_nf":
                     self.assertEqual(restored.motion.reference_time.item(), 21.)
 
+    def test_hash_nf_config_sets_its_grid_and_width(self):
+        """Without encoding/head_width the original defaults; with them, the requested grid."""
+        default = build_model(dict(model="hash_nf", coordinate_bounds=BOUNDS))
+        self.assertEqual(default.encoding.resolutions.tolist(), HashNeuralField().encoding.resolutions.tolist())
+        self.assertEqual(default.mlp[0].out_features, 64)
+        encoding = dict(levels=3, features=2, log2_hash_size=9, min_resolution=[4, 4, 2], max_resolution=[16, 16, 32])
+        model = build_model(dict(model="hash_nf", coordinate_bounds=BOUNDS, head_width=16, encoding=encoding))
+        self.assertEqual(model.encoding.resolutions.tolist(), [[4, 4, 2], [8, 8, 8], [16, 16, 32]])
+        self.assertEqual(model.mlp[0].in_features, 6)
+        self.assertEqual(model.mlp[0].out_features, 16)
+        # Level 0 (5 x 5 x 3 vertices) is dense; the finer levels are hashed into 2^9 rows.
+        self.assertEqual(model.encoding.sizes.tolist(), [75, 512, 512])
+
 
 if __name__ == "__main__":
     unittest.main()

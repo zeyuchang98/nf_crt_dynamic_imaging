@@ -74,7 +74,10 @@ def build_model(config):
     bounds = config.get("coordinate_bounds", DEFAULT_BOUNDS)
     reference_time = config.get("reference_time")
     if config["model"] == "hash_nf":
-        return HashNeuralField(coordinate_bounds=bounds)
+        # One hash grid over (x, y, t). Configs without these keys keep the original defaults
+        # (8 levels, 2^15 tables, resolution 8-128, width 64; the template's values).
+        return HashNeuralField(width=config.get("head_width", 64), coordinate_bounds=bounds,
+                               **config.get("encoding", {}))
     if config["model"] == "nested_mlp":
         return NestedMLP(
             config.get("intensity_width", 128), config.get("motion_width", 32),

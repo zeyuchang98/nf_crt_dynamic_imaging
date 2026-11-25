@@ -1,0 +1,15 @@
+{
+  "config": "motion_static/results/inverse_benchmark_20261125/window_hash_fullarch.json",
+  "model": "hash_nf",
+  "device": "mps",
+  "frames": 151,
+  "parameters": 1287133,
+  "render_ms_per_frame": 27.02707812522931,
+  "direct_frames_per_step": 4,
+  "direct_step_ms": 167.11858400230994,
+  "gradient_step_ms_per_frame": 28.83732698674729,
+  "gradient_step_memory_gib": 6.022216796875,
+  "inner_batch_points": 16384,
+  "inner_step_ms": 13.299916998221306,
+  "mps_driver_memory_gib": 6.022216796875
+}

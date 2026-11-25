@@ -3200,7 +3200,7 @@ the user: whether POUnet's per-revolution time unit should be kept for a 200-rev
 yet made); choosing weights or stopping by held-out data. No run is started until the user
 says so.
 
-### ProxNF baseline: psi's time input (2026-11-25): fixed, rerun not started
+### ProxNF baseline: psi's time input (2026-11-25): fixed, rerun queued
 
 Asked by the user: do the 2D inverse settings follow the ProxNF paper (Lozenski et al., IEEE
 TCI 10, 2024, Section IV-V and Table I)? Comparison:
@@ -3266,3 +3266,48 @@ invalid values refused (216 tests pass).
 Open, for the user: the outer-iteration cap (125 as the code, about 1.3 h; or up to 500 with
 the paper's stopping rule, which needs a code change); the weight (proposed: keep 1e4 and check
 the final all-frame data fidelity afterwards). No run is started until the user says so.
+
+Decided by the user (2026-11-25, later): 125 outer iterations (the config's value), 100 inner
+steps of 10^4 points, psi rate 1e-5, squared-gradient weight 1e4 and the warm start
+unchanged; one run, no tuning; the final all-frame data fidelity is reported as a check of
+the discrepancy principle, not used to change the weight. Queued with the single hash-grid
+baseline (next section).
+
+### Single hash-grid baseline (2026-11-25): agreed, queued
+
+Asked by the user: a proximal reconstruction with one hash grid over (x, y, t), no nested
+model (no motion branch, no low-rank split), about the same parameter count, to see its time
+and use it as a baseline.
+- Model (`hash_nf`, `models/hash_nf.py`): one 3D grid of 8 levels x 2 features, 2^17 rows per
+  level, resolution 8-512 in x and y (the nested intensity grid's) and 3-1,536 in t (from the
+  nested model's coarsest temporal grid to its motion grid's finest, 0.47 s per cell), then a
+  64-wide MLP with two hidden layers. 1,287,133 parameters (nested 1,308,330, -1.6%; POUnet
+  1,312,140).
+- `run.build_model` now passes `encoding` and `head_width` to `hash_nf`; configs without them
+  keep the original defaults (8 levels, 2^15, 8-128, width 64, equal to the template's
+  values), and no `hash_nf` run had been saved before. Test in `tests/test_coordinates.py`
+  (217 tests pass).
+- Config `experiments/inverse/full_proximal_hash.json`: everything else as
+  `full_proximal_nested.json` (25 outer x 300 inner steps of 16,384 points, hash rate 0.01,
+  MLP rate 0.001, no penalty, the same LSQR warm start fitted for 5,000 steps). The rates were
+  chosen for the nested model on the window and are not tuned for this one.
+- Timings (`inverse/benchmark.py`, the whole-series architectures on the window data, MPS,
+  medians; `results/inverse_benchmark_20261125/`):
+
+  | | render, ms per frame | gradient step, ms per frame | inner step (16,384 points), ms | direct step (4 frames), ms |
+  |---|---:|---:|---:|---:|
+  | single hash grid | 27.0 | 28.8 | 13.3 | 167 |
+  | nested | 69.6 | 71.2 | 30.0 | 445 |
+
+  A point needs one 3D lookup (8 levels x 8 corners) and one MLP; the nested model needs a 3D
+  motion lookup and MLP, a 2D intensity lookup and MLP and its temporal branch. Estimate for
+  the whole series: 14,401 x 28.8 ms + 300 x 13.3 ms = 419 s per outer iteration, times 1.06
+  (the nested run's measured / benchmarked ratio) = 446 s; 25 iterations 3.1 h, plus about
+  5 min of warm start and 10 min of scoring: about 3.4 h (nested 7.8 h).
+
+Queue (2026-11-25): the two runs one after the other on this laptop (MPS), detached
+(setsid + nohup + `caffeinate -is`), AC power and lid open; one at a time because together
+they would need about 11 + 13 GiB of the 24 GB and would slow each other's timings:
+1. `full_proximal_pou_time1.json` -> `results/inverse_full_20261125_proximal_pou_time1`
+   (about 1.3 h);
+2. `full_proximal_hash.json` -> `results/inverse_full_20261125_proximal_hash` (about 3.4 h).
