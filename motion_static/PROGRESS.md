@@ -1,6 +1,6 @@
 # Motion and Intensity Separation: Current Progress
 
-Last updated: 2026-11-23.
+Last updated: 2026-11-25.
 
 ## Current status (2026-11-18; 2D items from 2026-10-30)
 
@@ -74,8 +74,12 @@ at the end of this file.
   The formal box run (32 nodes, 21.5 ms per step) finished on 2026-11-20 as one long job
   continuing a copy of the chain's first 2 h segment: all-frame RRMSE 2.47%, PSNR 62.99
   dB, SSIM 0.99974; frame 0 fits worst (80%); a per-frame score plot and a truth | NF GIF
-  of one frame per breath were made locally. A whole-volume run
-  (248 x 248 x 200, no mask, 72.7 M parameters, 64 nodes) was set up on 2026-11-19.
+  of one frame per breath were made locally. The whole-volume run (248 x 248 x 200, no
+  mask, 72.7 M parameters, 64 nodes, two jobs, 0.375 s per step) finished on 2026-11-24:
+  all-frame RRMSE 4.67%, SSIM 0.99986, ROI-mean curve 0.50% (not comparable with the box's
+  scores: about 60% of the volume is zero background). Slurm marks its second job FAILED:
+  processes waiting at the final gather of the scores hit the 600 s NCCL timeout, as
+  process 0 was writing the complete results.
 - **2D inverse problem (started 2026-11-18):** plan agreed with the user (last section):
   caSRT's circular Radon transform on the 248^2 grid, ProxNF's 2D geometry and noise
   (R = 26.3 mm, 5 + 5 views per frame rotating 5 degrees, dr = 0.15 mm, sigma = 4% of
@@ -2653,7 +2657,7 @@ prints a banner, and one that fails). The chain checkout keeps `9e06f0d` until t
 ends, because each segment checks the code.
 
 
-## Whole-volume full-series run (2026-11-19): input agreed, local checks
+## Whole-volume full-series run (2026-11-19): input agreed, local checks; complete (2026-11-24)
 
 Asked for by the user (2026-11-19): the whole 248 x 248 x 200 volume over all 14,401 frames,
 from the source files, with no support mask (the user's choice after the cost and metric
@@ -2716,6 +2720,49 @@ Continuation submitted at the user's request (8 h chosen over 6 h, for scoring m
 1164904, `sbatch -p gh -N 64 -t 08:00:00 train_multinode.sbatch
 dce_moby_whole_full_series.json dce_moby_whole_full_20261119_224k_b16m_r3_s0_64node
 --continue --segment-minutes 300`, pending (Priority 1506) at submission.
+
+**The whole-volume run is complete (2026-11-24); Slurm records its second job as FAILED,
+after the results were saved.** Job 1164904 started 2026-11-24 04:32:51 (13 h 15 min after
+submission) and ended 09:43:35 (5 h 10 min of the 8 h). Measured, against the estimates:
+- Training continued from step 199,501 at 04:33:59 and reached 224,000 at 07:10:18:
+  0.375 s per step (0.371 s over 199,500-200,000, the first 500 steps after the restart), as
+  in the first segment. Training time over both jobs 84,602 s (23.5 h). The fixed-sample
+  training MSE ended at 1.46e-7; the loss curve is smooth through the restart.
+- Scoring (each process its 225 or 226 frames, every frame predicted with its 3 + 3 halo
+  frames) took 2 h 15 min to 2 h 32 min per process (07:10 to 09:25-09:42), within the 1-3 h
+  estimate. Process 0's GPU was 36-37% busy while scoring, with a stretch at 0% from about
+  08:05 to 08:50 (cause not identified). Peak host memory 15.4-15.7 GB per process
+  (`/usr/bin/time`, the 47 processes that reported), against 4.8 GB in the first job.
+- The failure: the final `all_gather` of the 64 partial sums waits for the slowest
+  process. 21 of the 64 processes had waited over PyTorch's default NCCL timeout of 600 s
+  (606-1,042 s; the first finished at 09:25:07). Their watchdogs reported the timeout at
+  09:42:29-30 and aborted them (SIGABRT, exit 134); srun then terminated the rest. By then
+  the gather had completed: process 0 combined all 64 partials and wrote `metrics.json` and
+  `config.json` (status complete) at 09:42:30 and printed "Saved results". The saved report
+  lists the 64 frame ranges covering frames 0-14,401, and all 14,401 per-frame scores are
+  finite. Not changed: the timeout (`init_process_group` takes a `timeout`); the box's
+  32-node scoring took minutes and never came near it.
+Scores, protocol A (all 14,401 frames fitted and scored, the whole volume, no mask):
+- Image: RRMSE 4.67%, PSNR 68.21 dB, SSIM 0.99986, largest absolute error 0.518. ROI
+  (rows, columns, slices 22-219 x 27-206 x 0-200 as saved, the bounding box of positive
+  voxels): RRMSE
+  4.67%, PSNR 65.80 dB, SSIM 0.99976. ROI-mean curve (`activity_curve`, not the lesion
+  activity curve): RRMSE 0.50% (box 0.45%).
+- Per frame: median RRMSE 4.23% (box 2.11%), best 2.57%. Frame 0 (t = -36 s) fits worst
+  again, 67.6% (box 80.4%), then 63.5%, 54.7%, ... 13.1% at frame 11. 215 frames are above
+  10%: 14 of frames 0-49 and 201 isolated later frames, which recur about once per breath;
+  in both runs the worst 0.5% of frames after frame 50 lie mostly at the same few positions
+  of the about 50-frame breath (positions 32, 36, 37 here; 12, 32, 36 in the box).
+- Not comparable with the box's scores: different region, and about 60% of this volume is
+  zero in every frame, so PSNR and SSIM are dominated by background (see the notes above).
+  Scoring this run on the box's region would compare the two; not done.
+Records (no `model.pt` of 291 MB, checkpoints or `scan.npz`; those stay on Vista):
+[results/dce_moby_whole_full_20261119_224k_b16m_r3_s0_64node/](results/dce_moby_whole_full_20261119_224k_b16m_r3_s0_64node/metrics.json),
+with both jobs' Slurm logs and GPU samples, and
+[visuals/series_scores.png](results/dce_moby_whole_full_20261119_224k_b16m_r3_s0_64node/visuals/series_scores.png)
+(per-frame scores and the ROI-mean curve, from `metrics.json` alone; drawn on this machine).
+No volume GIF: the whole volume's truth (about 709 GB) is on Vista only. The whole-volume
+checkout on Vista no longer needs to stay at `6b8ecbb`.
 
 ## 2D CRT inverse problem (2026-11-18): plan agreed, stage 1 (operator, measurements) done
 
