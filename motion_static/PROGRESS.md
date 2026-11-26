@@ -96,8 +96,9 @@ at the end of this file.
   2026-11-25: ProxNF's per-revolution time input (-100..100 on 200 revolutions) makes psi
   jitter frame to frame; the user chose -1..1 over the series for the ProxNF baseline
   (`pou.time_half_range`), all frames per outer iteration. The rerun removes the jitter but
-  scores 49.2% (final DF 1.229, as before); a single hash-grid baseline (one (x, y, t) grid,
-  1.29 M parameters, proximal nested's settings) runs after it.
+  scores 49.2% (final DF 1.229, as before). A single hash-grid baseline (one (x, y, t) grid,
+  1.29 M parameters, proximal nested's settings; 2026-11-26) scores 47.4% (final DF 1.237) in
+  about 3.0 h of compute, 2.6 times faster per outer iteration than nested (36.6%, 7.8 h).
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -3310,7 +3311,7 @@ training 3,352 s. All-frame scores against the earlier runs:
 - `evaluation/inverse_figures.py`: entries for this run and the hash run; the old run is
   relabelled "time -100..100"; the end labels of the top panel are spread apart with leaders.
 
-### Single hash-grid baseline (2026-11-25): agreed, queued
+### Single hash-grid baseline (2026-11-25/26): done, RRMSE 47.4%, 2.6 times faster than nested
 
 Asked by the user: a proximal reconstruction with one hash grid over (x, y, t), no nested
 model (no motion branch, no low-rank split), about the same parameter count, to see its time
@@ -3348,3 +3349,41 @@ they would need about 11 + 13 GiB of the 24 GB and would slow each other's timin
 1. `full_proximal_pou_time1.json` -> `results/inverse_full_20261125_proximal_pou_time1`
    (about 1.3 h);
 2. `full_proximal_hash.json` -> `results/inverse_full_20261125_proximal_hash` (about 3.4 h).
+
+Run done (code 9587ad2; 16:24 on 11-25 to 12:23 on 11-26; status complete; model.pt not
+committed). All-frame scores, with the other proximal runs for reference:
+
+| Run | RRMSE | PSNR | SSIM | Activity-curve RRMSE | Final DF | Training |
+|---|---:|---:|---:|---:|---:|---:|
+| Proximal single hash grid | 47.37% | 41.67 dB | 0.972 | 2.6% | 1.237 | 3.31 h (2.96 h without the sleep) |
+| Proximal nested (2026-11-19) | 36.56% | 43.92 dB | 0.985 | 2.4% | 1.126 | 7.79 h |
+| Proximal POUnet, time -1..1 (2026-11-25) | 49.22% | 41.34 dB | 0.971 | 2.7% | 1.229 | 0.93 h |
+| Proximal POUnet, time -100..100 (2026-11-19) | 47.50% | 41.65 dB | 0.976 | 2.7% | 1.229 | 1.32 h |
+
+- Compute: median 426 s per outer iteration (estimate 446 s; nested 1,121 s, 2.6 times as
+  long); 25 iterations at the median 2.96 h. The lid was closed on battery at 17:31 (pmset:
+  clamshell sleep) and the laptop slept until 10:31 on 11-26 (17.0 h); the run went on after
+  waking, so the wall clock is 20 h. The run's timer (`perf_counter`) does not count the sleep,
+  but outers 10 and 11, around it, took 1,212 and 858 s, 1,219 s above the median, and the
+  recorded 11,901 s includes that; the cause of this excess is not pinned down. Data fidelity
+  and the monitor show no break at these iterations.
+- Monitor (151 frames): 57.6% at the warm start (nested 40.3% from the same LSQR target),
+  falling monotonically to 47.7% at outer 25, still about 0.15 points per iteration at the end.
+  Data fidelity 2.571 at the warm start, 1.228 after outer 25; final all-frame 1.237, above 1.
+- Warm start: after the 5,000 fit steps the MSE to the LSQR target is 8.4e-7 (nested 2.5e-6),
+  so the hash grid follows the warm-start target more closely yet is further from the truth.
+  Cause not tested.
+- The per-frame error dips every 37.8 s (19 dips, at -16.6, 20.9, 58.4, ..., 663.7 s): the
+  centres of the warm start's 19 groups of 757 frames (37.85 s). The nested run has no such
+  dips, and no time level of the grid has this spacing (cells 42.4 s at level 3, 16.7 s at
+  level 4). So the warm start's group structure stays in the hash model through the 25
+  iterations; why is not tested.
+- Images: grainy noise over the whole body (no penalty), edges sharper than POUnet's. Frame
+  RRMSE 38.7% before contrast, 41.9% at wash-in, 49.6% at the activity peak, 50.4-50.8% at
+  300 and 600 s. Activity curve smooth; its peak is the closest to the truth's of the runs
+  (0.0200 vs 0.0197; nested 0.0212, POUnet -1..1 0.0210), its pre-contrast level slightly high
+  (0.0124 vs 0.0121).
+- The rates are the nested model's, not tuned for this model; not a tuned method comparison.
+- Figures: `results/inverse_full_20261125_comparison_{frames,curves}.png` now show four runs
+  (POUnet -1..1, POUnet -100..100, nested, single hash grid); the renders match the saved
+  per-frame scores (largest difference 8.4e-6).

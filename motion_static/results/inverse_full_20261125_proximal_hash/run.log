@@ -1,0 +1,36 @@
+Inverse (proximal) | model hash_nf | frames 14401 | 25 outer x 300 inner steps | regularizer {'type': 'none', 'weight': 0.0}
+dce_moby/hash_nf step 1: MSE 0.003931, temporal L2 0, total 0.003931
+dce_moby/hash_nf step 1000: MSE 2.1366e-06, temporal L2 0, total 2.1366e-06
+dce_moby/hash_nf step 2000: MSE 1.34626e-06, temporal L2 0, total 1.34626e-06
+dce_moby/hash_nf step 3000: MSE 1.00475e-06, temporal L2 0, total 1.00475e-06
+dce_moby/hash_nf step 4000: MSE 8.88426e-07, temporal L2 0, total 8.88426e-07
+dce_moby/hash_nf step 5000: MSE 8.40189e-07, temporal L2 0, total 8.40189e-07
+Warm start: 19 groups, LSQR iterations [9, 11, 11, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+proximal/hash_nf outer 1: tau 4.843e-05, data fidelity before 2.30494, inner loss 1.691e-06 -> 7.571e-07, data fidelity after 1.54069, truth RRMSE 56.1107%
+proximal/hash_nf outer 2: tau 9.976e-05, data fidelity before 1.49747, inner loss 1.675e-06 -> 1.762e-06, data fidelity after 1.41961, truth RRMSE 54.9674%
+proximal/hash_nf outer 3: tau 0.0001117, data fidelity before 1.39741, inner loss 1.654e-06 -> 1.807e-06, data fidelity after 1.35984, truth RRMSE 54.0625%
+proximal/hash_nf outer 4: tau 0.0001182, data fidelity before 1.34801, inner loss 1.672e-06 -> 1.756e-06, data fidelity after 1.32412, truth RRMSE 53.3232%
+proximal/hash_nf outer 5: tau 0.0001188, data fidelity before 1.31914, inner loss 1.551e-06 -> 1.593e-06, data fidelity after 1.30754, truth RRMSE 52.7168%
+proximal/hash_nf outer 6: tau 0.0001171, data fidelity before 1.30413, inner loss 1.475e-06 -> 1.492e-06, data fidelity after 1.30363, truth RRMSE 52.1912%
+proximal/hash_nf outer 7: tau 9.843e-05, data fidelity before 1.30769, inner loss 1.111e-06 -> 9.99e-07, data fidelity after 1.30529, truth RRMSE 51.8040%
+proximal/hash_nf outer 8: tau 9.341e-05, data fidelity before 1.30668, inner loss 1.041e-06 -> 9.044e-07, data fidelity after 1.29999, truth RRMSE 51.4050%
+proximal/hash_nf outer 9: tau 8.848e-05, data fidelity before 1.30576, inner loss 9.385e-07 -> 7.995e-07, data fidelity after 1.30526, truth RRMSE 51.0933%
+proximal/hash_nf outer 10: tau 8.448e-05, data fidelity before 1.30746, inner loss 9.031e-07 -> 6.974e-07, data fidelity after 1.2769, truth RRMSE 50.8263%
+proximal/hash_nf outer 11: tau 9.562e-05, data fidelity before 1.28246, inner loss 1.029e-06 -> 8.587e-07, data fidelity after 1.28072, truth RRMSE 50.5296%
+proximal/hash_nf outer 12: tau 9.114e-05, data fidelity before 1.28433, inner loss 9.458e-07 -> 7.636e-07, data fidelity after 1.266, truth RRMSE 50.2462%
+proximal/hash_nf outer 13: tau 9.506e-05, data fidelity before 1.2726, inner loss 9.77e-07 -> 8.466e-07, data fidelity after 1.26938, truth RRMSE 49.9638%
+proximal/hash_nf outer 14: tau 9.128e-05, data fidelity before 1.27458, inner loss 9.529e-07 -> 7.493e-07, data fidelity after 1.25775, truth RRMSE 49.7006%
+proximal/hash_nf outer 15: tau 9.389e-05, data fidelity before 1.2654, inner loss 9.812e-07 -> 8.045e-07, data fidelity after 1.26037, truth RRMSE 49.4990%
+proximal/hash_nf outer 16: tau 9.084e-05, data fidelity before 1.26625, inner loss 9.158e-07 -> 7.219e-07, data fidelity after 1.24943, truth RRMSE 49.2927%
+proximal/hash_nf outer 17: tau 9.517e-05, data fidelity before 1.2571, inner loss 9.558e-07 -> 7.865e-07, data fidelity after 1.26249, truth RRMSE 49.1226%
+proximal/hash_nf outer 18: tau 8.589e-05, data fidelity before 1.26906, inner loss 8.51e-07 -> 6.55e-07, data fidelity after 1.23903, truth RRMSE 48.9742%
+proximal/hash_nf outer 19: tau 9.924e-05, data fidelity before 1.24673, inner loss 1.017e-06 -> 8.675e-07, data fidelity after 1.24251, truth RRMSE 48.7392%
+proximal/hash_nf outer 20: tau 9.392e-05, data fidelity before 1.24934, inner loss 9.102e-07 -> 7.613e-07, data fidelity after 1.23613, truth RRMSE 48.5270%
+proximal/hash_nf outer 21: tau 9.541e-05, data fidelity before 1.24485, inner loss 9.312e-07 -> 7.836e-07, data fidelity after 1.24063, truth RRMSE 48.3244%
+proximal/hash_nf outer 22: tau 9.135e-05, data fidelity before 1.24795, inner loss 8.947e-07 -> 6.931e-07, data fidelity after 1.24253, truth RRMSE 48.1560%
+proximal/hash_nf outer 23: tau 8.734e-05, data fidelity before 1.25194, inner loss 8.353e-07 -> 6.331e-07, data fidelity after 1.2302, truth RRMSE 48.0028%
+proximal/hash_nf outer 24: tau 9.49e-05, data fidelity before 1.23805, inner loss 9.348e-07 -> 7.428e-07, data fidelity after 1.22506, truth RRMSE 47.8325%
+proximal/hash_nf outer 25: tau 9.547e-05, data fidelity before 1.23491, inner loss 9.381e-07 -> 7.391e-07, data fidelity after 1.22834, truth RRMSE 47.7244%
+Final all-frame data fidelity 1.23683
+All-frame image RRMSE=47.3742%, SSIM=0.9715503664629634
+Saved results: motion_static/results/inverse_full_20261125_proximal_hash
