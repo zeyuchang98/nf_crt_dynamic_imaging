@@ -1,6 +1,6 @@
 # Motion and Intensity Separation: Current Progress
 
-Last updated: 2026-11-25.
+Last updated: 2026-11-27.
 
 ## Current status (2026-11-18; 2D items from 2026-10-30)
 
@@ -29,8 +29,8 @@ at the end of this file.
   embedding figures, branch GIFs (with frame subsets), whole-series data checks,
   time-chunked SSIM, Vista job scripts, lesion activity curves, streamed source data over several processes
   (2026-11-16), optional support mask, resume over segments (2026-11-17), the 2D inverse
-  problem (2026-11-18), per-frame score plots (2026-11-20). 215 tests pass
-  (2026-11-20) in this machine's `nf-crt` conda
+  problem (2026-11-18), per-frame score plots (2026-11-20), the 2D inverse evaluator
+  (2026-11-27). 224 tests pass (2026-11-27) in this machine's `nf-crt` conda
   environment (Python 3.11, torch 2.14.0, numpy 1.26.4, h5py 3.16.0); 136 passed earlier
   in the second machine's `.venv-hash-sweep` and Vista's `$WORK/envs/nf-crt`.
 - **Local only on the second machine (not on GitHub):** `model.pt` of the DCE-MOBY runs
@@ -99,6 +99,10 @@ at the end of this file.
   scores 49.2% (final DF 1.229, as before). A single hash-grid baseline (one (x, y, t) grid,
   1.29 M parameters, proximal nested's settings; 2026-11-26) scores 47.4% (final DF 1.237) in
   about 3.0 h of compute, 2.6 times faster per outer iteration than nested (36.6%, 7.8 h).
+  2026-11-27: a reusable evaluator (`evaluation/inverse_evaluate.py`, METRICS.md 3.8) adds
+  the space-time SSIM with ProxNF's data range (the reconstruction's max - min), curve
+  RRMSE at fixed tumor core, shell and artery pixels, and the lesion LAC RRMSE; nested is
+  best on every score (last section).
 - **Open, to decide with the user:** more spatial compression
   for 3D (Umberto, 2026-10-25: e.g. hash-table size); the NF budget under protocol A;
   POUnet as a later baseline.
@@ -3387,3 +3391,64 @@ committed). All-frame scores, with the other proximal runs for reference:
 - Figures: `results/inverse_full_20261125_comparison_{frames,curves}.png` now show four runs
   (POUnet -1..1, POUnet -100..100, nested, single hash grid); the renders match the saved
   per-frame scores (largest difference 8.4e-6).
+
+### Reusable 2D inverse evaluation (2026-11-27): two SSIM ranges, single-pixel curves, lesion LAC
+
+Asked by the user: a reusable evaluation of 2D inverse runs with RRMSE, SSIM and time-activity
+curves at single points (tumor core, tumor shell, artery). Agreed on 2026-11-27, definitions in
+METRICS.md 3.8:
+- SSIM: the existing space-time SSIM over (y, x, t) with data range 1 stays the headline; also
+  reported, the same SSIM with ProxNF's code convention, data range = the reconstruction's
+  max - min. ProxNF's paper gives no SSIM settings; its code
+  (`applications/proximal_splitting/create_animations.py`) calls skimage on the whole space-time
+  array with that range. For these runs the mean of per-frame spatial SSIM equals the space-time
+  value within 0.0005. With range 1, SSIM changes little between reconstructions: the truth's
+  normalized maximum 1 comes from a few pixels (99% of pixels below 0.047), and C2 exceeds the
+  local truth variance in 96% of body windows at frame 3000.
+- Points (`artery` confirmed as the third region): one fixed pixel per region, wholly inside at
+  every respiratory phase and deepest there; curve RRMSE over all 14,401 frames.
+- Lesion LAC RRMSE (METRICS.md 3.6): ProxNF's only curve metric (its code uses a binary per-frame
+  lesion mask; paper Table III: ProxNF 2D LAC RRMSE 0.0791 on its own phantom, not comparable).
+- Discussed, not adopted: enhancement RRMSE (meaningless at the artery, whose contrast change is
+  about 3%), peak value and time-to-peak (need a smoothing rule for single-pixel curves).
+
+Implemented (commit 7051b5e): `evaluation/inverse_evaluate.py` renders every window frame of
+each run from model.pt (as `InverseProblem.render`) and scores image metrics with the code of
+`inverse/execute.score_all_frames`, then the ProxNF-range SSIM, the point curves and the lesion
+LACs (reusing `moby_lesion_curves`); figures in raw p0. Six tests (`tests/test_inverse_evaluate.py`):
+the deepest-pixel rule on a moving rectangle, (t, y, x) rendering for fields and POUnet,
+LACs against the direct weighted mean, scores against whole-array evaluation and skimage, and a
+complete tiny proximal run whose saved metrics are reproduced. 224 tests pass.
+
+Pixels (row y, column x) on the whole z = 100 series: core (195, 121), depth 3.0 px, 74
+candidates; shell (186, 118), 1.41 px, 97; artery (129, 148), 1.41 px, 8.
+
+Run on the four proximal runs (`results/inverse_eval_20261127/`, code 7051b5e, MPS): each run's
+image scores equal its metrics.json (largest difference 2.2e-16); a first pass from the same code
+before its commit gave identical scores and arrays.
+
+| Run | RRMSE | SSIM (range 1) | SSIM (ProxNF range) | Reconstruction range | Core pixel | Shell pixel | Artery pixel | LAC whole | LAC shell | LAC core |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Proximal POUnet, time -1..1 | 49.22% | 0.9711 | 0.8632 | 0.185 | 4.7% | 19.2% | 55.5% | 11.42% | 18.96% | 8.74% |
+| Proximal POUnet, time -100..100 | 47.50% | 0.9761 | 0.8928 | 0.205 | 8.4% | 19.0% | 55.5% | 11.92% | 18.81% | 11.33% |
+| Proximal nested | **36.56%** | **0.9846** | **0.9638** | 0.479 | **2.6%** | **5.8%** | **4.2%** | **5.05%** | **7.23%** | **2.46%** |
+| Proximal single hash grid | 47.37% | 0.9716 | 0.9252 | 0.427 | 9.8% | 20.2% | 38.5% | 8.56% | 15.41% | 8.55% |
+
+Observations (not acted on; causes not tested):
+- Nested is best on every score. The ProxNF-range SSIM puts the hash grid (0.925) above both
+  POUnet runs (0.863, 0.893), unlike RRMSE and the range-1 SSIM; POUnet's reconstruction range is
+  less than half the others' (0.19-0.21 against 0.43-0.48), so its SSIM constants are smaller.
+- Artery pixel (truth 0.097-0.107 raw p0): both POUnet runs stay near 0.046, less than half
+  (the 8-candidate vessel is blurred); the hash run swings between about 0.04 and 0.12 with peaks
+  every 37.8 s, the spacing of its warm-start groups (as its per-frame dips); nested keeps the
+  level but rises to about 0.115 between 15 and 30 s and decays over the next 100 s, while the
+  truth rises briefly and dips near 45 s.
+- Lesion: every run underestimates the shell LAC after the peak (nested least) and
+  overestimates the core LAC after about 100 s. Pre-injection means: shell truth 0.0078,
+  nested 0.0084, POUnet 0.0063, hash 0.0071.
+- Compute: rendering 1,008 s (nested), 377 s (hash), 3 s (POUnet) on MPS; scoring about 155 s per
+  run.
+
+Records: `results/inverse_eval_20261127/` (`inverse_eval.json`, `inverse_eval.npz` 3.8 MB,
+`point_curves.png`, `lesion_curves.png`, `per_frame_scores.png`) and its log
+`results/inverse_eval_20261127.log`.

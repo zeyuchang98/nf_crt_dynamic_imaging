@@ -1,0 +1,285 @@
+{
+  "definitions": {
+    "image": "metrics.evaluate_sequence_in_blocks on all window frames, as inverse/execute.score_all_frames: RRMSE, PSNR and space-time SSIM over (y, x, t), 7 x 7 x 7 uniform windows, sample covariance, K1 0.01, K2 0.03, data range 1 (the normalized truth's range); roi = bounding box of positive truth",
+    "ssim_proxnf_convention": "the same space-time SSIM with data range = the reconstruction's max - min over all frames, as applications/proximal_splitting/create_animations.py",
+    "point_curves": "f(row, col, t) at a fixed pixel wholly inside the region (indicator 1) at every respiratory phase of the window's frames, deepest inside it (largest smallest-over-phases distance to a pixel not wholly inside); RRMSE = ||c - c_truth||_2 / ||c_truth||_2 over all frames",
+    "lesion_lac": "METRICS.md 3.6: LAC(t) = sum_r w(r, phase(t)) f(r, t) / sum_r w(r, phase(t)), w the region's partial volume at the frame's own phase; LAC RRMSE = ||LAC - LAC_truth||_2 / ||LAC_truth||_2",
+    "units": "curves in raw p0 (normalized values times intensity_scale_value)"
+  },
+  "points": {
+    "core": {
+      "indicator": "tumor_core",
+      "row": 195,
+      "col": 121,
+      "depth_px": 3.0,
+      "pixels_inside_every_phase": 74,
+      "x_mm": 18.225,
+      "y_mm": 29.325000000000003
+    },
+    "shell": {
+      "indicator": "tumor",
+      "row": 186,
+      "col": 118,
+      "depth_px": 1.4142135623730951,
+      "pixels_inside_every_phase": 97,
+      "x_mm": 17.775000000000002,
+      "y_mm": 27.975000000000005
+    },
+    "artery": {
+      "indicator": "artery",
+      "row": 129,
+      "col": 148,
+      "depth_px": 1.4142135623730951,
+      "pixels_inside_every_phase": 8,
+      "x_mm": 22.275000000000002,
+      "y_mm": 19.425000000000004
+    }
+  },
+  "lesion_regions": {
+    "whole lesion": "tumor + tumor_core",
+    "shell": "tumor",
+    "core": "tumor_core"
+  },
+  "data": {
+    "file": "/Users/zeyuchang/Data/dce-moby/moby_z100.h5",
+    "first_frame": 0,
+    "cycles": 288,
+    "frames_per_cycle": 50,
+    "intensity_scale": "global_maximum",
+    "intensity_scale_value": 0.4503569006919861,
+    "z_index": 100,
+    "spacing_mm": 0.15000000000000002,
+    "sha256": "89958d215bf241eb14e2ecfdf83f313bbfea3a8a06da16e5f6ccca974d1359da"
+  },
+  "scored_frames": 14401,
+  "roi": [
+    [
+      24,
+      218
+    ],
+    [
+      30,
+      202
+    ]
+  ],
+  "device": "mps",
+  "code_commit": "7051b5e1e160bd347a34cde593adf1e533053b50",
+  "labels": {
+    "inverse_full_20261125_proximal_pou_time1": "Proximal POUnet, time \u22121..1",
+    "inverse_full_20261119_proximal_pou": "Proximal POUnet, time \u2212100..100",
+    "inverse_full_20261119_proximal_nested": "Proximal nested",
+    "inverse_full_20261125_proximal_hash": "Proximal single hash grid"
+  },
+  "lesion_lac": {
+    "whole lesion": {
+      "truth_maximum": 0.04421149406532641,
+      "truth_pre_injection_mean": 0.005527635697849779,
+      "inverse_full_20261125_proximal_pou_time1": {
+        "lac_rrmse": 0.114249501169903,
+        "pre_injection_mean": 0.004850562553618828
+      },
+      "inverse_full_20261119_proximal_pou": {
+        "lac_rrmse": 0.11919352823970224,
+        "pre_injection_mean": 0.004813599583294783
+      },
+      "inverse_full_20261119_proximal_nested": {
+        "lac_rrmse": 0.05050281458040597,
+        "pre_injection_mean": 0.006120518392745972
+      },
+      "inverse_full_20261125_proximal_hash": {
+        "lac_rrmse": 0.08564344952856054,
+        "pre_injection_mean": 0.005548019128456746
+      }
+    },
+    "shell": {
+      "truth_maximum": 0.04757152810218527,
+      "truth_pre_injection_mean": 0.007823165121752873,
+      "inverse_full_20261125_proximal_pou_time1": {
+        "lac_rrmse": 0.1896204424355108,
+        "pre_injection_mean": 0.006276843234709313
+      },
+      "inverse_full_20261119_proximal_pou": {
+        "lac_rrmse": 0.18808520445447496,
+        "pre_injection_mean": 0.0062761163350833985
+      },
+      "inverse_full_20261119_proximal_nested": {
+        "lac_rrmse": 0.07230081543624112,
+        "pre_injection_mean": 0.008443015366719256
+      },
+      "inverse_full_20261125_proximal_hash": {
+        "lac_rrmse": 0.15413745072628154,
+        "pre_injection_mean": 0.0070857686147245014
+      }
+    },
+    "core": {
+      "truth_maximum": 0.03953801381628979,
+      "truth_pre_injection_mean": 0.001023118228242836,
+      "inverse_full_20261125_proximal_pou_time1": {
+        "lac_rrmse": 0.08736222560521181,
+        "pre_injection_mean": 0.002051006991255345
+      },
+      "inverse_full_20261119_proximal_pou": {
+        "lac_rrmse": 0.11332059492556591,
+        "pre_injection_mean": 0.0019440786470027228
+      },
+      "inverse_full_20261119_proximal_nested": {
+        "lac_rrmse": 0.024573050675079908,
+        "pre_injection_mean": 0.0015611248302393036
+      },
+      "inverse_full_20261125_proximal_hash": {
+        "lac_rrmse": 0.08549969670017273,
+        "pre_injection_mean": 0.0025316168877698966
+      }
+    }
+  },
+  "runs": {
+    "inverse_full_20261125_proximal_pou_time1": {
+      "rrmse": 0.4922107495099577,
+      "psnr_db": 41.337660060932,
+      "ssim": 0.9710582198387308,
+      "ssim_proxnf_convention": 0.8632140078126876,
+      "reconstruction_range": [
+        -0.0066098403185606,
+        0.17791327834129333
+      ],
+      "mean_per_frame_ssim": 0.9709136700384905,
+      "roi": {
+        "rrmse": 0.4918058933791295,
+        "psnr_db": 38.689075522529635,
+        "ssim": 0.9502089413013004
+      },
+      "point_curve_rrmse": {
+        "core": 0.047045209453002654,
+        "shell": 0.19154374049493658,
+        "artery": 0.5547165756604853
+      },
+      "run": "motion_static/results/inverse_full_20261125_proximal_pou_time1",
+      "model": "pou_net",
+      "method": "proximal",
+      "render_seconds": 2.574113833004958,
+      "evaluation_seconds": 151.51564654200047,
+      "check_against_saved_metrics": {
+        "rrmse_difference": 2.220446049250313e-16,
+        "ssim_difference": 0.0,
+        "max_per_frame_rrmse_difference": 2.220446049250313e-16,
+        "max_per_frame_ssim_difference": 0.0
+      },
+      "lesion_lac_rrmse": {
+        "whole lesion": 0.114249501169903,
+        "shell": 0.1896204424355108,
+        "core": 0.08736222560521181
+      }
+    },
+    "inverse_full_20261119_proximal_pou": {
+      "rrmse": 0.47504526916295386,
+      "psnr_db": 41.64598199484455,
+      "ssim": 0.9760933518029282,
+      "ssim_proxnf_convention": 0.892796418689686,
+      "reconstruction_range": [
+        -0.0072974152863025665,
+        0.1973898559808731
+      ],
+      "mean_per_frame_ssim": 0.9759208961465324,
+      "roi": {
+        "rrmse": 0.4747175305183877,
+        "psnr_db": 38.996244699886994,
+        "ssim": 0.9587561802277934
+      },
+      "point_curve_rrmse": {
+        "core": 0.08374137072612145,
+        "shell": 0.19008783303532384,
+        "artery": 0.5547192002375724
+      },
+      "run": "motion_static/results/inverse_full_20261119_proximal_pou",
+      "model": "pou_net",
+      "method": "proximal",
+      "render_seconds": 2.6815933329999098,
+      "evaluation_seconds": 152.13280391699664,
+      "check_against_saved_metrics": {
+        "rrmse_difference": 2.220446049250313e-16,
+        "ssim_difference": 0.0,
+        "max_per_frame_rrmse_difference": 1.6653345369377348e-16,
+        "max_per_frame_ssim_difference": 0.0
+      },
+      "lesion_lac_rrmse": {
+        "whole lesion": 0.11919352823970224,
+        "shell": 0.18808520445447496,
+        "core": 0.11332059492556591
+      }
+    },
+    "inverse_full_20261119_proximal_nested": {
+      "rrmse": 0.36559197748679756,
+      "psnr_db": 43.92074880254232,
+      "ssim": 0.9846050154522364,
+      "ssim_proxnf_convention": 0.9637901454312632,
+      "reconstruction_range": [
+        -0.010372762568295002,
+        0.46865177154541016
+      ],
+      "mean_per_frame_ssim": 0.9843959542363826,
+      "roi": {
+        "rrmse": 0.36249514146189926,
+        "psnr_db": 41.33890629387839,
+        "ssim": 0.9741825448227852
+      },
+      "point_curve_rrmse": {
+        "core": 0.02647301529953084,
+        "shell": 0.05849711312689978,
+        "artery": 0.0422147141155855
+      },
+      "run": "motion_static/results/inverse_full_20261119_proximal_nested",
+      "model": "nested_low_rank_hash_nf",
+      "method": "proximal",
+      "render_seconds": 1007.5589027089954,
+      "evaluation_seconds": 154.49118587499834,
+      "check_against_saved_metrics": {
+        "rrmse_difference": 0.0,
+        "ssim_difference": 0.0,
+        "max_per_frame_rrmse_difference": 1.1102230246251565e-16,
+        "max_per_frame_ssim_difference": 0.0
+      },
+      "lesion_lac_rrmse": {
+        "whole lesion": 0.05050281458040597,
+        "shell": 0.07230081543624112,
+        "core": 0.024573050675079908
+      }
+    },
+    "inverse_full_20261125_proximal_hash": {
+      "rrmse": 0.4737418595749918,
+      "psnr_db": 41.669846734601805,
+      "ssim": 0.9715503664629634,
+      "ssim_proxnf_convention": 0.9251994697309451,
+      "reconstruction_range": [
+        -0.01242326945066452,
+        0.4147835075855255
+      ],
+      "mean_per_frame_ssim": 0.9712979930467005,
+      "roi": {
+        "rrmse": 0.47051634932450265,
+        "psnr_db": 39.0734557209195,
+        "ssim": 0.9524330240174766
+      },
+      "point_curve_rrmse": {
+        "core": 0.0977062336200728,
+        "shell": 0.20203614586493074,
+        "artery": 0.3845287095536396
+      },
+      "run": "motion_static/results/inverse_full_20261125_proximal_hash",
+      "model": "hash_nf",
+      "method": "proximal",
+      "render_seconds": 376.56295929199405,
+      "evaluation_seconds": 154.5059401660037,
+      "check_against_saved_metrics": {
+        "rrmse_difference": 5.551115123125783e-17,
+        "ssim_difference": 0.0,
+        "max_per_frame_rrmse_difference": 1.6653345369377348e-16,
+        "max_per_frame_ssim_difference": 0.0
+      },
+      "lesion_lac_rrmse": {
+        "whole lesion": 0.08564344952856054,
+        "shell": 0.15413745072628154,
+        "core": 0.08549969670017273
+      }
+    }
+  }
+}
