@@ -39,6 +39,23 @@ RRMSE averaged over one sensor revolution, the saved activity curve, and the mon
 training). It reads model.pt, metrics.json and loss.csv, renders five frames on the CPU and
 prints their per-frame RRMSE next to the saved scores; it changes no record.
 
+## Evaluation of 2D CRT inverse runs
+
+```bash
+python -m motion_static.evaluation.inverse_evaluate --runs motion_static/results/inverse_full_<date>_<name> ... \
+    --out NEW_DIR --device mps
+```
+
+Renders every window frame of each run from its model.pt and writes, in a new folder
+([METRICS.md](../METRICS.md) Section 3.8): `inverse_eval.json` (image RRMSE, PSNR and
+space-time SSIM as the run's metrics.json, the same SSIM with ProxNF's data-range convention,
+the curve RRMSE at three fixed pixels (tumor core, tumor shell, artery), the lesion LAC RRMSE
+of Section 3.6, and each run's difference from its own metrics.json), `inverse_eval.npz`
+(curves in raw p0 and per-frame scores), `point_curves.png`, `lesion_curves.png` and
+`per_frame_scores.png`. The runs must share one data window; `--labels` names them in the
+figures and `--data-file` reads a local copy of the slice file with the recorded sha256. It
+holds the truth and one reconstruction in memory (about 3.5 GB each for the whole series).
+
 ## Generate GIFs for selected runs
 
 ```bash

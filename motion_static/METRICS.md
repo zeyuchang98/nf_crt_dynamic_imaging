@@ -246,7 +246,8 @@ shell (`tumor`) and its core (`tumor_core`); the two indicators are complementar
 volumes of the lesion. The pre-injection mean uses the frames with $t<0$ (time 0 is the
 injection). Curves are reported in raw p0 units; the RRMSE does not depend on the scale.
 This is not the `activity_curve` of `metrics.json`, which averages over the rectangular
-ROI. Defined for the embedding protocol only.
+ROI. Defined for the embedding protocol and, since 2026-11-27, for 2D inverse runs
+(Section 3.8).
 
 ### 3.7 Reference intensity on DCE-MOBY: reference-configuration frames
 
@@ -301,6 +302,46 @@ Frames outside $T_{\mathrm{ref}}$ are neither scored nor interpolated.
 
 The displacement of the scored planes, in p0's layout, comes from
 [phantoms/moby_motion_slice.py](phantoms/moby_motion_slice.py).
+
+### 3.8 2D inverse runs: two SSIM ranges and time-activity curves
+
+Agreed with the user on 2026-11-27 for 2D inverse runs (protocol E1: every window frame is
+reconstructed and scored), implemented in
+[evaluation/inverse_evaluate.py](evaluation/inverse_evaluate.py).
+
+- **SSIM with two data ranges.** The headline SSIM is the existing space-time SSIM over
+  $(y,x,t)$ (Section 4, "Midpoint SSIM") with data range 1, the normalized truth's range,
+  the same for every method. Also reported: the same SSIM with the data range of ProxNF's
+  code, $\Delta=\max\hat F-\min\hat F$ over all frames of the reconstruction
+  (`applications/proximal_splitting/create_animations.py`, skimage defaults on the whole
+  space-time array; the paper, Lozenski et al. 2024, cites Wang et al. 2004 without
+  settings). That range differs between methods, so the second SSIM does not put methods on
+  one scale; it is reported for comparison with the paper's scoring. On the DCE-MOBY z = 100
+  series the truth's range comes from a few pixels (normalized maximum 1, 99% of pixels
+  below 0.047), so with range 1 the constant $C_2$ exceeds the local truth variance in most
+  body windows (96% at frame 3000) and SSIM changes little between reconstructions.
+- **Single-pixel time-activity curves** at one fixed pixel in each of the tumor core
+  (`tumor_core`), the tumor shell (`tumor`) and the artery (`artery`). With $\Omega_p$ the
+  pixels wholly inside the region (indicator 1) at respiratory phase $p$, over the phases
+  of the scored frames,
+
+$$
+r^*=\arg\max_{r\in\bigcap_p\Omega_p}\ \min_p\ \operatorname{dist}\bigl(r,\ \Omega_p^{c}\bigr),
+\qquad
+\operatorname{RRMSE}_c=\frac{\|\hat f(r^*,\cdot)-f(r^*,\cdot)\|_2}{\|f(r^*,\cdot)\|_2},
+$$
+
+  dist being the Euclidean distance between pixel centers in pixels (1 next to the
+  boundary); ties go to the first pixel in row-major order. The pixel does not follow the
+  breathing motion, but lies in its region at every phase, so its truth curve has no
+  partial volume and no frames outside the region. On the whole z = 100 series the pixels
+  (row y, column x) are core (195, 121), shell (186, 118) and artery (129, 148), at depths
+  3.0, 1.4 and 1.4 pixels. The artery's truth stays within about 3% of its pre-injection
+  level after injection, so its curve RRMSE mostly measures the static level.
+- **Lesion LAC RRMSE** of Section 3.6 (whole lesion, shell, core) on all scored frames.
+- Curves are saved and plotted in raw p0 units; the RRMSEs do not depend on the scale.
+  ProxNF itself scores only the lesion LAC (relative L2), with a binary per-frame lesion
+  mask; single-pixel curves are not part of its evaluation.
 
 ## 4. Existing evaluation conventions to preserve
 
@@ -386,6 +427,7 @@ version, not adoption of the proposed standardized metric protocol.
 | Selected-block errors and spatial-window SSIM | [masked_metrics.py](evaluation/masked_metrics.py): `evaluate_masked_sequence()` | Block-run reports, using their distinct mask protocol |
 | Fixed-point and region-mean temporal curve errors | [metrics.py](evaluation/metrics.py): `evaluate_sequence()` | `point_curves`, `activity_curve`, including curve `rrmse` |
 | DCE-MOBY lesion activity curves and LAC RRMSE (Section 3.6) | [moby_lesion_curves.py](evaluation/moby_lesion_curves.py): `curves_for()`, `scores()` | Separate output folder: `lesion_curves.json` (`scores`, `ss_check`), `lesion_curves.npz`, `lesion_curves.png` |
+| 2D inverse runs: SSIM with both ranges, single-pixel curves, lesion LAC (Section 3.8) | [inverse_evaluate.py](evaluation/inverse_evaluate.py): `region_points()`, `render_frames()`, `evaluate_reconstruction()`, `lesion_curves()` | Separate output folder: `inverse_eval.json` (`points`, `runs.RUN.{rrmse, psnr_db, ssim, ssim_proxnf_convention, reconstruction_range, mean_per_frame_ssim, roi, point_curve_rrmse, lesion_lac_rrmse, check_against_saved_metrics}`), `inverse_eval.npz`, `point_curves.png`, `lesion_curves.png`, `per_frame_scores.png` |
 | DCE-MOBY reference intensity at reference-configuration frames (Section 3.7) | [moby_reference_intensity.py](evaluation/moby_reference_intensity.py): `configuration_deviation()`, `reference_frames()`, `reference_intensity_scores()` | Separate output folder: `reference_intensity.json` (`qualifying_phases`, `frames`, `scores.RUN.{full_grid,roi}`; `rrmse`, `psnr_db`, `ssim_mean_of_frames`, per-frame lists) |
 
 `motion_scores()` uses one scalar pixel spacing and is currently used on isotropic
